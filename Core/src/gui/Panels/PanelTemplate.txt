@@ -1,0 +1,35 @@
+#pragma once
+#include "PanelBase.h"
+
+namespace libCore
+{
+    class FrameBuffersPreviewPanel : public PanelBase
+    {
+    public:
+        FrameBuffersPreviewPanel() : PanelBase("Frame Buffers") {}
+
+        void Init() override 
+        {
+
+        }
+
+        void Draw() override {
+            if (!m_isVisible) return;
+
+            ImGui::Begin(m_title.c_str());
+            //--
+            
+
+
+            //--
+            ImGui::End();
+        }
+
+        void Shutdown() override {
+            // Liberación de recursos si es necesario
+        }
+    };
+}
+
+
+
