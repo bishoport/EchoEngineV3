@@ -69,7 +69,7 @@
     <ClInclude Include="src\tools\AssimpGlmHelpers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\tools\ModelLoader.h">
+    <ClInclude Include="src\managers\ModelLoader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\tools\ThumbnailGenerator.h">
@@ -84,7 +84,7 @@
     <ClInclude Include="src\managers\LightsManager.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\managers\TextureManager.h">
+    <ClInclude Include="src\managers\TextureLoader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\managers\InputManager.h">
@@ -249,6 +249,9 @@
     <ClInclude Include="src\gui\Panels\DynamicSkyboxPanel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\managers\MainThreadTaskManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\core\geometry\VBO.cpp">
@@ -284,13 +287,13 @@
     <ClCompile Include="src\tools\cameras\EditorCamera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\tools\ModelLoader.cpp">
+    <ClCompile Include="src\managers\ModelLoader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\tools\ThumbnailGenerator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\managers\TextureManager.cpp">
+    <ClCompile Include="src\managers\TextureLoader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\managers\InputManager.cpp">

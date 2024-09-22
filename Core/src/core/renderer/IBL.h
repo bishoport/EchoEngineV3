@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../Core.h"
-#include "../../tools/ModelLoader.h"
+#include "../../managers/ModelLoader.h"
 
 namespace libCore
 {

@@ -13,7 +13,9 @@ namespace libCore
         std::string m_textureName = "";    // Nombre de la textura
         std::string texturePath = "";      // Ruta de la textura en el disco
 
-        bool loadingImage = true;
+        std::string key = "";
+
+        bool loadingImage = false;
 
         // Constructor predeterminado
         Texture() = default;
@@ -34,9 +36,9 @@ namespace libCore
         bool IsValid() const { return ID != 0; }
 
         // Obtiene el ID de la textura
-        GLuint GetTextureID() const {
-            if (loadingImage) return;
-            return ID; 
-        }
+        GLuint GetTextureID() const;
+
+        // Obtiene el tipo de la textura
+        TEXTURE_TYPES GetType() const;
     };
 }

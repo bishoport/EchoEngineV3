@@ -41,6 +41,8 @@
 
 #include "../tools/ConsoleLog.h"
 
+#include "../managers/MainThreadTaskManager.h"
+
 template<typename T>
 using Scope = std::unique_ptr<T>;
 template<typename T, typename ... Args>
@@ -134,4 +136,3 @@ class Material;
 class AABB;
 class Mesh;
 class Model;
-

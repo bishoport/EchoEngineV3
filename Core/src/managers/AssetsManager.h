@@ -4,6 +4,9 @@
 #include "../core/textures/Texture.h"
 #include "../core/model/Model.h"
 
+#include <future> // Para std::future y std::promise
+#include <atomic> // Para manejar el progreso de forma segura entre hilos
+
 namespace libCore
 {
 	class AssetsManager
@@ -18,7 +21,7 @@ namespace libCore
 		}
 
 		//--TEXTURES
-		//std::string defaultAssetsPathTexture = "C:/Produccion/PROPIOS/OpenGL_DEV/OpenGLSandbox/Core/assets/textures/";
+
 		std::string defaultAssetsPathTexture = "C:/Users/bisho/OneDrive/Escritorio/OPENGL_GAME/OpenGL_ShooterV2/Core/assets/textures/";
 		void UnloadTexture(const std::string& name);
 		void LoadDefaultAssets();
@@ -32,7 +35,6 @@ namespace libCore
 
 		//--MODELS
 		void LoadModelAsset(ImportModelData importModelData);
-		void LoadModelAssetAsync(ImportModelData importModelData);
 		Ref<Model> GetModel(const std::string& name);
 		Ref<Model> FindModelRecursive(const Ref<Model>& model, const std::string& name);
 		Ref<Model> GetModelByMeshName(const std::string& meshName);

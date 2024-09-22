@@ -1,7 +1,7 @@
 #pragma once
 #include "PanelBase.h"
 #include "../../managers/AssetsManager.h"
-#include "../../managers/TextureManager.h"
+#include "../../managers/TextureLoader.h"
 #include "../../managers/EntityManager.h"
 
 namespace libCore
@@ -91,7 +91,7 @@ namespace libCore
                 // Ruta y carga del thumbnail
                 std::filesystem::path projectBasePath = std::filesystem::current_path();
                 std::filesystem::path thumbnailPath = projectBasePath / modelPath / "thumbnails" / (mesh->meshName + "_thumbnail.png");
-                mesh->thumbnailTextureID = TextureManager::getInstance().LoadTextureFromFile(thumbnailPath.string().c_str());
+                mesh->thumbnailTextureID = TextureLoader::getInstance().LoadTextureFromFile(thumbnailPath.string().c_str());
             }
 
             ImVec2 imageSize(m_previewSize, m_previewSize);

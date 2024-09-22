@@ -65,19 +65,18 @@ namespace libCore
 
 
         //CARGA DE ASSETS
-        // Carga de archivos: Texturas, Modelos, Scripts, etc.
         static Event<const std::string&>& OnLoadAssetStart() {
             static Event<const std::string&> event;  // Archivo que se está cargando
             return event;
         }
 
         static Event<float>& OnLoadAssetProgress() {
-            static Event<float> event;  // Progreso de la carga
+            static Event<float> event;  // Progreso de la carga y la textura
             return event;
         }
 
-        static Event<const std::string&, bool>& OnLoadAssetComplete() {
-            static Event<const std::string&, bool> event;  // Archivo y si fue exitoso
+        static Event<Ref<Texture>, bool>& OnLoadAssetComplete() {
+            static Event<Ref<Texture>, bool> event;  // Archivo y si fue exitoso
             return event;
         }
 

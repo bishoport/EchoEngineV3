@@ -33,3 +33,65 @@ namespace libCore
 
 
 
+
+
+    //Ref<Texture> TextureLoader::LoadTexture(const char* directoryPath, const char* fileName, TEXTURE_TYPES type, GLuint slot)
+    //{
+    //    // Función auxiliar para buscar la textura recursivamente en subcarpetas
+    //    auto findTextureInSubfolders = [](const fs::path& baseDir, const std::string& imageName) -> fs::path
+    //    {
+    //        for (auto& p : fs::recursive_directory_iterator(baseDir))
+    //        {
+    //            if (fs::is_regular_file(p) && p.path().filename() == imageName)
+    //            {
+    //                return p.path();
+    //            }
+    //        }
+    //        return "";
+    //    };
+
+    //    // Ruta completa de la textura
+    //    fs::path imagePathFS = fs::path(directoryPath) / fileName;
+    //    std::string textureKey = imagePathFS.string();
+
+    //    // Comprobar si la textura existe en la ruta inicial
+    //    if (!fs::exists(imagePathFS))
+    //    {
+    //        // Registrar que no se encontró la textura en la ruta inicial
+    //        ConsoleLog::GetInstance().AddLog(LogLevel::L_WARNING, "Textura no encontrada en la ruta inicial. Buscando en subcarpetas...");
+
+    //        // Buscar recursivamente en las subcarpetas
+    //        fs::path foundPath = findTextureInSubfolders(directoryPath, fileName);
+
+    //        if (foundPath.empty())
+    //        {
+    //            ConsoleLog::GetInstance().AddLog(LogLevel::L_ERROR, "Textura no encontrada en subcarpetas: " + std::string(fileName));
+    //            return nullptr;
+    //        }
+
+    //        imagePathFS = foundPath;  // Actualizar la ruta de la textura encontrada
+    //        textureKey = imagePathFS.string();
+    //        ConsoleLog::GetInstance().AddLog(LogLevel::L_SUCCESS, "Textura encontrada en: " + textureKey);
+    //    }
+
+    //    // Cargar la imagen con stb_image
+    //    int width, height, nrChannels;
+    //    unsigned char* data = stbi_load(imagePathFS.string().c_str(), &width, &height, &nrChannels, 0);
+    //    if (!data) {
+    //        ConsoleLog::GetInstance().AddLog(LogLevel::L_ERROR, "Error al cargar la textura: " + textureKey);
+    //        return nullptr;
+    //    }
+
+    //    // Generar la textura en OpenGL
+    //    GLuint textureID = GenerateTexture(data, width, height, nrChannels, type, slot);
+
+    //    // Liberar la memoria de la imagen cargada
+    //    stbi_image_free(data);
+
+    //    // Crear una nueva instancia de la textura y guardarla en el mapa de texturas cargadas
+    //    auto texture = CreateRef<Texture>(textureID, type, slot);
+    //    ConsoleLog::GetInstance().AddLog(LogLevel::L_SUCCESS, "Textura cargada correctamente: " + textureKey);
+    //    return texture;
+    //}
+
+

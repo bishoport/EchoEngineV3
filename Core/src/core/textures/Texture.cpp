@@ -1,5 +1,4 @@
 #include "Texture.h"
-//#include "../../managers/TextureManager.h"
 #include "../../managers/ShaderManager.h"
 
 namespace libCore
@@ -45,5 +44,18 @@ namespace libCore
     {
         if (loadingImage) return;
         glDeleteTextures(1, &ID);
+    }
+
+    // Obtiene el ID de la textura
+    GLuint Texture::GetTextureID() const
+    {
+        if (loadingImage) return 0;
+        return ID;
+    }
+
+    // Obtiene el tipo de la textura
+    TEXTURE_TYPES Texture::GetType() const
+    {
+        return m_type;
     }
 }

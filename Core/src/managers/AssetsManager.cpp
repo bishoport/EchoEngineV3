@@ -1,36 +1,53 @@
 #include "AssetsManager.h"
 
-#include "TextureManager.h"
-#include "../tools/ModelLoader.h"
+#include "TextureLoader.h"
+#include "ModelLoader.h"
+#include "EventManager.h"
 #include "../tools/ThumbnailGenerator.h"
 
 namespace libCore
 {
 	void AssetsManager::LoadDefaultAssets()
 	{
-		LoadTextureAsset("default_albedo",    (defaultAssetsPathTexture).c_str(), "default_albedo.jpg",    TEXTURE_TYPES::ALBEDO);
-		LoadTextureAsset("default_normal",    (defaultAssetsPathTexture).c_str(), "default_normal.jpg",    TEXTURE_TYPES::NORMAL);
-		LoadTextureAsset("default_metallic",  (defaultAssetsPathTexture).c_str(), "default_metallic.jpg",  TEXTURE_TYPES::METALLIC);
+		// Carga síncrona de las texturas por defecto (bloquea hasta que todas las texturas estén cargadas)
+		LoadTextureAsset("default_albedo", (defaultAssetsPathTexture).c_str(), "default_albedo.jpg", TEXTURE_TYPES::ALBEDO);
+		LoadTextureAsset("default_normal", (defaultAssetsPathTexture).c_str(), "default_normal.jpg", TEXTURE_TYPES::NORMAL);
+		LoadTextureAsset("default_metallic", (defaultAssetsPathTexture).c_str(), "default_metallic.jpg", TEXTURE_TYPES::METALLIC);
 		LoadTextureAsset("default_roughness", (defaultAssetsPathTexture).c_str(), "default_roughness.jpg", TEXTURE_TYPES::ROUGHNESS);
-		LoadTextureAsset("default_ao",        (defaultAssetsPathTexture).c_str(), "default_ao.jpg",        TEXTURE_TYPES::AO);
-		LoadTextureAsset("checker",           (defaultAssetsPathTexture).c_str(), "checker.jpg",           TEXTURE_TYPES::ALBEDO);
+		LoadTextureAsset("default_ao", (defaultAssetsPathTexture).c_str(), "default_ao.jpg", TEXTURE_TYPES::AO);
+		LoadTextureAsset("checker", (defaultAssetsPathTexture).c_str(), "checker.jpg", TEXTURE_TYPES::ALBEDO);
 	}
 
 
+	//SetTexture(key, TextureLoader::getInstance().LoadTexture(directoryPath, fileName, type, slot));
+	
 	//--TEXTURES
-	Ref<Texture> AssetsManager::LoadTextureAsset(const std::string &key, const char* directoryPath, const char* fileName, TEXTURE_TYPES type)
+	Ref<Texture> AssetsManager::LoadTextureAsset(const std::string& key, const char* directoryPath, const char* fileName, TEXTURE_TYPES type)
 	{
-		// Registrar los detalles de la carga de la textura en la consola
 		int slot = 0;
-		if (type      == TEXTURE_TYPES::ALBEDO)    slot = 0;
+		if (type == TEXTURE_TYPES::ALBEDO)         slot = 0;
 		else if (type == TEXTURE_TYPES::NORMAL)    slot = 1;
 		else if (type == TEXTURE_TYPES::METALLIC)  slot = 2;
 		else if (type == TEXTURE_TYPES::ROUGHNESS) slot = 3;
 		else if (type == TEXTURE_TYPES::AO)        slot = 4;
 
-		SetTexture(key, TextureManager::getInstance().LoadTexture(directoryPath, fileName, type, slot));
-
+		SetTexture(key, TextureLoader::getInstance().LoadTexture(directoryPath, fileName, type, slot));
+		
+		/*TextureLoader::getInstance().LoadTexture(directoryPath, fileName, type, slot, key);
+		EventManager::OnLoadAssetComplete().subscribe([this](Ref<Texture> texture, bool success) {
+			if (success) {
+				ConsoleLog::GetInstance().AddLog(LogLevel::L_INFO, "Textura cargada correctamente en el evento.");
+				SetTexture(texture->key, texture);
+			}
+			else {
+				ConsoleLog::GetInstance().AddLog(LogLevel::L_ERROR, "Error al cargar la textura.");
+			}
+			});*/
 		return GetTexture(key);
+	}
+
+	std::size_t AssetsManager::GetNumberOfTextures() const {
+		return loadedTextures.size();
 	}
 	Ref<Texture> AssetsManager::GetTexture(const std::string& name) { // Método para obtener una textura
 		auto it = loadedTextures.find(name);
@@ -46,9 +63,6 @@ namespace libCore
 	const std::unordered_map<std::string, Ref<Texture>>& AssetsManager::GetAllTextures() const {
 		return loadedTextures;
 	}
-	std::size_t AssetsManager::GetNumberOfTextures() const {
-		return loadedTextures.size();
-	}
 	void AssetsManager::SetTexture(const std::string& name, const Ref<Texture>& texture)
 	{
 		loadedTextures[name] = texture;
@@ -58,28 +72,30 @@ namespace libCore
 	}
 	//---------------------------------------------------------------------------------------------------------------------------
 
+
+
+
+
+
+
+
 	//--MODELS
-	void AssetsManager::LoadModelAssetAsync(ImportModelData importModelData)
-	{
-		std::thread([=]() {
-			LoadModelAsset(importModelData);
-			}).detach();
-	}
 	void AssetsManager::LoadModelAsset(ImportModelData importModelData)
 	{
-		Ref<Model> model = ModelLoader::LoadModel(importModelData);
-	
+		Ref<Model> model = ModelLoader::getInstance().LoadModel(importModelData);
+
 		if (model != nullptr)
 		{
 			std::string key = model->name;
 			loadedModels[key] = model;
 			ThumbnailGenerator::GenerateThumbnail(model);
 		}
-		else 
+		else
 		{
 			ConsoleLog::GetInstance().AddLog(LogLevel::L_ERROR, "Error Loading MODEL: " + model->name);
 		}
 	}
+	
 	Ref<Model> AssetsManager::GetModel(const std::string& name) {
 		// Primero, buscamos en el unordered_map de modelos cargados
 		auto it = loadedModels.find(name);
@@ -164,6 +180,7 @@ namespace libCore
 		return nullptr;
 	}
 	//---------------------------------------------------------------------------------------------------------------------------
+
 
 
 	//--MATERIALS

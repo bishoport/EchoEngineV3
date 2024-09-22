@@ -1,7 +1,7 @@
 #pragma once
 #include "../Core.h"
 #include "../../managers/ShaderManager.h"
-#include "../../managers/TextureManager.h"
+#include "../../managers/TextureLoader.h"
 #include "../lights/SunLight.h"
 
 namespace libCore {
@@ -67,7 +67,7 @@ namespace libCore {
             glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 
 
-            cubemapTexture = TextureManager::getInstance().LoadImagesForCubemap(faces);
+            cubemapTexture = TextureLoader::getInstance().LoadImagesForCubemap(faces);
 
         }
 

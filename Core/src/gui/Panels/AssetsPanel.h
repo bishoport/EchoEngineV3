@@ -1,7 +1,6 @@
 #pragma once
 #include "PanelBase.h"
 #include "../../managers/AssetsManager.h"
-//#include "../../managers/SceneManager.h"
 
 namespace libCore
 {
@@ -86,8 +85,12 @@ namespace libCore
                         LuaManager::GetInstance().LoadLuaFile(scriptName, path.string());
                     }
                     else if (path.extension() == ".fbx" || path.extension() == ".obj" || path.extension() == ".gltf") {
-                        isDialogOpen = true;  // Abre el diálogo
+                        isModelDialogOpen = true;  // Abre el diálogo
                         m_DirectoryEntry = directoryEntry;
+                    }
+                    else if (path.extension() == ".jpg" || path.extension() == ".png") {
+                        selectedFilePath = path.string(); // Guarda la ruta completa del archivo
+                        isTextureDialogOpen = true;  // Abre el diálogo de selección de textura
                     }
                 }
 
@@ -106,99 +109,96 @@ namespace libCore
                 ImGui::PopID();
             }
 
-            if (isDialogOpen) {
-                ImGui::OpenPopup("Import Options");
+
+            //--DIALOG IMPORT TEXTURE
+            if (isTextureDialogOpen) {
+                ImGui::OpenPopup("Texture Import Options");
             }
 
-            if (ImGui::BeginPopupModal("Import Options", &isDialogOpen)) {
-                std::filesystem::path fullPath = m_DirectoryEntry;
-                std::string filePath = fullPath.parent_path().string();
-                std::string fileName = fullPath.filename().string();
+            if (ImGui::BeginPopupModal("Texture Import Options", &isTextureDialogOpen, ImGuiWindowFlags_AlwaysAutoResize)) {
+                // Mostrar la ruta al archivo seleccionado
+                ImGui::Text("Ruta del archivo: %s", selectedFilePath.c_str());
 
-                ImGui::Text("Path: %s", filePath.c_str());
-                ImGui::Text("File: %s", fileName.c_str());
-                ImGui::Separator();
+                // Combo box para seleccionar el tipo de textura
+                const char* textureTypes[] = { "ALBEDO", "NORMAL", "METALLIC", "ROUGHNESS", "AO" };
+                static int currentItem = 0;  // Almacena el índice del tipo de textura seleccionado
+                ImGui::Combo("Tipo de textura", &currentItem, textureTypes, IM_ARRAYSIZE(textureTypes));
 
-                ImGui::Checkbox("Invert UV", &importOptions.invertUV);
-                ImGui::Checkbox("Rotate 90 degrees on X-axis", &importOptions.rotate90);
-                ImGui::SliderFloat("Scale", &importOptions.globalScaleFactor, 0.01f, 10.0f, "%.1f");
-                ImGui::Separator();
+                // Botón de Aceptar
+                if (ImGui::Button("Aceptar")) {
+                    // Convertir el índice seleccionado a TEXTURE_TYPES
+                    selectedTextureType = static_cast<TEXTURE_TYPES>(currentItem);
 
-                ImGui::Checkbox("Lights", &importOptions.processLights);
+                    // Cargar la textura con el tipo seleccionado
+                    std::filesystem::path fullPath = selectedFilePath;
+                    std::string filePath = fullPath.parent_path().string();
+                    std::string fileName = fullPath.filename().string();
 
-                // Variables estáticas para manejar la carga
-                static std::atomic<float> loadProgress = 0.0f;
-                static bool isLoading = false;
-                static bool loadComplete = false;
-                static bool loadFailed = false;
-                static std::string loadError;
+                    AssetsManager::GetInstance().LoadTextureAsset(selectedFilePath, filePath.c_str(), fileName.c_str(), selectedTextureType);
 
-                if (!isLoading) {
-                    if (ImGui::Button("Accept")) {
-                        isDialogOpen = false;
-
-                        if (filePath.back() != '\\' && filePath.back() != '/') {
-                            filePath += '\\';
-                        }
-                        importOptions.filePath = filePath;
-                        importOptions.fileName = fileName;
-
-                        // Iniciar la carga en un hilo separado
-                        isLoading = true;
-                        loadComplete = false;
-                        loadFailed = false;
-                        loadProgress = 0.0f;
-
-                        // Suscribirse a eventos de progreso y finalización
-                        EventManager::OnLoadAssetStart().subscribe([](const std::string& fileName) {
-                            // Código opcional para manejar el inicio
-                            std::cout << "Started loading: " << fileName << std::endl;
-                            });
-
-                        EventManager::OnLoadAssetProgress().subscribe([](float progress) {
-                            loadProgress = progress;
-                            });
-
-                        EventManager::OnLoadAssetComplete().subscribe([](const std::string& fileName, bool success) {
-                            if (success) {
-                                loadComplete = true;
-                                isLoading = false;
-                            }
-                            });
-
-                        EventManager::OnLoadAssetFailed().subscribe([](const std::string& fileName, const std::string& error) {
-                            loadFailed = true;
-                            loadError = error;
-                            isLoading = false;
-                            });
-
-                        // Llamar a la carga asíncrona
-                        //AssetsManager::GetInstance().LoadModelAssetAsync(importOptions);
-                        AssetsManager::GetInstance().LoadModelAsset(importOptions);
-                    }
-                    ImGui::SameLine();
-                    if (ImGui::Button("Cancel")) {
-                        isDialogOpen = false;
-                    }
+                    isTextureDialogOpen = false;  // Cerrar el diálogo
                 }
-                else {
-                    // Mostrar el progreso de carga
-                    ImGui::Text("Loading...");
-                    ImGui::ProgressBar(loadProgress);
-                    ImGui::Dummy(ImVec2(0.0f, 5.0f));
 
-                    // Si la carga está completa o ha fallado
-                    if (loadComplete) {
-                        ImGui::Text("Load Complete!");
-                        isDialogOpen = false;  // Cerrar popup al finalizar
-                    }
-                    else if (loadFailed) {
-                        ImGui::TextColored(ImVec4(1, 0, 0, 1), "Load Failed: %s", loadError.c_str());
-                    }
+                ImGui::SameLine();
+
+                // Botón de Cancelar
+                if (ImGui::Button("Cancelar")) {
+                    isTextureDialogOpen = false;  // Cerrar el diálogo sin hacer nada
                 }
 
                 ImGui::EndPopup();
             }
+            //---------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+            if (isModelDialogOpen) {
+                ImGui::OpenPopup("Model Import Options");
+            }
+
+
+
+
+            //--DIALOG IMPORT MODEL
+            if (ImGui::BeginPopupModal("Model Import Options", &isModelDialogOpen))
+            {
+                // Obtener el fullPath y descomponer en filePath y fileName
+                std::filesystem::path fullPath = m_DirectoryEntry;
+                std::string filePath = fullPath.parent_path().string();
+                std::string fileName = fullPath.filename().string();
+
+                // Mostrar el path y el nombre de archivo
+                ImGui::Text("Path: %s", filePath.c_str());
+                ImGui::Text("File: %s", fileName.c_str());
+                ImGui::Separator();
+
+                // Mostrar las opciones de importación
+                ImGui::Checkbox("Invert UV", &importOptions.invertUV);
+                ImGui::Checkbox("Rotate 90 degrees on X-axis", &importOptions.rotate90);
+                ImGui::SliderFloat("Scale", &importOptions.globalScaleFactor, 0.01f, 10.0f, "%.1f", ImGuiSliderFlags_None);
+                ImGui::Separator();
+
+                ImGui::Checkbox("Lights", &importOptions.processLights);
+
+                // Botón de Aceptar
+                if (ImGui::Button("Accept")) {
+                    //isModelDialogOpen = false;  // Cierra el diálogo
+
+                    if (filePath.back() != '\\' && filePath.back() != '/') {
+                        filePath += '\\';  // Asegura que el filePath termina en '\'
+                    }
+                    importOptions.filePath = filePath;
+                    importOptions.fileName = fileName;
+
+                    AssetsManager::GetInstance().LoadModelAsset(importOptions);
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Cancel")) {
+                    isModelDialogOpen = false;  // Cierra el diálogo
+                }
+                ImGui::EndPopup();
+            }
+            //---------------------------------------------------------------------------------------------------------------------------------------------------------
+
 
 
             ImGui::Columns(1);
@@ -207,8 +207,6 @@ namespace libCore
             ImGui::End();
         }
 
-
-
         void Shutdown() override
         {
             // Liberación de recursos si es necesario
@@ -216,16 +214,26 @@ namespace libCore
         }
 
     private:
-        std::filesystem::path m_BaseDirectory;
-        std::filesystem::path m_CurrentDirectory;
-        std::filesystem::path m_DirectoryEntry;
 
-        // Íconos (suponiendo que estos son texturas de OpenGL)
+        //Iconos (suponiendo que estos son texturas de OpenGL)
         GLuint iconFolder = 0;
         GLuint iconModel = 0;
         GLuint iconImage = 0;
 
+        //Paths
+        std::filesystem::path m_BaseDirectory;
+        std::filesystem::path m_CurrentDirectory;
+        std::filesystem::path m_DirectoryEntry;
+
+        // Variables para el diálogo de textura
+        bool isTextureDialogOpen = false;
+        std::string selectedFilePath;
+        TEXTURE_TYPES selectedTextureType = TEXTURE_TYPES::ALBEDO;
+
+        
+        // Variables para el diálogo de modelos
+        bool isModelDialogOpen = false;
         ImportModelData importOptions;
-        bool isDialogOpen = false;
+        
     };
 }

@@ -4,7 +4,6 @@
 #include "../managers/ShaderManager.h"
 #include "../managers/AssetsManager.h"
 #include "../managers/ViewportManager.hpp"
-
 #include "../tools/ConsoleLog.h"
 #include "../gui/GuiLayer.h"
 
@@ -119,8 +118,6 @@ namespace libCore
 		importModelData.skeletal = false;
 		importModelData.modelID = 0;
 		importModelData.globalScaleFactor = 1.0f;
-
-
 		AssetsManager::GetInstance().LoadModelAsset(importModelData);
 
 		//PREPARE ENGINE
@@ -160,6 +157,8 @@ namespace libCore
             m_deltaTime = currentFrameTime - lastFrameTime;
             lastFrameTime = currentFrameTime;
 			//---------
+
+			MainThreadTaskManager::GetInstance().ExecuteTasks();
 
 			//--UPDATE SCENE
 			UpdateBeforeRender();

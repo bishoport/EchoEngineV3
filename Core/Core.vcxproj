@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClInclude Include="src\core\lights\SunLight.h" />
     <ClInclude Include="src\gui\Panels\DynamicSkyboxPanel.h" />
+    <ClInclude Include="src\managers\MainThreadTaskManager.h" />
     <ClInclude Include="src\tools\ConsoleLog.h" />
     <ClInclude Include="src\core\Core.h" />
     <ClInclude Include="src\core\geometry\AABB.h" />
@@ -74,7 +75,7 @@
     <ClInclude Include="src\managers\InputManager.h" />
     <ClInclude Include="src\managers\LightsManager.hpp" />
     <ClInclude Include="src\managers\ShaderManager.h" />
-    <ClInclude Include="src\managers\TextureManager.h" />
+    <ClInclude Include="src\managers\TextureLoader.h" />
     <ClInclude Include="src\managers\ViewportManager.hpp" />
     <ClInclude Include="src\managers\WindowManager.h" />
     <ClInclude Include="src\scene\Scene.h" />
@@ -84,7 +85,7 @@
     <ClInclude Include="src\tools\cameras\GameCamera.h" />
     <ClInclude Include="src\tools\Itc_matrix_floats.hpp" />
     <ClInclude Include="src\tools\KeyCodes.h" />
-    <ClInclude Include="src\tools\ModelLoader.h" />
+    <ClInclude Include="src\managers\ModelLoader.h" />
     <ClInclude Include="src\tools\MouseButtonCodes.h" />
     <ClInclude Include="src\tools\ThumbnailGenerator.h" />
     <ClInclude Include="vendor\imGizmo\ImGuizmo.h" />
@@ -122,10 +123,10 @@
     <ClCompile Include="src\managers\AssetsManager.cpp" />
     <ClCompile Include="src\managers\InputManager.cpp" />
     <ClCompile Include="src\managers\ShaderManager.cpp" />
-    <ClCompile Include="src\managers\TextureManager.cpp" />
+    <ClCompile Include="src\managers\TextureLoader.cpp" />
     <ClCompile Include="src\tools\cameras\Camera.cpp" />
     <ClCompile Include="src\tools\cameras\EditorCamera.cpp" />
-    <ClCompile Include="src\tools\ModelLoader.cpp" />
+    <ClCompile Include="src\managers\ModelLoader.cpp" />
     <ClCompile Include="src\tools\ThumbnailGenerator.cpp" />
     <ClCompile Include="vendor\glad\glad.c" />
     <ClCompile Include="vendor\imGizmo\ImGuizmo.cpp" />

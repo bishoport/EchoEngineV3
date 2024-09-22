@@ -1,6 +1,6 @@
 #include "ThumbnailGenerator.h"
 
-#include "../managers/TextureManager.h"
+#include "../managers/TextureLoader.h"
 
 //#include "../Core/EngineOpenGL.h"
 
@@ -79,7 +79,7 @@ void libCore::ThumbnailGenerator::CaptureScreenshot(const std::string& filePath,
     glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, pixels);
 
     // Guardar la imagen como PNG
-    TextureManager::getInstance().SaveImage(filePath.c_str(), width, height, 3, pixels);
+    TextureLoader::getInstance().SaveImage(filePath.c_str(), width, height, 3, pixels);
 
     delete[] pixels;
 
