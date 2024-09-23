@@ -19,6 +19,8 @@ namespace libCore
 
 		Ref<Model> LoadModel(ImportModelData importOptions);
 
+		const std::unordered_map<unsigned int, Ref<Mesh>>& GetProcessedMeshes() const;
+
 	private:
 		ModelLoader() {}
 

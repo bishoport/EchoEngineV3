@@ -33,7 +33,7 @@ namespace libCore
                     if (ImGui::CollapsingHeader(ICON_FA_ID_BADGE " ID")) {
                         std::string uuidStr = std::to_string(static_cast<uint64_t>(idComponent.ID));
                         ImGui::Text("UUID: %s", uuidStr.c_str());
-
+                        ImGui::Checkbox("Mark To Delete", &idComponent.markToDelete);
                         // Botón para eliminar la entidad
                         if (ImGui::Button(ICON_FA_TRASH " Delete Entity")) {
                             EntityManager::GetInstance().MarkToDeleteRecursively(EntityManager::GetInstance().currentSelectedEntityInScene);
@@ -41,6 +41,17 @@ namespace libCore
                         }
                     }
                 }
+
+                //--CreatedInRunTimeComponent_component
+                if (EntityManager::GetInstance().HasComponent<CreatedInRunTimeComponent>(selectedEntity)) {
+                    auto& createdInRunTimeComponent = EntityManager::GetInstance().GetComponent<CreatedInRunTimeComponent>(selectedEntity);
+                    if (ImGui::CollapsingHeader(ICON_FA_ID_BADGE "DESTROY_")) 
+                    {
+                        ImGui::Text("CREATED IN RUN TIME, THIS ENTITY WILL BE DESTORY");
+                    }
+                }
+                
+
                 //--TAG_COMPONENT
                 if (EntityManager::GetInstance().HasComponent<TagComponent>(selectedEntity)) {
                     auto& tagComponent = EntityManager::GetInstance().GetComponent<TagComponent>(selectedEntity);

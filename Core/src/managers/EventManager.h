@@ -2,6 +2,7 @@
 
 #include "../core/Core.h"
 
+#include "../core/textures/Texture.h"
 
 namespace libCore
 {
@@ -37,7 +38,7 @@ namespace libCore
     class EventManager {
     public:
 
-        //WINDOW
+        //--WINDOW
         static Event<int, int>& OnWindowResizeEvent() {
             static Event<int, int> event;
             return event;
@@ -48,7 +49,14 @@ namespace libCore
         }
         //-----------------
 
-        //PANEL EVENTS
+        // ENGINE STATE CHANGE
+        static Event<EditorStates>& OnEngineStateChanged() {
+            static Event<EditorStates> event;  // Notifica el nuevo estado del motor
+            return event;
+        }
+        //-----------------
+
+        //--PANEL EVENTS
         static Event<const std::string&, const glm::vec2&, const  glm::vec2&>& OnPanelResizedEvent() {
             static Event<const std::string&, const  glm::vec2&, const  glm::vec2&> event;
             return event;
@@ -64,7 +72,7 @@ namespace libCore
         //-----------------
 
 
-        //CARGA DE ASSETS
+        //--CARGA DE ASSETS
         static Event<const std::string&>& OnLoadAssetStart() {
             static Event<const std::string&> event;  // Archivo que se está cargando
             return event;

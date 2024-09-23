@@ -5,14 +5,6 @@
 
 namespace libCore
 {
-    enum EngineStates
-    {
-        THINKING,
-        EDITOR,
-        FULL_PLAY
-    };
-
-
     class Engine
     {
     public:
@@ -28,12 +20,19 @@ namespace libCore
 
         void UpdateBeforeRender();
 
+        void SetEngineState(EditorStates newState);
+
+        EditorStates GetEngineState() const {
+            return m_CurrentState;
+        }
         Timestep GetDeltaTime();
 
         bool usingGizmo = false;
+
     private:
         //ENGINE LIFE--CYCLE
-        EngineStates engineState = EngineStates::EDITOR;
+        EngineMode   m_EngineMode = EngineMode::EDITOR_MODE;
+        EditorStates m_CurrentState = EditorStates::NONE;
         bool running = false;
         Timestep m_deltaTime = 0.0f;
     };

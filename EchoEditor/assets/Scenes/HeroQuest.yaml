@@ -1,0 +1,99 @@
+Scene: Untitled
+Models:
+  - ModelName: Primitives.glb
+    ImportModelData:
+      filePath: assets/models/
+      fileName: Primitives.glb
+      modelID: 0
+      invertUV: false
+      rotate90: false
+      skeletal: false
+      useCustomTransform: true
+      processLights: false
+      globalScaleFactor: 1
+Entities:
+  - Entity: 1048577
+    IDComponent:
+      ID: 16f8a4aa98a2e3f4
+      MarkToDelete: false
+    TagComponent:
+      Tag: Cube
+    TransformComponent:
+      Transform:
+        Position:
+          - 11.7502909
+          - 0
+          - 0.300317168
+        Rotation:
+          - 0
+          - -0
+          - 0
+        Scale:
+          - 1
+          - 1
+          - 1
+    MeshComponent:
+      MeshName: Cube
+    MaterialComponent:
+      Material:
+        MaterialName: default_material
+        ShaderName: default
+        AlbedoColor:
+          - 1
+          - 1
+          - 1
+        NormalStrength: 1
+        MetallicValue: 0
+        RoughnessValue: 0.699999988
+        AoValue: 1
+      AlbedoMap:
+        TexturePath: ""
+        TextureType: 0
+        TextureUnit: 0
+      NormalMap:
+        TexturePath: ""
+        TextureType: 1
+        TextureUnit: 1
+      MetallicMap:
+        TexturePath: ""
+        TextureType: 2
+        TextureUnit: 2
+      RoughnessMap:
+        TexturePath: ""
+        TextureType: 3
+        TextureUnit: 3
+      AOMap:
+        TexturePath: ""
+        TextureType: 4
+        TextureUnit: 4
+  - Entity: 0
+    IDComponent:
+      ID: 0da399f3ae4537f4
+      MarkToDelete: false
+    TagComponent:
+      Tag: Board
+    TransformComponent:
+      Transform:
+        Position:
+          - 0
+          - 0
+          - 0
+        Rotation:
+          - 0
+          - 0
+          - 0
+        Scale:
+          - 1
+          - 1
+          - 1
+    ChildComponent:
+      []
+    ScriptComponent:
+      Scripts:
+        - filePath: assets\scripts\Tablero.lua
+          name: Tablero
+      ExposedVars:
+        Tablero:
+          int_width: 26
+          selectedModel: Cylinder
+          int_height: 19

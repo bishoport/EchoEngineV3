@@ -1,0 +1,56 @@
+Scene: new_scene_temp
+Entities:
+  - Entity: 0
+    IDComponent:
+      ID: 8d5544cdf47d90ef
+      MarkToDelete: false
+    TagComponent:
+      Tag: Cylinder
+    TransformComponent:
+      Transform:
+        Position:
+          - 0
+          - 0
+          - 3
+        Rotation:
+          - 0
+          - 0
+          - 0
+        Scale:
+          - 1
+          - 1
+          - 1
+    MeshComponent:
+      MeshName: Cylinder
+    MaterialComponent:
+      Material:
+        MaterialName: default_material
+        ShaderName: default
+        AlbedoColor:
+          - 1
+          - 1
+          - 1
+        NormalStrength: 1
+        MetallicValue: 0
+        RoughnessValue: 0.699999988
+        AoValue: 1
+      AlbedoMap:
+        TexturePath: ""
+        TextureType: 0
+        TextureUnit: 0
+      NormalMap:
+        TexturePath: ""
+        TextureType: 1
+        TextureUnit: 1
+      MetallicMap:
+        TexturePath: ""
+        TextureType: 2
+        TextureUnit: 2
+      RoughnessMap:
+        TexturePath: ""
+        TextureType: 3
+        TextureUnit: 3
+      AOMap:
+        TexturePath: ""
+        TextureType: 4
+        TextureUnit: 4

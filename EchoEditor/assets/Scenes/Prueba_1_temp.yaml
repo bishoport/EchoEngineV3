@@ -1,0 +1,32 @@
+Scene: Prueba_1_temp
+Entities:
+  - Entity: 0
+    IDComponent:
+      ID: 1b9ec4a199f38094
+      MarkToDelete: false
+    TagComponent:
+      Tag: new_GameObject
+    TransformComponent:
+      Transform:
+        Position:
+          - 2.09854364
+          - 0
+          - -8.25688457
+        Rotation:
+          - 0
+          - -0
+          - 0
+        Scale:
+          - 1
+          - 1
+          - 1
+    ScriptComponent:
+      Scripts:
+        - filePath: assets\scripts\TransformTest.lua
+          name: TransformTest
+      ExposedVars:
+        TransformTest:
+          selectedModel: Cube
+          scale: 1
+          speed: 0.231000006
+          rotationSpeed: 30

@@ -21,7 +21,12 @@
   <ItemGroup>
     <ClInclude Include="src\core\lights\SunLight.h" />
     <ClInclude Include="src\gui\Panels\DynamicSkyboxPanel.h" />
+    <ClInclude Include="src\gui\Panels\MeshesPanel.h" />
+    <ClInclude Include="src\gui\Panels\ScenePanel.h" />
+    <ClInclude Include="src\gui\PopupManager.h" />
+    <ClInclude Include="src\managers\BackgroundTaskManager.h" />
     <ClInclude Include="src\managers\MainThreadTaskManager.h" />
+    <ClInclude Include="src\managers\SceneHistoryManager.h" />
     <ClInclude Include="src\tools\ConsoleLog.h" />
     <ClInclude Include="src\core\Core.h" />
     <ClInclude Include="src\core\geometry\AABB.h" />
@@ -35,7 +40,6 @@
     <ClInclude Include="src\core\renderer\Renderer.hpp" />
     <ClInclude Include="src\core\renderer\DynamicSkybox.h" />
     <ClInclude Include="src\core\renderer\Viewport.h" />
-    <ClInclude Include="src\core\renderer\Viewport.hpp" />
     <ClInclude Include="src\core\shaders\Shader.h" />
     <ClInclude Include="src\core\textures\Material.h" />
     <ClInclude Include="src\core\textures\Texture.h" />
@@ -46,7 +50,6 @@
     <ClInclude Include="src\core\Timestep.h" />
     <ClInclude Include="src\core\UUID.h" />
     <ClInclude Include="src\ecs\Components.h" />
-    <ClInclude Include="src\gui\Panels\COSA.H" />
     <ClInclude Include="src\gui\Panels\LuaPanel.h" />
     <ClInclude Include="src\managers\EntityManager.h" />
     <ClInclude Include="src\ecs\scripting\EntityManagerBridge.h" />

@@ -16,6 +16,8 @@ namespace libCore
 			return instance;
 		}
 
+		void SetupSceneManager();
+
 		//--CURRENT SCENE
 		void CreateNewScene(const std::string& sceneName);
 		Ref<Scene> GetCurrentScene() const{return currentScene;}
@@ -29,21 +31,19 @@ namespace libCore
 		void LoadComponentsScene();
 		//---------------------------------------------------------
 
+		void SerializeSceneTask();
+		void LoadSceneTask(const std::string& sceneName);
+		void SerializeComponentsSceneTask();
+		void DeserializeComponentsSceneTask();
 
 	private:
 		// Constructor privado
-		SceneManager() {}
+		SceneManager(){}
 		SceneManager(const SceneManager&) = delete;
 		SceneManager& operator=(const SceneManager&) = delete;
 		~SceneManager() {}
 
 		// La escena actualmente cargada
 		Ref<Scene> currentScene;
-
-		//--SERIALIZATION SCENE
-		void SerializeScene();
-		void DeserializeScene(std::string _sceneName);
-		void SerializeComponents();
-		void DeserializeComponents();
 	};
 }

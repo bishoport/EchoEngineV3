@@ -23,7 +23,7 @@ namespace libCore
         int width;
         int height;
 
-        float speed = 0.06f;
+        float speed = 0.01f;
         float sensitivity = 100.0f;
 
         float yaw = -90.0f;   // Inicialmente apuntando hacia el frente

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../Core.h"
-#include "Viewport.hpp"
+
 #include "DynamicSkybox.h"
 #include "IBL.h"
 #include "../../tools/Itc_matrix_floats.hpp"

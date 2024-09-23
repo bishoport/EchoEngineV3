@@ -92,7 +92,8 @@ namespace libCore
             finalTransform.c4 = 0.0;
 
             // Verificar si la malla ya ha sido procesada
-            if (processedMeshes.find(meshIndex) != processedMeshes.end()) {
+            if (processedMeshes.find(meshIndex) != processedMeshes.end()) 
+            {
                 // Reutilizar la malla existente
                 modelChild->meshes.push_back(processedMeshes[meshIndex]);
             }
@@ -119,54 +120,9 @@ namespace libCore
             ModelLoader::processNode(node->mChildren[i], scene, modelParent, finalTransform);
         }
     }
-
-    //void ModelLoader::processNode(aiNode* node, const aiScene* scene, Ref<Model> modelParent, aiMatrix4x4 _nodeTransform)
-    //{
-    //    glm::mat4 glmNodeTransform = aiMatrix4x4ToGlm(_nodeTransform);
-    //    glm::mat4 glmNodeTransformation = aiMatrix4x4ToGlm(node->mTransformation);
-
-    //    float globalRotationDeg_X = 0.0f;
-    //    if (current_importOptions.rotate90) globalRotationDeg_X = -90.0f;
-
-    //    glm::mat4 rotationX = glm::rotate(glm::mat4(1.0f), glm::radians(globalRotationDeg_X), glm::vec3(1.0f, 0.0f, 0.0f));
-    //    glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(current_importOptions.globalScaleFactor, current_importOptions.globalScaleFactor, current_importOptions.globalScaleFactor));
-    //    glm::mat4 glmFinalTransform = rotationX * scaleMatrix * glmNodeTransform * glmNodeTransformation;
-    //    aiMatrix4x4 finalTransform = glmToAiMatrix4x4(glmFinalTransform);
-
-
-    //    for (unsigned int i = 0; i < node->mNumMeshes; i++) {
-
-    //        aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-
-    //        auto modelChild = CreateRef<Model>();
-
-    //        // Aquí establecemos la relación padre-hijo
-    //        modelChild->modelParent = modelParent;
-
-    //        // Asignar el nombre del nodo de Assimp al modelo
-    //        modelChild->name = node->mName.C_Str();
-
-    //        processMaterials(mesh, scene, modelChild);
-
-    //        modelParent->children.push_back(modelChild);
-    //    }
-
-
-    //    for (unsigned int i = 0; i < node->mNumChildren; i++) 
-    //    {
-    //        ModelLoader::processNode(node->mChildren[i], scene, modelParent, finalTransform);
-    //    }
-    //}
     void ModelLoader::processMesh(aiMesh* mesh, const aiScene* scene, Ref<Model> modelBuild, aiMatrix4x4 finalTransform, int meshIndex)
     {
         auto meshBuild = CreateRef<Mesh>();
-
-        //modelBuild->transform->position = glm::vec3(finalTransform.a4, finalTransform.b4, finalTransform.c4);
-
-        ////Reset de la posicion original para que nos devuelva la matriz en la posicion 0,0,0
-        //finalTransform.a4 = 0.0;
-        //finalTransform.b4 = 0.0;
-        //finalTransform.c4 = 0.0;
 
         // Cargando los datos de los vértices y los índices
         for (unsigned int i = 0; i < mesh->mNumVertices; i++)
@@ -287,14 +243,14 @@ namespace libCore
 
         Ref<Material> material;
 
-        if (existingMaterial) {
-            //std::cout << "Using existing material: " << materialName << std::endl;
+        if (existingMaterial) 
+        {
             material = existingMaterial;
         }
-        else {
+        else 
+        {
             // Crear un nuevo material
             material = CreateRef<Material>(materialName);
-            //material->materialName = materialName;
 
             // Obtener el color difuso del material
             aiColor3D color(1.f, 1.f, 1.f);
@@ -386,8 +342,6 @@ namespace libCore
                 std::string key = materialName + "_ROUGHNESS";
                 Ref<Texture> texture = AssetsManager::GetInstance().LoadTextureAsset(key, directoryPath.c_str(), fileName.c_str(), TEXTURE_TYPES::ROUGHNESS);
 
-                //Ref<Texture> texture = libCore::TextureManager::LoadTexture(directoryPath.c_str(), fileName.c_str(), TEXTURE_TYPES::ROUGHNESS, 3);
-
                 if (texture != nullptr) {
                     material->roughnessMap = texture;
                 }
@@ -401,14 +355,16 @@ namespace libCore
 
             // Añadir el material al MaterialManager
             AssetsManager::GetInstance().addMaterial(material);
-
         }
 
         // Añadir el material al modelo
         modelBuild->materials.push_back(material);
     }
+    const std::unordered_map<unsigned int, Ref<Mesh>>& ModelLoader::GetProcessedMeshes() const
+    {
+        return processedMeshes;
+    }
     //------------------------------------------------------------------------------
-
 
 
     //-------------------------------------TOOLS---------------------------
@@ -444,7 +400,6 @@ namespace libCore
         return path.substr(lastSlash + 1);
     }
     //-----------------------------------------------------------------------
-
 
 
     //-----------------------------------FEATURES PROCESS---------------------------

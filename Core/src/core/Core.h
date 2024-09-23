@@ -88,6 +88,24 @@ enum CAMERA_CONTROLLERS
 	EDITOR,
 	GAME
 };
+
+enum EngineMode
+{
+	EDITOR_MODE,
+	FULL_PLAY_MODE
+};
+
+enum EditorStates
+{
+	NONE,
+	BUSY,
+	STOP,
+	PREPARE_STOP,
+	PAUSE,
+	PREPARE_PLAY,
+	PLAY,
+};
+
 struct ImportModelData {
 	std::string filePath = "";
 	std::string fileName = "";
@@ -128,11 +146,3 @@ struct Vertex
 	//int m_BoneIDs[MAX_BONE_INFLUENCE]; //bone indexes which will influence this vertex
 	//float m_Weights[MAX_BONE_INFLUENCE]; //weights from each bone
 };
-
-
-
-class Texture;
-class Material;
-class AABB;
-class Mesh;
-class Model;

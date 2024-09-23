@@ -1,10 +1,12 @@
 #include "GuiLayer.h"
-#include "GuiStyle.h"  // Incluir el estilo personalizado
+#include "GuiStyle.h"
 
 #include <imGizmo/ImGuizmo.h>
 #include <imgui_internal.h>
+#include <IconFontCppHeaders/IconsFontAwesome5.h>
 
 #include "../managers/WindowManager.h"
+//#include "../managers/SceneManager.h"
 
 //--Panels
 #include "Panels/InspectorPanel.h"
@@ -19,10 +21,9 @@
 #include "Panels/TexturesPanel.h"
 #include "Panels/LuaPanel.h"
 #include "Panels/GlobalIluminationPanel.h"
-
-
-#include <IconFontCppHeaders/IconsFontAwesome5.h>
 #include "Panels/DynamicSkyboxPanel.h"
+#include "Panels/MeshesPanel.h"
+#include "Panels/ScenePanel.h"
 
 
 namespace libCore
@@ -67,12 +68,16 @@ namespace libCore
         auto luaPanel                      = CreateRef<LuaPanel>();
         auto globalIluminationPanel        = CreateRef<GlobalIluminationPanel>();
         auto dynamicSkyboxPanel            = CreateRef<DynamicSkyboxPanel>();
+        auto meshesPanel                   = CreateRef<MeshesPanel>();
+        auto scenePanel                    = CreateRef<ScenePanel>();
 
        
         AddPanel(inspectorPanel);
         AddPanel(editorCameraPanel);
         AddPanel(assetsPanel);
         AddPanel(modelsPanel);
+        //AddPanel(meshesPanel);
+        AddPanel(scenePanel);
         AddPanel(hierarchyPanel);
         AddPanel(logPanel);
         AddPanel(materialsPanel);
@@ -81,9 +86,10 @@ namespace libCore
         AddPanel(globalIluminationPanel);
         AddPanel(frameBuffersPreviewPanel);
         AddPanel(dynamicSkyboxPanel);
+        
         AddPanel(viewportPanel); //<- El ultimo
         //--
-        
+
         // Inicializar todos los paneles
         for (auto& panel : m_panels)
         {
@@ -177,18 +183,18 @@ namespace libCore
         // Main Menu Bar
         renderMainMenuBar();
         
-
         // Render the dock space
         renderDockers();
 
-       
+        //Render popUps
+        PopupManager::GetInstance().ShowPopups(); // Llamada para renderizar todos los popups
 
         // Render the panels
         for (auto& panel : m_panels)
         {
             if (panel->IsVisible())
             {
-                panel->Draw();  // Asegúrate de que no haya ningún ImGui::End() adicional aquí
+                panel->Draw();
             }
         }
 
@@ -196,6 +202,7 @@ namespace libCore
         //SE hace en el panel de ViewportPanel
         //--------------------------------------------------------
 
+        //Render Tool bar
         DrawToolBarEditor();
 
         // Render ImGui elements and end frame
@@ -259,16 +266,12 @@ namespace libCore
     {
         if (ImGui::BeginMainMenuBar())
         {
-            if (ImGui::BeginMenu(ICON_FA_FILE " Scene")) // Agregar el icono de un archivo
-            {
-                if (ImGui::MenuItem(ICON_FA_PLUS " New Scene")) { /* Acción para crear nueva escena */ }
-                if (ImGui::MenuItem(ICON_FA_SAVE " Save Scene")) { /* Acción para guardar escena */ }
-                ImGui::EndMenu();
-            }
-
             if (ImGui::BeginMenu(ICON_FA_CUBE " GameObjects")) // Agregar el icono de un cubo
             {
-                if (ImGui::MenuItem(ICON_FA_EYE " Check Entities")) { /* Acción para chequear entidades */ }
+                if (ImGui::MenuItem(ICON_FA_CUBE "Empty"))
+                {
+                    EntityManager::GetInstance().CreateEmptyGameObject("new_GameObject");
+                }
                 if (ImGui::BeginMenu(ICON_FA_LIGHTBULB " Lights"))
                 {
                     if (ImGui::MenuItem(ICON_FA_SUN " Directional Light")) { /* Crear luz direccional */ }
@@ -276,6 +279,15 @@ namespace libCore
                     if (ImGui::MenuItem(ICON_FA_RULER_COMBINED " Area Light")) { /* Crear luz de área */ }
                     ImGui::EndMenu();
                 }
+                if (ImGui::BeginMenu(ICON_FA_CAMERA "Cameras"))
+                {
+                    if (ImGui::MenuItem(ICON_FA_CAMERA "Camera"))
+                    {
+                        EntityManager::GetInstance().CreateCamera();
+                    }
+                    ImGui::EndMenu();
+                }
+
                 ImGui::EndMenu();
             }
 
@@ -288,7 +300,6 @@ namespace libCore
             ImGui::EndMainMenuBar();
         }
     }
-
     void GuiLayer::DrawToolBarEditor()
     {
         // Barra de herramientas ubicada debajo del menú superior
@@ -298,16 +309,16 @@ namespace libCore
         ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
         if (ImGui::Begin("Toolbar", nullptr, window_flags))
         {
-            if (ImGui::Button(ICON_FA_EDIT " Editor")) {
-                // Acción para cambiar a modo Editor
+            if (ImGui::Button(ICON_FA_STOP "")) {
+                Engine::GetInstance().SetEngineState(EditorStates::PREPARE_STOP);
             }
             ImGui::SameLine();
-            if (ImGui::Button(ICON_FA_PLAY " Editor Play")) {
-                // Acción para iniciar el modo de juego en el editor
+            if (ImGui::Button(ICON_FA_PAUSE "")) {
+                Engine::GetInstance().SetEngineState(EditorStates::PAUSE);
             }
             ImGui::SameLine();
-            if (ImGui::Button(ICON_FA_GAMEPAD " Play")) {
-                // Acción para cambiar al modo Play
+            if (ImGui::Button(ICON_FA_PLAY "")) {
+                Engine::GetInstance().SetEngineState(EditorStates::PREPARE_PLAY);
             }
 
             //-- ImGIZMO CONTROLS AREA
@@ -328,69 +339,8 @@ namespace libCore
         }
         ImGui::End();
     }
-
-
-    //void GuiLayer::DrawToolBarEditor()
-    //{
-    //    // Barra de herramientas ubicada debajo del menú superior
-    //    ImGui::SetNextWindowPos(ImVec2(0, ImGui::GetFrameHeight()));
-    //    ImGui::SetNextWindowSize(ImVec2(ImGui::GetMainViewport()->Size.x, 40));
-
-    //    ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
-    //    if (ImGui::Begin("Toolbar", nullptr, window_flags))
-    //    {
-    //        if (ImGui::Button("Editor")) {
-    //            //EngineOpenGL::GetInstance().ChangeEngineState(EngineStates::EDITOR);
-    //        }
-    //        ImGui::SameLine();
-    //        if (ImGui::Button("Editor Play")) {
-    //            //EngineOpenGL::GetInstance().ChangeEngineState(EngineStates::EDITOR_PLAY);
-    //        }
-    //        ImGui::SameLine();
-    //        if (ImGui::Button("Play")) {
-    //            //EngineOpenGL::GetInstance().ChangeEngineState(EngineStates::PLAY);
-    //        }
-
-    //        //-- ImGIZMO CONTROLS AREA
-    //        static bool useLocalTransform = true; // Variable para controlar el modo de transformación
-    //        static bool snapEnabled = false; // Variable para controlar si el snap está habilitado
-    //        static float snapValue[3] = { 1.0f, 1.0f, 1.0f }; // Valores de snap para mover, rotar, y escalar
-
-    //        // ImGui button to toggle transform mode
-    //        ImGui::SameLine();
-    //        if (ImGui::Button(useLocalTransform ? "Switch to Global" : "Switch to Local"))
-    //        {
-    //            useLocalTransform = !useLocalTransform;
-    //           // m_useLocalTransform = useLocalTransform;
-    //        }
-    //        ImGui::SameLine();
-    //        // Toggle snap with a button
-    //        if (ImGui::Button(snapEnabled ? "Disable Snap" : "Enable Snap"))
-    //        {
-    //            snapEnabled = !snapEnabled;
-    //           // m_snapEnabled = snapEnabled;
-    //        }
-    //        //--
-    //    }
-    //    ImGui::End();
-
-    //    /*if (ImGui::Begin("Engine State")) {
-    //        if (ImGui::Button("Editor")) {
-    //            EngineOpenGL::GetInstance().ChangeEngineState(EngineStates::EDITOR);
-    //        }
-    //        ImGui::SameLine();
-    //        if (ImGui::Button("Editor Play")) {
-    //            EngineOpenGL::GetInstance().ChangeEngineState(EngineStates::EDITOR_PLAY);
-    //        }
-    //        ImGui::SameLine();
-    //        if (ImGui::Button("Play")) {
-    //            EngineOpenGL::GetInstance().ChangeEngineState(EngineStates::PLAY);
-    //        }
-    //    }
-    //    ImGui::End();*/
-    //}
     //-------------------------------------------------------------------------------
-
+    
     //--PANELS
     void GuiLayer::AddPanel(std::shared_ptr<PanelBase> panel)
     {
@@ -398,7 +348,7 @@ namespace libCore
     }
     //-------------------------------------------------------------------------------
 
-    //--GIZMO
+    //--ImGIZMO
     void GuiLayer::checkGizmo(Ref<Viewport> viewport)
     {
         ImGuizmo::SetDrawlist(ImGui::GetWindowDrawList());
@@ -473,8 +423,5 @@ namespace libCore
             }
         }
     }
-
-
-
     //-------------------------------------------------------------------------------
 }

@@ -26,11 +26,12 @@ namespace libCore
         float sceneRadiusOffset = 10.0f;
 
         // Shadow values
-        int shadowMapResolution = 1024;
+        int shadowMapResolution = 2048;
 
         glm::mat4 shadowMVP = glm::mat4(1.0f);
         bool drawShadows = false;
-        float near_plane = 0.1f, far_plane = 100.0f;
+        float near_plane = 0.10f;
+        float far_plane = 100.0f;
         float shadowIntensity = 0.5f;
         bool usePoisonDisk = false;
         float orthoLeft = -10.0f;
@@ -53,7 +54,7 @@ namespace libCore
             0.5, 0.5, 0.5, 1.0
         );
         //--SCENE BOUNDS
-        std::pair<glm::vec3, float> SceneBounds = { glm::vec3(0.0f), 30.0f };
+        std::pair<glm::vec3, float> SceneBounds = { glm::vec3(0.0f), 1.0f };
 
 
     public:

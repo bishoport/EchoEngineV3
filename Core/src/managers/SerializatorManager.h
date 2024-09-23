@@ -12,6 +12,9 @@
 #include "../core/model//Mesh.h"
 #include "LuaManager.h"
 
+#include "../ecs/Components.h"
+#include "../ecs/scripting/ScriptComponent.h"
+
 // YAML Conversion Specializations
 namespace YAML 
 {

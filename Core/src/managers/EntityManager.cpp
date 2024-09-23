@@ -1,10 +1,11 @@
 #include "EntityManager.h"
 
+#include "../core/Engine.h"
+
 #include "../core/model/Model.h"
 #include <minwindef.h>
 #include <libloaderapi.h>
 #include "LuaManager.h"
-
 
 
 namespace libCore
@@ -78,10 +79,10 @@ namespace libCore
         m_registry->emplace<TransformComponent>(entity);
 
 
-        //if(EngineOpenGL::GetInstance().engineState == EDITOR_PLAY || EngineOpenGL::GetInstance().engineState == PLAY)
-        //{
-        //    m_registry->emplace<CreatedInRunTimeComponent>(entity);
-        //}
+        if(Engine::GetInstance().GetEngineState() == PLAY)
+        {
+            m_registry->emplace<CreatedInRunTimeComponent>(entity);
+        }
 
         return entity;
     }
@@ -391,9 +392,6 @@ namespace libCore
 
 
     //--INIT SCRIPTS Components
-    void EntityManager::RegisterScripts() 
-    {
-    }
     void EntityManager::InitScripts() 
     {
         auto scriptView = m_registry->view<ScriptComponent>();
@@ -419,6 +417,7 @@ namespace libCore
     void EntityManager::UpdateGameObjects(Timestep deltaTime)
     {
         //Destruccion real antes de actualizar
+        //(Quizá mejor crear un componente temporal para esto)
         auto IDCompView = m_registry->view<IDComponent>();
         for (auto entity : IDCompView) {
             auto& idComponent = GetComponent<IDComponent>(entity);
@@ -429,9 +428,9 @@ namespace libCore
         }
 
         // Actualizar scripts (si es necesario)
-        //if (EngineOpenGL::GetInstance().engineState == EDITOR_PLAY || EngineOpenGL::GetInstance().engineState == PLAY) {
-        //    UpdateScripts(deltaTime);
-        //}
+        if (runScripting) {
+            UpdateScripts(deltaTime);
+        }
 
         //UPDATE ALL TRANSFORM CHILDREN
         auto rootView = m_registry->view<TransformComponent>(entt::exclude<ParentComponent>);
@@ -591,7 +590,6 @@ namespace libCore
         }
     }
 
-    
 
     //DEBUG ENTITIES
     void EntityManager::PrintEntityInfo(entt::entity entity, const Ref<entt::registry>& registry)

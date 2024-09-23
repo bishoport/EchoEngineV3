@@ -14,6 +14,10 @@ namespace libCore
         void Init() override {
             // Inicialización del selector de texturas
             m_TextureOptions = { "Position", "Normal", "Albedo", "MetallicRoughness", "Specular", "Final" };
+
+
+
+
         }
 
         void Draw() override {

@@ -4,9 +4,12 @@
 #include "../managers/ShaderManager.h"
 #include "../managers/AssetsManager.h"
 #include "../managers/ViewportManager.hpp"
+#include "../managers/BackgroundTaskManager.h"
+
 #include "../tools/ConsoleLog.h"
 #include "../gui/GuiLayer.h"
 
+#include "../managers/SceneManager.h"
 
 namespace libCore
 {
@@ -15,7 +18,7 @@ namespace libCore
     {
         if (full_play == true)
         {
-            engineState = FULL_PLAY;
+			m_EngineMode = FULL_PLAY_MODE;
         }
 
         // Utiliza WindowManager para inicializar la ventana
@@ -120,15 +123,15 @@ namespace libCore
 		importModelData.globalScaleFactor = 1.0f;
 		AssetsManager::GetInstance().LoadModelAsset(importModelData);
 
-		//PREPARE ENGINE
-        if (engineState == EDITOR)
+		//PREPARE ENGINE MODE
+        if (m_EngineMode == EDITOR)
         {
             // -- IMGUI
             GuiLayer::GetInstance().Init();
             // -- VIEWPORT
             ViewportManager::GetInstance().CreateViewport("EDITOR CAMERA", glm::vec3(0.0f, 20.0f, 0.0f), 800, 600, CAMERA_CONTROLLERS::EDITOR);
         }
-        else if (engineState == FULL_PLAY)
+        else if (m_EngineMode == FULL_PLAY_MODE)
         {
             // -- IMGUI
             GuiLayer::GetInstance().Init();
@@ -142,6 +145,22 @@ namespace libCore
         Renderer::getInstance().initialize();
         //---------------------------------------------------------------------------
 
+		//--INITIAL-STATE
+		if (m_EngineMode == EDITOR)
+		{
+			m_CurrentState = STOP;
+		}
+		else
+		{
+			m_CurrentState = STOP;
+		}
+		//---------------------------------------------------------------------------
+
+		//--INITIAL-SCENE
+		SceneManager::GetInstance().CreateNewScene("new_scene");
+		SceneManager::GetInstance().SetupSceneManager();
+		//---------------------------------------------------------------------------
+
 		return true;
     }
     void Engine::InitializeMainLoop()
@@ -150,40 +169,48 @@ namespace libCore
 
         running = true;
 
+		BackgroundTaskManager::GetInstance().Start();
+
         while (!WindowManager::GetInstance().ShouldClose() && running)
         {
+
+			MainThreadTaskManager::GetInstance().ExecuteTasks();
+
             //--DELTA TIME
             Timestep currentFrameTime = static_cast<float>(glfwGetTime());
             m_deltaTime = currentFrameTime - lastFrameTime;
             lastFrameTime = currentFrameTime;
 			//---------
 
-			MainThreadTaskManager::GetInstance().ExecuteTasks();
+			
+			if (m_CurrentState != BUSY)
+			{
+				//--UPDATE SCENE
+				UpdateBeforeRender();
+				//---------
 
-			//--UPDATE SCENE
-			UpdateBeforeRender();
-			//---------
+				//--RENDER SCENE
+				Renderer::getInstance().RenderViewport(ViewportManager::GetInstance().viewports[0], m_deltaTime);
+				//---------
 
-            //--RENDER SCENE
-            Renderer::getInstance().RenderViewport(ViewportManager::GetInstance().viewports[0], m_deltaTime);
-			//---------
-
-            //--VIEWPORT OUT
-            if (engineState == EDITOR)
-            {
-				glDisable(GL_DEPTH_TEST);  // Desactiva el depth test para que el gizmo se dibuje en la parte superior
-				glEnable(GL_BLEND);
-                //--RENDER IN ViewportPanel
-                GuiLayer::GetInstance().DrawImGUI();
-				// Restaurar el estado OpenGL tras renderizar ImGui/ImGuizmo
-				glEnable(GL_DEPTH_TEST);
-            }
-            else if (engineState == FULL_PLAY)
-            {
-                //--RENDER IN Quad
-                Renderer::getInstance().ShowViewportInQuad(ViewportManager::GetInstance().viewports[0]);
-            }
-            //---------
+				//--VIEWPORT OUT
+				if (m_EngineMode == EDITOR)
+				{
+					glDisable(GL_DEPTH_TEST);  // Desactiva el depth test para que el gizmo se dibuje en la parte superior
+					glEnable(GL_BLEND);
+					//--RENDER IN ViewportPanel
+					GuiLayer::GetInstance().DrawImGUI();
+					// Restaurar el estado OpenGL tras renderizar ImGui/ImGuizmo
+					glEnable(GL_DEPTH_TEST);
+				}
+				else if (m_EngineMode == FULL_PLAY_MODE)
+				{
+					//--RENDER IN Quad
+					Renderer::getInstance().ShowViewportInQuad(ViewportManager::GetInstance().viewports[0]);
+				}
+				//---------
+			}
+			
 
             
 
@@ -195,13 +222,14 @@ namespace libCore
             WindowManager::GetInstance().SwapBuffers();
         }
 
+		BackgroundTaskManager::GetInstance().Stop();
         glfwTerminate();
     }
     void Engine::StopMainLoop()
     {
         running = false;
     }
-
+	// -------------------------------------------------
 
 
 	//--UPDATES
@@ -228,22 +256,6 @@ namespace libCore
 		}
 		else
 		{
-			//if (InputManager::Instance().IsKeyJustPressed(GLFW_KEY_F1)) //Editor
-			//{
-			//	ChangeEngineState(EngineStates::EDITOR);
-			//}
-			//else if (InputManager::Instance().IsKeyJustPressed(GLFW_KEY_F2)) //Editor Play
-			//{
-			//	ChangeEngineState(EngineStates::EDITOR_PLAY);
-			//}
-			//else if (InputManager::Instance().IsKeyJustPressed(GLFW_KEY_F3)) //Play
-			//{
-			//	ChangeEngineState(EngineStates::PLAY);
-			//}
-			//else if (InputManager::Instance().IsKeyJustPressed(GLFW_KEY_ESCAPE)) //BACK TO EDITOR MODE WITH ESC FROM PLAY MODE
-			//{
-			//	ChangeEngineState(EngineStates::EDITOR);
-			//}
 			//--ImGizmo
 			if (InputManager::Instance().IsKeyJustPressed(GLFW_KEY_1))
 			{
@@ -261,17 +273,9 @@ namespace libCore
 		//------------------------------------------------------------------------------
 		//------------------------------------------------------------------------------
 
-
 		//--UPDATE DynamicSkyBox & SunLight
 		//Renderer::getInstance().dynamicSkybox->sunLight->UpdateSceneRadius();
 		//Renderer::getInstance().dynamicSkybox->SyncSunLightWithSkybox();
-
-
-		//--DIRECTIONAL LIGHT UPDATE
-		//if (LightsManager::GetInstance().GetDirectionalLight() != nullptr)
-		//{
-		//	LightsManager::GetInstance().GetDirectionalLight()->UpdateLightPosition();
-		//}
 		//-------------------------------------------------------------------
 
 		//--UPDATE ENTITIES WITH TRANSFORM & AABB
@@ -305,7 +309,7 @@ namespace libCore
 
 
 
-		if (engineState == EDITOR && GuiLayer::GetInstance().mouseInsideViewport == true)
+		if (m_CurrentState == EDITOR && GuiLayer::GetInstance().mouseInsideViewport == true)
 		{
 			//--MOUSE PICKING
 			if (usingGizmo == false)
@@ -364,6 +368,16 @@ namespace libCore
 
 
     //--OTHERS
+	void Engine::SetEngineState(EditorStates newState)
+	{
+		{
+			if (m_CurrentState != newState) 
+			{
+				m_CurrentState = newState;
+				EventManager::OnEngineStateChanged().trigger(m_CurrentState);
+			}
+		}
+	}
     Timestep Engine::GetDeltaTime()
     {
         return m_deltaTime;

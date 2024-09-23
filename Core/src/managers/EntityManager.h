@@ -15,6 +15,9 @@ namespace libCore
 {
     class EntityManager {
     public:
+
+        bool runScripting = false;
+
         Scope<entt::registry> m_registry;
 
         std::vector<entt::entity> entitiesInRay;
@@ -75,8 +78,6 @@ namespace libCore
 
     private:
         EntityManager();
-
-        void RegisterScripts();
 
     public:
         void PrintEntityInfo(entt::entity entity, const Ref<entt::registry>& registry);

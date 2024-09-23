@@ -1,0 +1,15 @@
+Scene: Untitled
+Models:
+  - ModelName: Primitives.glb
+    ImportModelData:
+      filePath: assets/models/
+      fileName: Primitives.glb
+      modelID: 0
+      invertUV: false
+      rotate90: false
+      skeletal: false
+      useCustomTransform: true
+      processLights: false
+      globalScaleFactor: 1
+Entities:
+  []

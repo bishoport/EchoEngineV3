@@ -8,34 +8,38 @@
 
 #include "Panels/PanelBase.h"
 
+#include "PopupManager.h"
+
 namespace libCore
 {
     class GuiLayer
     {
     public:
-        // Método estático para obtener la instancia única del singleton
+        
+        //--Instance
         static GuiLayer& GetInstance();
-
-        // Elimina el constructor por copia y el operador de asignación para evitar duplicación de la instancia
         GuiLayer(const GuiLayer&) = delete;
         GuiLayer& operator=(const GuiLayer&) = delete;
+        //--
 
         //-- PUBLIC LIFE CYCLE
         void Init();
         void DrawImGUI();
         void Shutdown();
-
+        //--
+        
+        //--ImGuizmo
         GizmoOperation m_GizmoOperation;
         bool isSelectingObject = false;
         bool showModelSelectionCombo = false;
-
         bool mouseInsideViewport = false;
         bool mouseFocusedViewport = false;
-
         void checkGizmo(Ref<Viewport> viewport);
         bool m_useLocalTransform = true; // Variable para controlar el modo de transformación
         bool m_snapEnabled = false; // Variable para controlar si el snap está habilitado
         float m_snapValue[3] = { 1.0f, 1.0f, 1.0f }; // Valores de snap para mover, rotar, y escalar
+        //--
+
     private:
         // Constructor y destructor privados para garantizar que solo se pueda crear desde dentro de la clase
         GuiLayer();
@@ -49,23 +53,17 @@ namespace libCore
         void begin();
         void Draw();
         void end();
-        //-----------------------------------------------
+        //--------------------
 
         //--CONTENEDORES PRINCIPALES
         void DrawToolBarEditor();
         void renderDockers();
         void renderMainMenuBar();
-        //void renderEditorViewportPanel();
         //-----------------------------------------------
 
         //--PANELS
         void AddPanel(Ref<PanelBase> panel);
-        std::vector<Ref<PanelBase>> m_panels;  // Contenedor de paneles
+        std::vector<Ref<PanelBase>> m_panels;
         //-----------------------------------------------
-
-        //--ImGuizmo
-        
-        
-        
     };
 }
