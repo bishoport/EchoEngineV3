@@ -25,6 +25,26 @@ namespace libCore
             // Crear un nodo del árbol para el modelo
             if (ImGui::TreeNode((ICON_FA_CUBES + model->name).c_str()))  // Añadir icono de modelo
             {
+                // Mostrar información sobre el número de huesos si el modelo tiene datos esqueléticos
+                if (!model->m_BoneInfoMap.empty())
+                {
+                    ImGui::Text("Huesos en el modelo: %d", model->GetBoneCount());
+
+                    if (ImGui::TreeNode("Huesos del modelo"))
+                    {
+                        for (const auto& bone : model->GetBoneInfoMap())
+                        {
+                            ImGui::Text("Hueso: %s, ID: %d", bone.first.c_str(), bone.second.id);
+                            ImGui::Text("Offset: [%.2f, %.2f, %.2f]", bone.second.offset[3][0], bone.second.offset[3][1], bone.second.offset[3][2]);
+                        }
+                        ImGui::TreePop();
+                    }
+                }
+                else
+                {
+                    ImGui::Text("No hay huesos asociados a este modelo.");
+                }
+
                 // Recorrer los meshes del modelo
                 for (const auto& mesh : model->meshes)
                 {
@@ -51,6 +71,7 @@ namespace libCore
                 ImGui::TreePop();
             }
         }
+
 
         // Función para mostrar los hijos del modelo en un grid ajustable
         void DrawModelChildrenInGrid(const std::vector<Ref<libCore::Model>>& children)
@@ -125,10 +146,6 @@ namespace libCore
 
             // Slider para ajustar el tamaño de las previsualizaciones
             ImGui::SliderFloat(ICON_FA_EXPAND_ARROWS_ALT " Preview Size", &m_previewSize, 64.0f, 256.0f, "%.0f");  // Añadir icono de slider
-
-            //ImGui::Spacing();
-            //ImGui::Text(ICON_FA_CUBE " Model Count: %zu", models.size());  // Añadir icono de conteo de modelos
-            //ImGui::Spacing();
 
             for (const auto& modelPair : models)
             {

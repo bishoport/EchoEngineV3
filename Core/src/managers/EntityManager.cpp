@@ -111,6 +111,7 @@ namespace libCore
                 meshComponent.instanceMatrices.push_back(instanceMatrix);
                 auto& abbComponent = m_registry->emplace<AABBComponent>(entity);
                 abbComponent.aabb->CalculateAABB(mesh->vertices);
+                meshComponent.originalModel = model;
             }
         }
 
@@ -513,6 +514,7 @@ namespace libCore
         if (!meshComponent.instanceMatrices.empty())
         {
             meshComponent.mesh->DrawInstanced(static_cast<GLsizei>(meshComponent.instanceMatrices.size()), meshComponent.instanceMatrices);
+            //meshComponent.mesh->Draw();  //<-Dibujado sin Instancia (el modelo Original)
         }
     }
     //------------------------------------------------------------------------------------

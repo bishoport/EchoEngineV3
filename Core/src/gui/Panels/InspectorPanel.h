@@ -149,6 +149,19 @@ namespace libCore
                         ImGui::Text("Mesh Name: %s", meshComponent.mesh->meshName.c_str());
                         ImGui::Text("Instance: %s", meshComponent.isInstance ? "Yes" : "No");
                         ImGui::Checkbox("Renderable", &meshComponent.renderable);
+                        ImGui::Spacing();
+                        ImGui::Spacing();
+                        // Mostrar información sobre huesos si existen
+                        if (meshComponent.originalModel && !meshComponent.originalModel->GetBoneInfoMap().empty()) {
+                            if (ImGui::CollapsingHeader("Bone Information")) {
+                                ImGui::Text("Number of Bones: %d", meshComponent.originalModel->GetBoneCount());
+
+                                // Listar huesos
+                                for (const auto& [boneName, boneInfo] : meshComponent.originalModel->GetBoneInfoMap()) {
+                                    ImGui::Text("Bone: %s, ID: %d", boneName.c_str(), boneInfo.id);
+                                }
+                            }
+                        }
                     }
                 }
                 //--AABB_COMPONENT
