@@ -164,6 +164,65 @@ namespace libCore
                         }
                     }
                 }
+                //--ANIMATION_COMPONENT
+                if (EntityManager::GetInstance().HasComponent<AnimationComponent>(selectedEntity)) {
+                    if (ImGui::CollapsingHeader(ICON_FA_FILM " Animation")) {  // Icono de "película" para el componente de animación
+                        auto& animationComponent = EntityManager::GetInstance().GetComponent<AnimationComponent>(selectedEntity);
+
+                        // Mostrar la animación actual
+                        ImGui::Text(ICON_FA_PLAY " Current Animation: %s", animationComponent.currentAnimation.empty() ? "None" : animationComponent.currentAnimation.c_str());  // Icono de "reproducción"
+                        ImGui::SliderFloat(ICON_FA_TACHOMETER_ALT " Playback Speed", &animationComponent.playbackSpeed, 0.1f, 3.0f, "%.1f");  // Icono de "velocidad"
+                        ImGui::Checkbox(ICON_FA_PLAY_CIRCLE " Playing", &animationComponent.isPlaying);  // Icono de "círculo de reproducción"
+
+                        // Si existe una animación actual
+                        if (auto currentAnim = animationComponent.GetCurrentAnimation()) {
+                            ImGui::Text(ICON_FA_CLOCK " Animation Time: %.2f", animationComponent.animationTime);  // Icono de "reloj"
+                            ImGui::Text(ICON_FA_HOURGLASS_HALF " Duration: %.2f", currentAnim->GetDuration());  // Icono de "duración"
+                            ImGui::Text(ICON_FA_CLOCK " Ticks Per Second: %.2f", currentAnim->GetTicksPerSecond());  // Icono de "metrónomo"
+
+                            // Mostrar huesos involucrados en la animación actual
+                            if (ImGui::CollapsingHeader(ICON_FA_BONE " Bones Information")) {  // Icono de "hueso"
+                                const auto& boneMap = currentAnim->GetBoneIDMap();
+                                const auto& finalBoneMatrices = animationComponent.GetFinalBoneMatrices();
+                                ImGui::Text(ICON_FA_CALENDAR " Number of Bones: %d", (int)boneMap.size());  // Icono de "calendario" para contar
+
+                                int boneIndex = 0;
+                                for (const auto& [boneName, boneInfo] : boneMap) {
+                                    ImGui::Text(ICON_FA_BONE " Bone: %s, ID: %d", boneName.c_str(), boneInfo.id);  // Icono de "hueso" para cada hueso
+
+                                    if (boneIndex < finalBoneMatrices.size()) {
+                                        // Extraer la posición del hueso a partir de la matriz final
+                                        glm::vec3 bonePosition = glm::vec3(finalBoneMatrices[boneIndex][3]);
+
+                                        // Mostrar la posición del hueso en el panel
+                                        ImGui::Text("Position: X: %.2f, Y: %.2f, Z: %.2f", bonePosition.x, bonePosition.y, bonePosition.z);
+                                    }
+                                    boneIndex++;
+                                }
+                            }
+                        }
+
+                        ImGui::Spacing();
+                        ImGui::Separator();
+
+                        // Mostrar y seleccionar las animaciones disponibles
+                        if (!animationComponent.animations.empty()) {
+                            if (ImGui::CollapsingHeader(ICON_FA_LIST " Available Animations")) {  // Icono de "lista"
+                                for (const auto& [animationName, animRef] : animationComponent.animations) {
+                                    if (ImGui::Selectable((ICON_FA_FILM " " + animationName).c_str(), animationComponent.currentAnimation == animationName)) {
+                                        // Cambiar la animación actual
+                                        animationComponent.SetCurrentAnimation(animationName);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+
+
+
+
                 //--AABB_COMPONENT
                 if (EntityManager::GetInstance().HasComponent<AABBComponent>(selectedEntity)) {
                     if (ImGui::CollapsingHeader(ICON_FA_CUBE " AABB")) {  // Añadir icono de cubo para el AABB

@@ -1,30 +1,30 @@
 Scene: new_scene_temp
 Entities:
-  - Entity: 0
+  - Entity: 1
     IDComponent:
-      ID: 8d5544cdf47d90ef
+      ID: 9dfdc55594887012
       MarkToDelete: false
     TagComponent:
-      Tag: Cylinder
+      Tag: Vampire
     TransformComponent:
       Transform:
         Position:
           - 0
           - 0
-          - 3
+          - 0
         Rotation:
           - 0
-          - 0
+          - -0
           - 0
         Scale:
           - 1
           - 1
           - 1
     MeshComponent:
-      MeshName: Cylinder
+      MeshName: Vampire-lib
     MaterialComponent:
       Material:
-        MaterialName: default_material
+        MaterialName: Vampire_MAT
         ShaderName: default
         AlbedoColor:
           - 1
@@ -54,3 +54,23 @@ Entities:
         TexturePath: ""
         TextureType: 4
         TextureUnit: 4
+  - Entity: 0
+    IDComponent:
+      ID: eda5aa0b2f55c1b4
+      MarkToDelete: false
+    TagComponent:
+      Tag: dancing_vampire.dae
+    TransformComponent:
+      Transform:
+        Position:
+          - 0
+          - 0
+          - 0
+        Rotation:
+          - 0
+          - 0
+          - 0
+        Scale:
+          - 1
+          - 1
+          - 1

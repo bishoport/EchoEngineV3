@@ -128,8 +128,6 @@ namespace libCore {
             //--------------------------------------------------------------------------------
             //-----------------------DIRECTIONAL LIGHT SHADOW PASS----------------------------
             //--------------------------------------------------------------------------------
-            //auto& directionalLight = LightsManager::GetInstance().GetDirectionalLight();
-            
             auto& sunLight = dynamicSkybox->sunLight;
             if (sunLight != nullptr && sunLight->drawShadows) {
                 PushDebugGroup("Directional Light Shadow Pass");
@@ -163,11 +161,9 @@ namespace libCore {
                 glFinish(); // Espera a que el framebuffer de sombra termine antes de proceder
                 PopDebugGroup();
             }
-            //glViewport(0, 0, static_cast<GLsizei>(viewport->viewportSize.x), static_cast<GLsizei>(viewport->viewportSize.y));
             int shadowMapWidth = 1024; // o el tamaño que definas
             int shadowMapHeight = 1024;
             glViewport(0, 0, shadowMapWidth, shadowMapHeight);
-            //--------------------------------------------------------------------------------
             //--------------------------------------------------------------------------------
 
 
@@ -175,7 +171,6 @@ namespace libCore {
             //------------------------------------------------------------------------------------------------------
             //---------------------------------------------DEFERRED-------------------------------------------------
             //------------------------------------------------------------------------------------------------------
-
             // 1.1 Renderizado de geometría en el GBuffer
             PushDebugGroup("Deferred Geometry Pass");
             viewport->gBuffer->bindGBuffer();

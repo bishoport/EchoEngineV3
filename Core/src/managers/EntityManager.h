@@ -51,7 +51,7 @@ namespace libCore
         void UpdateScripts(Timestep deltaTime);
         void UpdateGameObjects(Timestep deltaTime);
         void DrawGameObjects(const std::string& shader);
-        void DrawOneGameObject(TransformComponent& transformComponent, MeshComponent& meshComponent, MaterialComponent& materialComponent, const std::string& shader);
+        void DrawOneGameObject(entt::entity entity, const std::string& shader);
         void DrawABBGameObjectMeshComponent(const std::string& shader);
         void CheckRayModelIntersection(const glm::vec3& rayOrigin, const glm::vec3& rayDirection);
         void CheckInstancesInRunTime();

@@ -113,7 +113,16 @@ namespace libCore
                 abbComponent.aabb->CalculateAABB(mesh->vertices);
                 meshComponent.originalModel = model;
             }
+
+            if (model->importModelData.skeletal == true)
+            {
+                auto& animationComponent = m_registry->emplace<AnimationComponent>(entity, model);
+                animationComponent.AddAnimation("dance", "C:/Users/bisho/OneDrive/Escritorio/EchoEngine_2024/EchoEngine/EchoEditor/assets/models/vampire/dancing_vampire.dae");
+                animationComponent.SetCurrentAnimation("dance");
+            }
         }
+
+        
 
         // Asignar los componentes de herencia
         if (parent != entt::null) {
@@ -413,12 +422,10 @@ namespace libCore
     //------------------------------------------------------------------------------------
 
 
-
     //--ACTUALIZADOR DE FUNCIONES UPDATES ANTES DEL RENDER DE LOS COMPONENTES
     void EntityManager::UpdateGameObjects(Timestep deltaTime)
     {
-        //Destruccion real antes de actualizar
-        //(Quizá mejor crear un componente temporal para esto)
+        // Destrucción real antes de actualizar
         auto IDCompView = m_registry->view<IDComponent>();
         for (auto entity : IDCompView) {
             auto& idComponent = GetComponent<IDComponent>(entity);
@@ -428,35 +435,34 @@ namespace libCore
             }
         }
 
+        // ACTUALIZACION DE LOS ANIMATION
+        auto viewAnimation = m_registry->view<AnimationComponent>();
+        for (auto entity : viewAnimation) {
+            auto& animationComponent = viewAnimation.get<AnimationComponent>(entity);
+
+            // Actualiza el tiempo y el estado de la animación
+            animationComponent.Update(deltaTime);
+
+            // Actualiza las transformaciones de los huesos si está reproduciendo la animación
+            if (animationComponent.isPlaying) {
+                Ref<Animation> currentAnimation = animationComponent.GetCurrentAnimation();
+                if (currentAnimation) {
+                    // Recalcular las transformaciones de los huesos en base al tiempo de la animación
+                    animationComponent.CalculateBoneTransform(&currentAnimation->GetRootNode(), glm::mat4(1.0f));
+                }
+            }
+        }
+
         // Actualizar scripts (si es necesario)
         if (runScripting) {
             UpdateScripts(deltaTime);
         }
 
-        //UPDATE ALL TRANSFORM CHILDREN
+        // UPDATE ALL TRANSFORM CHILDREN
         auto rootView = m_registry->view<TransformComponent>(entt::exclude<ParentComponent>);
         for (auto entity : rootView) {
             UpdateAccumulatedTransforms(entity);
         }
-
-
-        // Actualizar las cámaras
-        //auto CameraCompView = m_registry->view<CameraComponent, TransformComponent>();
-        //
-        //for (auto entity : CameraCompView) {
-        //    auto& cameraComponent = GetComponent<CameraComponent>(entity);
-        //    auto& transformComponent = GetComponent<TransformComponent>(entity);
-        //
-        //    glm::vec3 forward = transformComponent.transform->rotation * glm::vec3(0.0f, 0.0f, -1.0f);
-        //    cameraComponent.view = glm::lookAt(transformComponent.transform->position, transformComponent.transform->position + forward, cameraComponent.Up);
-        //
-        //    if (cameraComponent.width > 0 && cameraComponent.height > 0) {
-        //        cameraComponent.projection = glm::perspective(glm::radians(cameraComponent.FOVdeg), (float)cameraComponent.width / (float)cameraComponent.height, cameraComponent.nearPlane, cameraComponent.farPlane);
-        //    }
-        //
-        //    cameraComponent.cameraMatrix = cameraComponent.projection * cameraComponent.view;
-        //}
-
 
         // Actualizar los AABB
         auto viewAABB = m_registry->view<TransformComponent, AABBComponent>();
@@ -468,19 +474,9 @@ namespace libCore
             aabbComponent.aabb->UpdateAABB(globalTransform);
         }
     }
+
     //------------------------------------------------------------------------------------
 
-    //--DRAW MESH Component (Son llamadas desde el Renderer cuando le toque)
-    void EntityManager::DrawGameObjects(const std::string& shader)
-    {
-        auto view = m_registry->view<TransformComponent, MeshComponent, MaterialComponent,AABBComponent>();
-        for (auto entity : view) {
-            auto& transform = view.get<TransformComponent>(entity);
-            auto& mesh = view.get<MeshComponent>(entity);
-            auto& material = view.get<MaterialComponent>(entity);
-            auto& aabb = view.get<AABBComponent>(entity).aabb;
-
-            DrawOneGameObject(transform, mesh, material, shader);
 
             /*if (EngineOpenGL::GetInstance().CheckAABBInFrustum(aabb->minBounds, aabb->maxBounds))
             {
@@ -491,11 +487,22 @@ namespace libCore
             {
                 mesh.renderable = false;
             }*/
+
+    //--DRAW MESH Component (Son llamadas desde el Renderer cuando le toque)
+    void EntityManager::DrawGameObjects(const std::string& shader)
+    {
+        auto view = m_registry->view<TransformComponent, MeshComponent, MaterialComponent, AABBComponent>();
+        for (auto entity : view) {
+            DrawOneGameObject(entity, shader);
         }
     }
-    void EntityManager::DrawOneGameObject(TransformComponent& transformComponent, MeshComponent& meshComponent, MaterialComponent& materialComponent, const std::string& shader)
+    void EntityManager::DrawOneGameObject(entt::entity entity, const std::string& shader)
     {
-        // Valores
+        auto& transformComponent = GetComponent<TransformComponent>(entity);
+        auto& meshComponent = GetComponent<MeshComponent>(entity);
+        auto& materialComponent = GetComponent<MaterialComponent>(entity);
+
+        // Valores del material
         libCore::ShaderManager::Get(shader)->setVec3("albedoColor", materialComponent.material->albedoColor);
         libCore::ShaderManager::Get(shader)->setFloat("normalStrength", materialComponent.material->normalStrength);
         libCore::ShaderManager::Get(shader)->setFloat("metallicValue", materialComponent.material->metallicValue);
@@ -510,13 +517,70 @@ namespace libCore
         // Usar la transformación acumulada
         libCore::ShaderManager::Get(shader)->setMat4("model", transformComponent.accumulatedTransform);
 
-        // Si hay instancias, dibujarlas
-        if (!meshComponent.instanceMatrices.empty())
-        {
-            meshComponent.mesh->DrawInstanced(static_cast<GLsizei>(meshComponent.instanceMatrices.size()), meshComponent.instanceMatrices);
-            //meshComponent.mesh->Draw();  //<-Dibujado sin Instancia (el modelo Original)
+        // Determinar si el modelo usa huesos
+        bool useBones = false;
+        if (HasComponent<AnimationComponent>(entity)) {
+            auto& animationComponent = GetComponent<AnimationComponent>(entity);
+            if (animationComponent.GetCurrentAnimation() != nullptr) {
+                useBones = true;
+                auto boneTransforms = animationComponent.GetFinalBoneMatrices();
+
+                // Enviar las matrices de huesos al shader
+                for (int i = 0; i < boneTransforms.size(); ++i) {
+                    libCore::ShaderManager::Get(shader)->setMat4("finalBonesMatrices[" + std::to_string(i) + "]", boneTransforms[i]);
+
+                    // Imprimir la matriz de hueso para depuración
+                    std::cout << "Bone " << i << " Matrix:\n";
+                    for (int row = 0; row < 4; ++row) {
+                        std::cout << boneTransforms[i][row][0] << " " << boneTransforms[i][row][1] << " "
+                            << boneTransforms[i][row][2] << " " << boneTransforms[i][row][3] << "\n";
+                    }
+                    std::cout << std::endl;
+                }
+            }
         }
+
+
+        // Establecer el valor de 'useBones' en el shader
+        libCore::ShaderManager::Get(shader)->setBool("useBones", useBones);
+
+        meshComponent.mesh->DrawInstanced(static_cast<GLsizei>(meshComponent.instanceMatrices.size()), meshComponent.instanceMatrices);
+
+        //// Dibujar el mesh (instanciado o no)
+        //if (!meshComponent.instanceMatrices.empty()) {
+        //    meshComponent.mesh->DrawInstanced(static_cast<GLsizei>(meshComponent.instanceMatrices.size()), meshComponent.instanceMatrices);
+        //}
+        //else {
+        //    meshComponent.mesh->Draw();
+        //}
     }
+
+
+
+    //void EntityManager::DrawOneGameObject(TransformComponent& transformComponent, MeshComponent& meshComponent, MaterialComponent& materialComponent, const std::string& shader)
+    //{
+    //    // Valores
+    //    libCore::ShaderManager::Get(shader)->setVec3("albedoColor", materialComponent.material->albedoColor);
+    //    libCore::ShaderManager::Get(shader)->setFloat("normalStrength", materialComponent.material->normalStrength);
+    //    libCore::ShaderManager::Get(shader)->setFloat("metallicValue", materialComponent.material->metallicValue);
+    //    libCore::ShaderManager::Get(shader)->setFloat("roughnessValue", materialComponent.material->roughnessValue);
+
+    //    // Texturas
+    //    materialComponent.material->albedoMap->Bind(shader);
+    //    materialComponent.material->normalMap->Bind(shader);
+    //    materialComponent.material->metallicMap->Bind(shader);
+    //    materialComponent.material->roughnessMap->Bind(shader);
+
+    //    // Usar la transformación acumulada
+    //    libCore::ShaderManager::Get(shader)->setMat4("model", transformComponent.accumulatedTransform);
+
+    //    // Si hay instancias, dibujarlas
+    //    if (!meshComponent.instanceMatrices.empty())
+    //    {
+    //        meshComponent.mesh->DrawInstanced(static_cast<GLsizei>(meshComponent.instanceMatrices.size()), meshComponent.instanceMatrices);
+    //        //meshComponent.mesh->Draw();  //<-Dibujado sin Instancia (el modelo Original)
+    //    }
+    //}
     //------------------------------------------------------------------------------------
 
 

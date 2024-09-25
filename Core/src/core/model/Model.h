@@ -45,6 +45,16 @@ namespace libCore
 		int& GetBoneCount() { return m_BoneCounter; }
 
 
+		// Función para obtener la matriz de transformación de un hueso
+		glm::mat4 GetBoneTransform(int boneID) const {
+			for (const auto& [boneName, boneInfo] : m_BoneInfoMap) {
+				if (boneInfo.id == boneID) {
+					return boneInfo.offset; // Devuelve la matriz de transformación (offset) del hueso
+				}
+			}
+			return glm::mat4(1.0f);  // Devuelve la matriz identidad si no se encuentra el hueso
+		}
+
 		void Draw(const std::string& shader)
 		{
 			//Bind Textures & Values

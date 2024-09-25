@@ -71,7 +71,7 @@ namespace libCore
             aiMesh* mesh = scene->mMeshes[meshIndex];
 
             auto modelChild = CreateRef<Model>();
-
+            modelChild->importModelData = current_importOptions;
             // Aquí establecemos la relación padre-hijo
             modelChild->modelParent = modelParent;
 
@@ -274,10 +274,6 @@ namespace libCore
             std::cout << "Total huesos procesados: " << boneCount << std::endl;
         }
     }
-
-
-
-
     void SkeletalModelLoader::SetVertexBoneDataToDefault(Vertex& vertex)
     {
         for (int i = 0; i < MAX_BONE_INFLUENCE; i++)
@@ -298,6 +294,9 @@ namespace libCore
             }
         }
     }
+    
+    
+    
     void SkeletalModelLoader::processMaterials(aiMesh* mesh, const aiScene* scene, Ref<Model> modelBuild)
     {
         // Obtener el material del mesh
