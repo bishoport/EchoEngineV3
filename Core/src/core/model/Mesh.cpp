@@ -13,6 +13,7 @@ namespace libCore
         EBO EBO(indices);
 
         // Habilitar y configurar los atributos de vértices
+        // 
         // Posiciones de vértices
         glEnableVertexAttribArray(0);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
@@ -32,6 +33,19 @@ namespace libCore
         // Bitangentes de vértices
         glEnableVertexAttribArray(4);
         glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, bitangent));
+
+
+        //SKELETAL
+        // ids
+        glEnableVertexAttribArray(5);
+        glVertexAttribIPointer(5, 4, GL_INT, sizeof(Vertex), (void*)offsetof(Vertex, m_BoneIDs));
+
+        // weights
+        glEnableVertexAttribArray(6);
+        glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, m_Weights));
+        glBindVertexArray(0);
+
+
 
         // Desvincular para evitar modificaciones accidentales
         glBindVertexArray(0);

@@ -59,7 +59,7 @@ namespace libCore
     }
     void ModelLoader::processNode(aiNode* node, const aiScene* scene, Ref<Model> modelParent, aiMatrix4x4 _nodeTransform)
     {
-        glm::mat4 glmNodeTransform = aiMatrix4x4ToGlm(_nodeTransform);
+        glm::mat4 glmNodeTransform      = aiMatrix4x4ToGlm(_nodeTransform);
         glm::mat4 glmNodeTransformation = aiMatrix4x4ToGlm(node->mTransformation);
 
         float globalRotationDeg_X = 0.0f;

@@ -4,7 +4,7 @@
 
 namespace libCore
 {
-#define MAX_BONE_INFLUENCE 4
+
 	//---Vertex Buffer Object(VBO)
 	//-------------------------------------------------------------------------
 	//Es un contenedor de memoria en la GPU que almacena datos de vértices.

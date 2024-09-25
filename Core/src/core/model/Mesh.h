@@ -27,7 +27,6 @@ namespace libCore
         void Draw();
         void DrawInstanced(GLsizei instanceCount, const std::vector<glm::mat4>& instanceMatrices);
         void SetupInstanceVBO(const std::vector<glm::mat4>& instanceMatrices);
-
         void DrawAABB()
         {
             VAO.Bind();

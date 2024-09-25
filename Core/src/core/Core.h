@@ -94,7 +94,6 @@ enum EngineMode
 	EDITOR_MODE,
 	FULL_PLAY_MODE
 };
-
 enum EditorStates
 {
 	NONE,
@@ -127,6 +126,7 @@ struct ImageData {
 	int height;
 	int numChannels;
 };
+
 enum class GizmoOperation
 {
 	Translate,
@@ -134,6 +134,7 @@ enum class GizmoOperation
 	Scale
 };
 
+#define MAX_BONE_INFLUENCE 4
 // Structure to standardize the vertices used in the meshes
 struct Vertex
 {
@@ -143,6 +144,6 @@ struct Vertex
 	glm::vec3 tangent;
 	glm::vec3 bitangent;
 
-	//int m_BoneIDs[MAX_BONE_INFLUENCE]; //bone indexes which will influence this vertex
-	//float m_Weights[MAX_BONE_INFLUENCE]; //weights from each bone
+	int m_BoneIDs[MAX_BONE_INFLUENCE]; //bone indexes which will influence this vertex
+	float m_Weights[MAX_BONE_INFLUENCE]; //weights from each bone
 };

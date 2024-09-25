@@ -28,7 +28,7 @@ namespace libCore
                 // Recorrer los meshes del modelo
                 for (const auto& mesh : model->meshes)
                 {
-                    DrawMeshWithThumbnail(mesh, model->modelParent->importModelData.filePath);
+                    DrawMeshWithThumbnail(mesh, model->importModelData.filePath);
 
                     if (ImGui::Button((ICON_FA_PLUS " " + model->name).c_str()))  // Añadir icono de instanciación
                     {
@@ -91,8 +91,16 @@ namespace libCore
                 // Ruta y carga del thumbnail
                 std::filesystem::path projectBasePath = std::filesystem::current_path();
                 std::filesystem::path thumbnailPath = projectBasePath / modelPath / "thumbnails" / (mesh->meshName + "_thumbnail.png");
-                mesh->thumbnailTextureID = TextureLoader::getInstance().LoadTextureFromFile(thumbnailPath.string().c_str());
+
+                // Verificar si el archivo existe antes de intentar cargarlo
+                if (std::filesystem::exists(thumbnailPath)) {
+                    mesh->thumbnailTextureID = TextureLoader::getInstance().LoadTextureFromFile(thumbnailPath.string().c_str());
+                }
+                else {
+                    std::cerr << "Error: No se encontró el archivo de thumbnail: " << thumbnailPath.string() << std::endl;
+                }
             }
+
 
             ImVec2 imageSize(m_previewSize, m_previewSize);
 

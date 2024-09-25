@@ -7,6 +7,7 @@
 
 #include "../textures/Material.h"
 #include "../../managers/ShaderManager.h"
+#include "skeletal/AnimData.h"
 
 //#include "skeletal/AnimData.h"
 
@@ -34,13 +35,15 @@ namespace libCore
         std::vector<Ref<Material>> materials;
 
 
-        //--SKELETAL DATA
-        //bool skeletal = false;
-        //std::map<std::string, BoneInfo> m_BoneInfoMap;
-        //int m_BoneCounter = 0;
 
-        //auto& GetBoneInfoMap() { return m_BoneInfoMap; }
-        //int& GetBoneCount() { return m_BoneCounter; }
+
+        //--SKELETAL DATA
+		std::map<std::string, BoneInfo> m_BoneInfoMap;
+		int m_BoneCounter = 0;
+
+		auto& GetBoneInfoMap() { return m_BoneInfoMap; }
+		int& GetBoneCount() { return m_BoneCounter; }
+
 
 		void Draw(const std::string& shader)
 		{
@@ -71,5 +74,6 @@ namespace libCore
 				meshes[i]->DrawAABB();
 			}
 		}
+
     };
 }

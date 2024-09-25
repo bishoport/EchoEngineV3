@@ -2,6 +2,7 @@
 
 #include "TextureLoader.h"
 #include "ModelLoader.h"
+#include "SkeletalModelLoader.h"
 #include "EventManager.h"
 #include "../tools/ThumbnailGenerator.h"
 
@@ -82,7 +83,16 @@ namespace libCore
 	//--MODELS
 	void AssetsManager::LoadModelAsset(ImportModelData importModelData)
 	{
-		Ref<Model> model = ModelLoader::getInstance().LoadModel(importModelData);
+		Ref<Model> model = nullptr;
+
+		if (importModelData.skeletal == true)
+		{
+			model = SkeletalModelLoader::getInstance().LoadModel(importModelData);
+		}
+		else
+		{
+			model = ModelLoader::getInstance().LoadModel(importModelData);
+		}
 
 		if (model != nullptr)
 		{

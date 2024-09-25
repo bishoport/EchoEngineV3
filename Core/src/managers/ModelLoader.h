@@ -1,11 +1,13 @@
 #pragma once
 
 #include "../core/Core.h"
+#include "../core/model/Model.h"
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
-#include "../core/model/Model.h"
+
+
 
 namespace libCore
 {

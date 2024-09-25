@@ -58,6 +58,7 @@ namespace libCore
 
                 ImGui::Checkbox(ICON_FA_CHECK_SQUARE " Invert UV", &importOptions.invertUV);
                 ImGui::Checkbox(ICON_FA_SYNC " Rotate 90 degrees on X-axis", &importOptions.rotate90);
+                ImGui::Checkbox(ICON_FA_BONE " Skeletal", &importOptions.skeletal);
                 ImGui::SliderFloat(ICON_FA_EXPAND " Scale", &importOptions.globalScaleFactor, 0.1f, 10.0f, "%.1f");
                 ImGui::Separator();
 
@@ -69,7 +70,6 @@ namespace libCore
                     }
                     importOptions.filePath = filePath;
                     importOptions.fileName = fileName;
-
                     AssetsManager::GetInstance().LoadModelAsset(importOptions);
                     PopupManager::GetInstance().ClosePopup("Model Import Options");
                 }
@@ -118,7 +118,7 @@ namespace libCore
                 if (directoryEntry.is_directory()) {
                     iconLabel = ICON_FA_FOLDER;
                 }
-                else if (path.extension() == ".fbx" || path.extension() == ".obj" || path.extension() == ".gltf" || path.extension() == ".glb") {
+                else if (path.extension() == ".fbx" || path.extension() == ".obj" || path.extension() == ".gltf" || path.extension() == ".glb" || path.extension() == ".dae") {
                     iconLabel = ICON_FA_CUBE;
                 }
                 else if (path.extension() == ".png" || path.extension() == ".jpg") {
@@ -138,7 +138,7 @@ namespace libCore
                         std::string scriptName = path.stem().string();
                         LuaManager::GetInstance().LoadLuaFile(scriptName, path.string());
                     }
-                    else if (path.extension() == ".fbx" || path.extension() == ".obj" || path.extension() == ".gltf" || path.extension() == ".glb") {
+                    else if (path.extension() == ".fbx" || path.extension() == ".obj" || path.extension() == ".gltf" || path.extension() == ".glb" || path.extension() == ".dae") {
                         m_DirectoryEntry = directoryEntry;
                         PopupManager::GetInstance().OpenPopup("Model Import Options");
                     }
