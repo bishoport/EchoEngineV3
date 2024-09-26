@@ -50,8 +50,6 @@ namespace libCore
                         ImGui::Text("CREATED IN RUN TIME, THIS ENTITY WILL BE DESTORY");
                     }
                 }
-                
-
                 //--TAG_COMPONENT
                 if (EntityManager::GetInstance().HasComponent<TagComponent>(selectedEntity)) {
                     auto& tagComponent = EntityManager::GetInstance().GetComponent<TagComponent>(selectedEntity);
@@ -164,6 +162,89 @@ namespace libCore
                         }
                     }
                 }
+                
+                //--ANIMATION_COMPONENT
+                if (EntityManager::GetInstance().HasComponent<AnimationComponent>(selectedEntity)) {
+                    if (ImGui::CollapsingHeader(ICON_FA_FILM " Animation")) {  // Icono de "película" para el componente de animación
+                        auto& animationComponent = EntityManager::GetInstance().GetComponent<AnimationComponent>(selectedEntity);
+                        ImGui::Separator();
+
+                        // Campo para hacer drag & drop de una animación
+                        static char animationPath[128] = "";
+                        ImGui::InputText("Animation Path", animationPath, IM_ARRAYSIZE(animationPath));
+
+                        // Aquí permitimos que el usuario haga drop de una animación
+                        if (ImGui::BeginDragDropTarget()) {
+                            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_DRAG")) {
+                                const char* droppedPath = (const char*)payload->Data;
+                                strncpy(animationPath, droppedPath, IM_ARRAYSIZE(animationPath));
+                            }
+                            ImGui::EndDragDropTarget();
+                        }
+
+                        // Botón para agregar la animación
+                        if (ImGui::Button("Add Animation")) {
+                            if (strlen(animationPath) > 0) {
+                                std::string name = "Animation_" + std::to_string(animationComponent.animations.size());
+                                animationComponent.AddAnimation(name, animationPath);
+                            }
+                        }
+
+                        ImGui::Separator();
+
+                        // Mostrar lista de animaciones y botones de reproducción
+                        if (!animationComponent.animations.empty()) {
+                            for (auto& [name, animation] : animationComponent.animations) {
+                                // Nombre de la animación
+                                ImGui::Text("%s", name.c_str());
+
+                                ImGui::SameLine();
+
+                                // Botón de reproducir para cada animación
+                                if (ImGui::Button(("Play##" + name).c_str())) {
+                                    animationComponent.SetCurrentAnimation(name);
+                                    animationComponent.isPlaying = true;  // Reproducir la animación
+                                }
+
+                                ImGui::SameLine();
+
+                                // Mostrar si la animación actual está siendo reproducida
+                                if (animationComponent.currentAnimation == name && animationComponent.isPlaying) {
+                                    ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Playing");
+                                }
+                            }
+                        }
+
+                        ImGui::Separator();
+
+                        // Control de la velocidad de reproducción
+                        ImGui::SliderFloat("Playback Speed", &animationComponent.playbackSpeed, 0.1f, 3.0f);
+
+                        // Botón para pausar o reanudar la animación
+                        if (animationComponent.isPlaying) {
+                            if (ImGui::Button("Pause Animation")) {
+                                animationComponent.isPlaying = false;  // Pausar la animación
+                            }
+                        }
+                        else {
+                            if (ImGui::Button("Resume Animation")) {
+                                animationComponent.isPlaying = true;  // Reanudar la animación
+                            }
+                        }
+
+                        // Botón para detener la animación
+                        if (ImGui::Button("Stop Animation")) {
+                            animationComponent.isPlaying = false;  // Detener la animación
+                            animationComponent.animationTime = 0.0f;  // Reiniciar el tiempo de la animación
+                        }
+                    }
+                }
+
+
+
+
+
+
                 //--AABB_COMPONENT
                 if (EntityManager::GetInstance().HasComponent<AABBComponent>(selectedEntity)) {
                     if (ImGui::CollapsingHeader(ICON_FA_CUBE " AABB")) {  // Añadir icono de cubo para el AABB

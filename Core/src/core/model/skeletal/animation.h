@@ -20,6 +20,8 @@ namespace libCore
 
         Animation(const std::string& animationPath, Ref<Model> unifiedModel)
         {
+            m_animationPath = animationPath;
+
             Assimp::Importer importer;
             const aiScene* scene = importer.ReadFile(animationPath, aiProcess_Triangulate);
             assert(scene && scene->mRootNode);
@@ -104,6 +106,9 @@ namespace libCore
             CalculateBoneTransform(&m_RootNode, glm::mat4(1.0f));
         }
 
+        const std::string& GetAnimationPath() const { return m_animationPath; }
+
+
     private:
         void ReadMissingBones(const aiAnimation* animation, Ref<Model> unifiedModel) {
             auto& boneInfoMap = unifiedModel->GetBoneInfoMap();
@@ -147,6 +152,8 @@ namespace libCore
         std::vector<Bone> m_Bones;
         AssimpNodeData m_RootNode;
         std::map<std::string, BoneInfo> m_BoneInfoMap;
+
+        std::string m_animationPath = "";
 
         std::vector<glm::mat4> m_FinalBoneMatrices;  // Matrices finales de los huesos
     };
