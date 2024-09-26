@@ -103,7 +103,7 @@ namespace libCore
 		ShaderManager::setShaderDataLoad("captureIBL", shadersDirectory + "IBL/capture_enviroment.vert", shadersDirectory + "IBL/capture_enviroment.frag");
 
 		//-SHADOWS
-		ShaderManager::setShaderDataLoad("direct_light_depth_shadows", shadersDirectory + "shadows/directLight_shadow_mapping_depth_shader.vs", shadersDirectory + "shadows/directLight_shadow_mapping_depth_shader.fs");
+		ShaderManager::setShaderDataLoad("direct_light_depth_shadows", shadersDirectory + "shadows/directLight_shadow_mapping_depth_shader.vert", shadersDirectory + "shadows/directLight_shadow_mapping_depth_shader.frag");
 
 		//-STENCIL MOUSE PICKING
 		ShaderManager::setShaderDataLoad("stencil", shadersDirectory + "Stencil.vert", shadersDirectory + "Stencil.frag");

@@ -115,6 +115,7 @@ namespace libCore {
                 glDisable(GL_MULTISAMPLE);
             }
 
+
             //// Limpiar el buffer de color y profundidad del framebuffer por defecto
             glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -124,6 +125,11 @@ namespace libCore {
             viewport->camera->updateMatrix();
 
             glEnable(GL_DEPTH_TEST); // Habilitar el test de profundidad
+
+
+
+
+
 
             //--------------------------------------------------------------------------------
             //-----------------------DIRECTIONAL LIGHT SHADOW PASS----------------------------
@@ -189,7 +195,7 @@ namespace libCore {
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             }
 
-            //EntityManager::GetInstance().DrawGameObjects("geometryPass");
+            EntityManager::GetInstance().DrawGameObjects("geometryPass");
 
             // Desvinculamos el GBuffer
             viewport->gBuffer->unbindGBuffer();
@@ -418,18 +424,15 @@ namespace libCore {
             renderGrid();
             
             
-
-            
-
-
             // Habilita nuevamente el depth test para el resto de la escena
             glEnable(GL_DEPTH_TEST);
             //------------------------------------------------------------------------------------------
  
-            libCore::ShaderManager::Get("forwardGeometryPass")->use();
+
+            /*libCore::ShaderManager::Get("forwardGeometryPass")->use();
             libCore::ShaderManager::Get("forwardGeometryPass")->setMat4("projection", viewport->camera->projection);
             libCore::ShaderManager::Get("forwardGeometryPass")->setMat4("view", viewport->camera->view);
-            EntityManager::GetInstance().DrawGameObjects("forwardGeometryPass");
+            EntityManager::GetInstance().DrawGameObjects("forwardGeometryPass");*/
             
 
             // PASADA DE TEXTOS
