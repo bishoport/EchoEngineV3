@@ -53,6 +53,7 @@ namespace libCore
         void DrawGameObjects(const std::string& shader);
         void DrawOneGameObject(entt::entity entity, const std::string& shader);
         void DrawABBGameObjectMeshComponent(const std::string& shader);
+        void DrawSkeletons(const std::string& shader);
         void CheckRayModelIntersection(const glm::vec3& rayOrigin, const glm::vec3& rayDirection);
         void CheckInstancesInRunTime();
         bool rayIntersectsBoundingBox(const glm::vec3& rayOrigin, const glm::vec3& rayDirection, glm::vec3 boxMin, glm::vec3 boxMax);

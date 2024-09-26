@@ -4,8 +4,10 @@
 #include "../core/UUID.h"
 #include "../core/model/Mesh.h"
 #include "../core/model/Model.h"
-#include "../core/model/skeletal/animation.h"
 #include "../tools/cameras/Camera.h"
+
+#include "../core/model/skeletal/animator.h"
+#include "../core/model/skeletal/animation.h"
 
 
 namespace libCore
@@ -130,107 +132,135 @@ namespace libCore
     };
     struct AnimationComponent
     {
-        // Mapa de animaciones: el nombre de la animación como clave
-        std::unordered_map<std::string, Ref<Animation>> animations;
-
-        // Parámetros para controlar la animación
-        std::string currentAnimation;    // Nombre de la animación actual
-        float animationTime = 0.0f;      // Tiempo transcurrido en la animación
-        float playbackSpeed = 1.0f;      // Velocidad de reproducción
-        bool isPlaying = true;           // Control de reproducción
-        Ref<Model> model = nullptr;      // Referencia al modelo animado
-
-        // Transformaciones finales de huesos
-        std::vector<glm::mat4> finalBoneMatrices;
-
-        // Constructor
-        AnimationComponent() = default;
-        AnimationComponent(const Ref<Model>& model) : model(model) {
-            finalBoneMatrices.resize(100, glm::mat4(1.0f)); // Inicializa las matrices de huesos
-        }
-
-        // Método para agregar una animación
-        void AddAnimation(const std::string& name, const std::string& filePath) {
-            animations[name] = CreateRef<Animation>(filePath, model);
-        }
-
-        // Método para cambiar la animación actual
-        void SetCurrentAnimation(const std::string& name) {
-            if (animations.find(name) != animations.end()) {
-                currentAnimation = name;
-                animationTime = 0.0f;  // Reinicia el tiempo de la animación
-            }
-            else {
-                std::cerr << "Error: Animación '" << name << "' no encontrada." << std::endl;
-            }
-        }
-
-        // Obtener la animación actual
-        Ref<Animation> GetCurrentAnimation() {
-            if (animations.find(currentAnimation) != animations.end()) {
-                return animations[currentAnimation];
-            }
-            return nullptr;
-        }
-
-        // Actualizar el tiempo de animación (se llama en cada frame)
-        void Update(float deltaTime) {
-            if (!isPlaying || currentAnimation.empty()) return;
-
-            animationTime += deltaTime * playbackSpeed;
-
-            // Obtener la animación actual para controlar la duración
-            auto anim = GetCurrentAnimation();
-            if (anim) {
-                float duration = anim->GetDuration();
-                if (animationTime > duration) {
-                    animationTime = fmod(animationTime, duration);  // Reinicia la animación al final
-                }
-
-                // Actualizar la animación antes de calcular la transformación de los huesos
-                anim->Update(deltaTime);
-
-                // Llamar a la función para calcular la transformación de los huesos
-                CalculateBoneTransform(&anim->GetRootNode(), glm::mat4(1.0f));
-            }
-        }
-
-        // Función para calcular las transformaciones de los huesos
-        void CalculateBoneTransform(const AssimpNodeData* node, glm::mat4 parentTransform) {
-            std::string nodeName = node->name;
-            glm::mat4 nodeTransform = node->transformation;
-
-            // Buscar el hueso en la animación actual
-            auto anim = GetCurrentAnimation();
-            if (anim) {
-                Bone* bone = anim->FindBone(nodeName);
-                if (bone) {
-                    bone->Update(animationTime);
-                    nodeTransform = bone->GetLocalTransform();
-                }
-            }
-
-            glm::mat4 globalTransformation = parentTransform * nodeTransform;
-
-            // Actualizar las matrices de huesos si el nodo es un hueso
-            auto boneInfoMap = anim->GetBoneIDMap();
-            if (boneInfoMap.find(nodeName) != boneInfoMap.end()) {
-                int index = boneInfoMap[nodeName].id;
-                glm::mat4 offset = boneInfoMap[nodeName].offset;
-                finalBoneMatrices[index] = globalTransformation * offset;
-            }
-
-            // Procesar los hijos recursivamente
-            for (int i = 0; i < node->childrenCount; i++) {
-                CalculateBoneTransform(&node->children[i], globalTransformation);
-            }
-        }
-
-        // Obtener las matrices finales de huesos
-        std::vector<glm::mat4> GetFinalBoneMatrices() {
-            return finalBoneMatrices;
-        }
+        Ref<Animation> danceAnimation = nullptr;
+        Ref<Animator> animator = nullptr;
     };
+        //// Mapa de animaciones: el nombre de la animación como clave
+        //std::unordered_map<std::string, Ref<Animation>> animations;
+
+        //// Parámetros para controlar la animación
+        //std::string currentAnimation;    // Nombre de la animación actual
+        //float animationTime = 0.0f;      // Tiempo transcurrido en la animación
+        //float playbackSpeed = 1.0f;      // Velocidad de reproducción
+        //bool isPlaying = true;           // Control de reproducción
+        //Ref<Model> model = nullptr;      // Referencia al modelo animado
+
+        //// Transformaciones finales de huesos
+        //std::vector<glm::mat4> finalBoneMatrices;
+
+        //// Constructor
+        //AnimationComponent() = default;
+        //AnimationComponent(const Ref<Model>& model) : model(model) {
+        //    finalBoneMatrices.resize(100, glm::mat4(1.0f)); // Inicializa las matrices de huesos
+        //}
+
+        //// Método para agregar una animación
+        //void AddAnimation(const std::string& name, const std::string& filePath) {
+        //    animations[name] = CreateRef<Animation>(filePath, model);
+        //}
+
+        //// Método para cambiar la animación actual
+        //void SetCurrentAnimation(const std::string& name) {
+        //    if (animations.find(name) != animations.end()) {
+        //        currentAnimation = name;
+        //        animationTime = 0.0f;  // Reinicia el tiempo de la animación
+        //    }
+        //    else {
+        //        std::cerr << "Error: Animación '" << name << "' no encontrada." << std::endl;
+        //    }
+        //}
+
+        //// Obtener la animación actual
+        //Ref<Animation> GetCurrentAnimation() {
+        //    if (animations.find(currentAnimation) != animations.end()) {
+        //        return animations[currentAnimation];
+        //    }
+        //    return nullptr;
+        //}
+
+        //// Actualizar el tiempo de animación (se llama en cada frame)
+        //void Update(float deltaTime) {
+        //    if (!isPlaying || currentAnimation.empty()) return;
+
+        //    animationTime += deltaTime * playbackSpeed;
+
+        //    // Depuración: imprimir el tiempo de animación
+        //    //std::cout << "Animación: " << currentAnimation << std::endl;
+        //    //std::cout << "Tiempo de animación: " << animationTime << std::endl;
+
+        //    // Obtener la animación actual para controlar la duración
+        //    auto anim = GetCurrentAnimation();
+        //    if (anim) {
+        //        float duration = anim->GetDuration();
+        //        if (animationTime > duration) {
+        //            animationTime = fmod(animationTime, duration);  // Reinicia la animación al final
+        //        }
+
+        //        // Depuración: imprimir la duración de la animación
+        //        //std::cout << "Duración de la animación: " << duration << std::endl;
+
+        //        // Actualizar la animación antes de calcular la transformación de los huesos
+        //        anim->Update(deltaTime);
+
+        //        // Llamar a la función para calcular la transformación de los huesos
+        //        CalculateBoneTransform(&anim->GetRootNode(), glm::mat4(1.0f));
+        //    }
+        //}
+
+
+        //// Función para calcular las transformaciones de los huesos
+        //void CalculateBoneTransform(const AssimpNodeData* node, glm::mat4 parentTransform) {
+        //    std::string nodeName = node->name;
+        //    glm::mat4 nodeTransform = node->transformation;
+
+        //    // Buscar el hueso en la animación actual
+        //    auto anim = GetCurrentAnimation();
+        //    if (anim) {
+        //        Bone* bone = anim->FindBone(nodeName);
+        //        if (bone) {
+        //            bone->Update(animationTime);
+        //            nodeTransform = bone->GetLocalTransform();
+        //        }
+        //    }
+
+        //    // Multiplica la transformación global acumulada
+        //    glm::mat4 globalTransformation = model->transform->getMatrix() * parentTransform * nodeTransform;
+
+        //    // Depuración: imprimir el nombre del nodo y la transformación
+        //    /*std::cout << "Nodo: " << nodeName << std::endl;
+        //    std::cout << "NodeTransform: \n"
+        //        << glm::to_string(nodeTransform) << std::endl;
+        //    std::cout << "ParentTransform: \n"
+        //        << glm::to_string(parentTransform) << std::endl;
+        //    std::cout << "GlobalTransform: \n"
+        //        << glm::to_string(globalTransformation) << std::endl;*/
+
+        //    // Actualizar las matrices de huesos si el nodo es un hueso
+        //    auto boneInfoMap = anim->GetBoneIDMap();
+        //    if (boneInfoMap.find(nodeName) != boneInfoMap.end()) {
+        //        int index = boneInfoMap[nodeName].id;
+        //        glm::mat4 offset = boneInfoMap[nodeName].offset;
+        //        finalBoneMatrices[index] = globalTransformation * offset;
+
+        //        // Depuración: imprimir la matriz del hueso
+        //        /*std::cout << "Bone: " << nodeName << ", ID: " << index << std::endl;
+        //        std::cout << "Offset: \n" << glm::to_string(offset) << std::endl;
+        //        std::cout << "FinalBoneMatrix: \n"
+        //            << glm::to_string(finalBoneMatrices[index]) << std::endl;*/
+        //    }
+
+        //    // Procesar los hijos recursivamente
+        //    for (int i = 0; i < node->childrenCount; i++) {
+        //        CalculateBoneTransform(&node->children[i], globalTransformation);
+        //    }
+        //}
+
+
+        //// Obtener las matrices finales de huesos
+        //std::vector<glm::mat4> GetFinalBoneMatrices() {
+        //    return finalBoneMatrices;
+        //}
+    //};
 
 
 }

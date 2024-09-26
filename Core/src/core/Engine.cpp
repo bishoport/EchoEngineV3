@@ -91,6 +91,9 @@ namespace libCore
 		ShaderManager::setShaderDataLoad("lightingPass", shadersDirectory + "deferred/lightingPass.vert", shadersDirectory + "deferred/lightingPass.frag");
 		ShaderManager::setShaderDataLoad("combinePass", shadersDirectory + "combine.vert", shadersDirectory + "combine.frag");
 
+		//-FORWARD
+		ShaderManager::setShaderDataLoad("forwardGeometryPass", shadersDirectory + "forward/ForwardGeometryPass.vert", shadersDirectory + "forward/ForwardGeometryPass.frag");
+
 		//-IBL
 		ShaderManager::setShaderDataLoad("equirectangularToCubemap", shadersDirectory + "IBL/cubemap.vs", shadersDirectory + "IBL/equirectangular_to_cubemap.fs");
 		ShaderManager::setShaderDataLoad("irradiance", shadersDirectory + "IBL/cubemap.vs", shadersDirectory + "IBL/irradiance_convolution.fs");

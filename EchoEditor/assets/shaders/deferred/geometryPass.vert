@@ -12,7 +12,6 @@ uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 
-
 const int MAX_BONES = 100;
 const int MAX_BONE_INFLUENCE = 4;
 
@@ -20,7 +19,7 @@ uniform bool useBones;
 uniform mat4 finalBonesMatrices[MAX_BONES];
 
 out vec3 FragPos;
-out vec3 FragPosView; // Para SSAO
+out vec3 FragPosView;
 out vec2 TexCoords;
 out vec3 Normal;
 out vec3 Tangent;
@@ -32,12 +31,15 @@ void main()
     
     if (useBones == false)
     {
-        worldPos = model * vec4(aPos, 1.0);
+        // Apply scaling for debugging
+        vec4 scaledModelPos = model * vec4(aPos, 1.0) * 100.0;  
+        worldPos = scaledModelPos;
+        
         FragPos = worldPos.xyz; 
         TexCoords = aTexCoords;
 
         vec4 viewPos = view * worldPos;
-        FragPosView = viewPos.xyz; // Para SSAO
+        FragPosView = viewPos.xyz;
 
         mat3 normalMatrix = transpose(inverse(mat3(model)));
         Normal = normalize(normalMatrix * aNormal);
@@ -63,35 +65,30 @@ void main()
                 break;
             }
 
-            // Aplicar las matrices de huesos
             vec4 localPosition = finalBonesMatrices[boneIds[i]] * vec4(aPos, 1.0f);
             totalPosition += localPosition * weights[i];
 
-            // Aplicar la transformación de huesos a la normal
             mat3 boneTransform = mat3(finalBonesMatrices[boneIds[i]]);
             vec3 localNormal = boneTransform * aNormal;
             totalNormal += localNormal * weights[i];
         }
 
-        // Transformación final en espacio mundial
-        worldPos = model * totalPosition;
+        // Apply scaling for debugging
+        vec4 scaledModelPos = model * totalPosition * 100.0;
+        worldPos = scaledModelPos;
+        
         FragPos = worldPos.xyz;
         TexCoords = aTexCoords;
 
-        // Transformar las normales con la matriz del modelo
         mat3 normalMatrix = transpose(inverse(mat3(model)));
-        Normal = normalize(normalMatrix * totalNormal);  // Normal transformada por huesos
+        Normal = normalize(normalMatrix * totalNormal);
 
-        // Transforma las tangentes y bitangentes de manera similar si las necesitas
         Tangent = normalize(normalMatrix * aTangent);
         Bitangent = normalize(normalMatrix * aBitangent);
 
-        // Obtener posición en espacio de vista
         vec4 viewPos = view * worldPos;
-        FragPosView = viewPos.xyz; // Para SSAO
+        FragPosView = viewPos.xyz;
 
-        // Posición final del vértice
         gl_Position = projection * viewPos;
     }
-
 }

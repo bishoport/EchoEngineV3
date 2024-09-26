@@ -137,6 +137,10 @@
   <ItemGroup>
     <ClInclude Include="src\EchoEditor.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="assets\shaders\forward\ForwardGeometryPass.frag" />
+    <None Include="assets\shaders\forward\ForwardGeometryPass.vert" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

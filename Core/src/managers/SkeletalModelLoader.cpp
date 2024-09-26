@@ -55,16 +55,8 @@ namespace libCore
     void SkeletalModelLoader::processNode(aiNode* node, const aiScene* scene, Ref<Model> modelParent, aiMatrix4x4 _nodeTransform)
     {
         glm::mat4 glmNodeTransform = aiMatrix4x4ToGlm(_nodeTransform);
-        glm::mat4 glmNodeTransformation = aiMatrix4x4ToGlm(node->mTransformation);
 
-        float globalRotationDeg_X = 0.0f;
-        if (current_importOptions.rotate90) globalRotationDeg_X = -90.0f;
-
-        glm::mat4 rotationX = glm::rotate(glm::mat4(1.0f), glm::radians(globalRotationDeg_X), glm::vec3(1.0f, 0.0f, 0.0f));
-        glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(current_importOptions.globalScaleFactor, current_importOptions.globalScaleFactor, current_importOptions.globalScaleFactor));
-        glm::mat4 glmFinalTransform = rotationX * scaleMatrix * glmNodeTransform * glmNodeTransformation;
-        aiMatrix4x4 finalTransform = glmToAiMatrix4x4(glmFinalTransform);
-
+        // Procesar las mallas en el nodo actual
         for (unsigned int i = 0; i < node->mNumMeshes; i++) {
 
             unsigned int meshIndex = node->mMeshes[i];
@@ -79,27 +71,39 @@ namespace libCore
             modelChild->name = node->mName.C_Str();
 
             // Establecer la posición del modelo basado en la transformación final
-            modelChild->transform->position = glm::vec3(finalTransform.a4, finalTransform.b4, finalTransform.c4);
-
-            // Resetear la traslación en la transformación final para que los vértices se procesen correctamente
-            finalTransform.a4 = 0.0;
-            finalTransform.b4 = 0.0;
-            finalTransform.c4 = 0.0;
+            modelChild->transform->position = glm::vec3(glmNodeTransform[3]);
 
             // Procesar la malla y almacenarla en el mapa
-            processMesh(mesh, scene, modelChild, finalTransform, meshIndex);
-            
+            processMesh(mesh, scene, modelChild, _nodeTransform, meshIndex);
+
             processMaterials(mesh, scene, modelChild);
 
             modelParent->children.push_back(modelChild);
         }
 
-        // Procesar los nodos hijos
-        for (unsigned int i = 0; i < node->mNumChildren; i++)
-        {
-            processNode(node->mChildren[i], scene, modelParent, finalTransform);
+        // Procesar los nodos hijos recursivamente
+        for (unsigned int i = 0; i < node->mNumChildren; i++) {
+            processNode(node->mChildren[i], scene, modelParent, _nodeTransform);
+        }
+
+        // Si el nodo es un hueso, lo añadimos al mapa de huesos
+        if (modelParent->m_BoneInfoMap.find(node->mName.C_Str()) != modelParent->m_BoneInfoMap.end()) {
+            std::string boneName = node->mName.C_Str();
+            int parentID = -1;
+
+            // Si el nodo tiene un padre, buscamos su ID
+            if (node->mParent) {
+                std::string parentName = node->mParent->mName.C_Str();
+                if (modelParent->m_BoneInfoMap.find(parentName) != modelParent->m_BoneInfoMap.end()) {
+                    parentID = modelParent->m_BoneInfoMap[parentName].id;
+                }
+            }
+
+            // Actualizar el parentID del hueso
+            modelParent->m_BoneInfoMap[boneName].parentId = parentID;
         }
     }
+
     void SkeletalModelLoader::processMesh(aiMesh* mesh, const aiScene* scene, Ref<Model> modelBuild, aiMatrix4x4 finalTransform, int meshIndex)
     {
 
@@ -113,20 +117,21 @@ namespace libCore
 
 
             //--Vertex Position
-            if (current_importOptions.useCustomTransform == true)
-            {
-                glm::vec4 posFixed = aiMatrix4x4ToGlm(finalTransform) * glm::vec4(
-                    mesh->mVertices[i].x,
-                    mesh->mVertices[i].y,
-                    mesh->mVertices[i].z,
-                    1);
+            //if (current_importOptions.useCustomTransform == true)
+            //{
+            //    glm::vec4 posFixed = aiMatrix4x4ToGlm(finalTransform) * glm::vec4(
+            //        mesh->mVertices[i].x,
+            //        mesh->mVertices[i].y,
+            //        mesh->mVertices[i].z,
+            //        1);
 
-                vertex.position = glm::vec3(posFixed.x, posFixed.y, posFixed.z);
-            }
-            else
-            {
-                vertex.position = AssimpGLMHelpers::GetGLMVec(mesh->mVertices[i]);
-            }
+            //    vertex.position = glm::vec3(posFixed.x, posFixed.y, posFixed.z);
+            //}
+            //else
+            //{
+            //    vertex.position = AssimpGLMHelpers::GetGLMVec(mesh->mVertices[i]);
+            //}
+            vertex.position = AssimpGLMHelpers::GetGLMVec(mesh->mVertices[i]);
             //--------------------------------------------------------------
 
 
@@ -146,51 +151,54 @@ namespace libCore
 
 
             //--Vertex Normal
-            if (current_importOptions.useCustomTransform == true)
-            {
-                glm::vec4 normFixed = aiMatrix4x4ToGlm(finalTransform) * glm::vec4(
-                    mesh->mNormals[i].x,
-                    mesh->mNormals[i].y,
-                    mesh->mNormals[i].z,
-                    1);
+            //if (current_importOptions.useCustomTransform == true)
+            //{
+            //    glm::vec4 normFixed = aiMatrix4x4ToGlm(finalTransform) * glm::vec4(
+            //        mesh->mNormals[i].x,
+            //        mesh->mNormals[i].y,
+            //        mesh->mNormals[i].z,
+            //        1);
 
-                vertex.normal = glm::vec3(normFixed.x, normFixed.y, normFixed.z);
-            }
-            else
-            {
-                vertex.normal = AssimpGLMHelpers::GetGLMVec(mesh->mNormals[i]);
-            }
+            //    vertex.normal = glm::vec3(normFixed.x, normFixed.y, normFixed.z);
+            //}
+            //else
+            //{
+            //    vertex.normal = AssimpGLMHelpers::GetGLMVec(mesh->mNormals[i]);
+            //}
+            vertex.normal = AssimpGLMHelpers::GetGLMVec(mesh->mNormals[i]);
             //--------------------------------------------------------------
 
 
             //--Vertex Tangent
-            if (mesh->mTangents) {
-                glm::vec4 tangentFixed = aiMatrix4x4ToGlm(finalTransform) * glm::vec4(
-                    mesh->mTangents[i].x,
-                    mesh->mTangents[i].y,
-                    mesh->mTangents[i].z,
-                    1.0);
+            //if (mesh->mTangents) {
+            //    glm::vec4 tangentFixed = aiMatrix4x4ToGlm(finalTransform) * glm::vec4(
+            //        mesh->mTangents[i].x,
+            //        mesh->mTangents[i].y,
+            //        mesh->mTangents[i].z,
+            //        1.0);
 
-                vertex.tangent = glm::vec3(tangentFixed.x, tangentFixed.y, tangentFixed.z);
-            }
-            else {
-                vertex.tangent = glm::vec3(0.0f, 0.0f, 0.0f);
-            }
+            //    vertex.tangent = glm::vec3(tangentFixed.x, tangentFixed.y, tangentFixed.z);
+            //}
+            //else {
+            //    vertex.tangent = glm::vec3(0.0f, 0.0f, 0.0f);
+            //}
+            vertex.tangent = glm::vec3(0.0f, 0.0f, 0.0f);
             //--------------------------------------------------------------
 
             //--Vertex Bitangent
-            if (mesh->mBitangents) {
-                glm::vec4 bitangentFixed = aiMatrix4x4ToGlm(finalTransform) * glm::vec4(
-                    mesh->mBitangents[i].x,
-                    mesh->mBitangents[i].y,
-                    mesh->mBitangents[i].z,
-                    1.0);
+            //if (mesh->mBitangents) {
+            //    glm::vec4 bitangentFixed = aiMatrix4x4ToGlm(finalTransform) * glm::vec4(
+            //        mesh->mBitangents[i].x,
+            //        mesh->mBitangents[i].y,
+            //        mesh->mBitangents[i].z,
+            //        1.0);
 
-                vertex.bitangent = glm::vec3(bitangentFixed.x, bitangentFixed.y, bitangentFixed.z);
-            }
-            else {
-                vertex.bitangent = glm::vec3(0.0f, 0.0f, 0.0f);
-            }
+            //    vertex.bitangent = glm::vec3(bitangentFixed.x, bitangentFixed.y, bitangentFixed.z);
+            //}
+            //else {
+            //    vertex.bitangent = glm::vec3(0.0f, 0.0f, 0.0f);
+            //}
+            vertex.bitangent = glm::vec3(0.0f, 0.0f, 0.0f);
             //--------------------------------------------------------------
 
             meshBuild->vertices.push_back(vertex);
@@ -241,6 +249,31 @@ namespace libCore
                 BoneInfo newBoneInfo;
                 newBoneInfo.id = boneCount;
                 newBoneInfo.offset = AssimpGLMHelpers::ConvertMatrixToGLMFormat(mesh->mBones[boneIndex]->mOffsetMatrix);
+
+                // Encontrar el nodo del hueso en la jerarquía de nodos
+                aiNode* boneNode = scene->mRootNode->FindNode(mesh->mBones[boneIndex]->mName);
+                if (boneNode) {
+                    // Verificar si el nodo tiene un padre
+                    if (boneNode->mParent) {
+                        std::string parentName = boneNode->mParent->mName.C_Str();
+                        // Asignar el parentID basándonos en el nombre del padre
+                        if (boneInfoMap.find(parentName) != boneInfoMap.end()) {
+                            newBoneInfo.parentId = boneInfoMap[parentName].id;
+                        }
+                        else {
+                            std::cout << "Padre del hueso " << boneName << " no encontrado: " << parentName << std::endl;
+                            newBoneInfo.parentId = -1;  // Si el padre no está en el mapa, asignar -1
+                        }
+                    }
+                    else {
+                        newBoneInfo.parentId = -1;  // Si no tiene padre, asignar -1
+                    }
+                }
+                else {
+                    std::cerr << "No se encontró el nodo para el hueso: " << boneName << std::endl;
+                    newBoneInfo.parentId = -1;  // Si no se encuentra el nodo, asignar -1
+                }
+
                 boneInfoMap[boneName] = newBoneInfo;
                 boneID = boneCount;
                 boneCount++;
@@ -274,6 +307,8 @@ namespace libCore
             std::cout << "Total huesos procesados: " << boneCount << std::endl;
         }
     }
+
+
     void SkeletalModelLoader::SetVertexBoneDataToDefault(Vertex& vertex)
     {
         for (int i = 0; i < MAX_BONE_INFLUENCE; i++)

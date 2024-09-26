@@ -48,7 +48,8 @@ namespace libCore
 		// Función para obtener la matriz de transformación de un hueso
 		glm::mat4 GetBoneTransform(int boneID) const {
 			for (const auto& [boneName, boneInfo] : m_BoneInfoMap) {
-				if (boneInfo.id == boneID) {
+				if (boneInfo.id == boneID) 
+				{
 					return boneInfo.offset; // Devuelve la matriz de transformación (offset) del hueso
 				}
 			}
@@ -84,6 +85,42 @@ namespace libCore
 				meshes[i]->DrawAABB();
 			}
 		}
+
+
+		void DrawBones(const std::string& shaderName)
+		{
+			glLineWidth(2.0f); // Configuramos el grosor de las líneas
+
+			// Dibujar líneas entre los huesos y sus padres
+			for (const auto& [boneName, boneInfo] : m_BoneInfoMap) {
+				if (boneInfo.parentId != -1) {
+					// Obtener la posición del hueso actual y de su padre en el espacio mundial
+					glm::vec3 currentBonePos = glm::vec3(GetBoneTransform(boneInfo.id) * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+					glm::vec3 parentBonePos = glm::vec3(GetBoneTransform(boneInfo.parentId) * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+
+					//// Trazas para verificar las posiciones y huesos
+					//std::cout << "Dibujando línea entre hueso: " << boneName
+					//	<< " (ID: " << boneInfo.id << ") y su padre (ID: "
+					//	<< boneInfo.parentId << ")." << std::endl;
+					//std::cout << "Posición hueso: (" << currentBonePos.x << ", "
+					//	<< currentBonePos.y << ", " << currentBonePos.z << ")" << std::endl;
+					//std::cout << "Posición hueso padre: (" << parentBonePos.x << ", "
+					//	<< parentBonePos.y << ", " << parentBonePos.z << ")" << std::endl;
+
+					// Dibujar una línea entre el hueso y su padre
+					glBegin(GL_LINES);
+					glVertex3fv(glm::value_ptr(parentBonePos));
+					glVertex3fv(glm::value_ptr(currentBonePos));
+					glEnd();
+				}
+				else {
+					/*std::cout << "Hueso: " << boneName << " (ID: " << boneInfo.id
+						<< ") no tiene padre asignado (parentId = -1)." << std::endl;*/
+				}
+			}
+		}
+
+
 
     };
 }

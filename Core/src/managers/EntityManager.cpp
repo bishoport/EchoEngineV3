@@ -116,9 +116,9 @@ namespace libCore
 
             if (model->importModelData.skeletal == true)
             {
-                auto& animationComponent = m_registry->emplace<AnimationComponent>(entity, model);
-                animationComponent.AddAnimation("dance", "C:/Users/bisho/OneDrive/Escritorio/EchoEngine_2024/EchoEngine/EchoEditor/assets/models/vampire/dancing_vampire.dae");
-                animationComponent.SetCurrentAnimation("dance");
+                auto& animationComponent = m_registry->emplace<AnimationComponent>(entity);
+                animationComponent.danceAnimation = CreateRef<Animation>("C:/Users/bisho/OneDrive/Escritorio/EchoEngine_2024/EchoEngine/EchoEditor/assets/models/vampire/dancing_vampire.dae", model);
+                animationComponent.animator = CreateRef<Animator>(animationComponent.danceAnimation);
             }
         }
 
@@ -441,16 +441,16 @@ namespace libCore
             auto& animationComponent = viewAnimation.get<AnimationComponent>(entity);
 
             // Actualiza el tiempo y el estado de la animación
-            animationComponent.Update(deltaTime);
+            animationComponent.animator->UpdateAnimation(deltaTime);
 
-            // Actualiza las transformaciones de los huesos si está reproduciendo la animación
-            if (animationComponent.isPlaying) {
-                Ref<Animation> currentAnimation = animationComponent.GetCurrentAnimation();
-                if (currentAnimation) {
-                    // Recalcular las transformaciones de los huesos en base al tiempo de la animación
-                    animationComponent.CalculateBoneTransform(&currentAnimation->GetRootNode(), glm::mat4(1.0f));
-                }
-            }
+            //// Actualiza las transformaciones de los huesos si está reproduciendo la animación
+            //if (animationComponent.isPlaying) {
+            //    Ref<Animation> currentAnimation = animationComponent.GetCurrentAnimation();
+            //    if (currentAnimation) {
+            //        // Recalcular las transformaciones de los huesos en base al tiempo de la animación
+            //        animationComponent.CalculateBoneTransform(&currentAnimation->GetRootNode(), glm::mat4(1.0f));
+            //    }
+            //}
         }
 
         // Actualizar scripts (si es necesario)
@@ -478,15 +478,15 @@ namespace libCore
     //------------------------------------------------------------------------------------
 
 
-            /*if (EngineOpenGL::GetInstance().CheckAABBInFrustum(aabb->minBounds, aabb->maxBounds))
-            {
-                mesh.renderable = true;
-                DrawOneGameObject(transform, mesh, material, shader);
-            }
-            else
-            {
-                mesh.renderable = false;
-            }*/
+        /*if (EngineOpenGL::GetInstance().CheckAABBInFrustum(aabb->minBounds, aabb->maxBounds))
+        {
+            mesh.renderable = true;
+            DrawOneGameObject(transform, mesh, material, shader);
+        }
+        else
+        {
+            mesh.renderable = false;
+        }*/
 
     //--DRAW MESH Component (Son llamadas desde el Renderer cuando le toque)
     void EntityManager::DrawGameObjects(const std::string& shader)
@@ -519,33 +519,40 @@ namespace libCore
 
         // Determinar si el modelo usa huesos
         bool useBones = false;
+        
         if (HasComponent<AnimationComponent>(entity)) {
             auto& animationComponent = GetComponent<AnimationComponent>(entity);
-            if (animationComponent.GetCurrentAnimation() != nullptr) {
-                useBones = true;
-                auto boneTransforms = animationComponent.GetFinalBoneMatrices();
+            useBones = true;
+            auto boneTransforms = animationComponent.animator->GetFinalBoneMatrices();
 
-                // Enviar las matrices de huesos al shader
-                for (int i = 0; i < boneTransforms.size(); ++i) {
-                    libCore::ShaderManager::Get(shader)->setMat4("finalBonesMatrices[" + std::to_string(i) + "]", boneTransforms[i]);
+            // Depuración: imprimir si se están usando huesos y las matrices
+            //std::cout << "Usando huesos: " << useBones << std::endl;
+            for (int i = 0; i < boneTransforms.size(); ++i) {
+                libCore::ShaderManager::Get(shader)->setMat4("finalBonesMatrices[" + std::to_string(i) + "]", boneTransforms[i]);
 
-                    // Imprimir la matriz de hueso para depuración
-                    std::cout << "Bone " << i << " Matrix:\n";
-                    for (int row = 0; row < 4; ++row) {
-                        std::cout << boneTransforms[i][row][0] << " " << boneTransforms[i][row][1] << " "
-                            << boneTransforms[i][row][2] << " " << boneTransforms[i][row][3] << "\n";
-                    }
-                    std::cout << std::endl;
-                }
+                // Depuración: imprimir cada matriz de hueso
+                //std::cout << "Bone " << i << " Matrix:\n";
+                //std::cout << glm::to_string(boneTransforms[i]) << std::endl;
             }
+            
         }
-
-
         // Establecer el valor de 'useBones' en el shader
         libCore::ShaderManager::Get(shader)->setBool("useBones", useBones);
 
-        meshComponent.mesh->DrawInstanced(static_cast<GLsizei>(meshComponent.instanceMatrices.size()), meshComponent.instanceMatrices);
 
+
+        if (!meshComponent.instanceMatrices.empty())
+        {
+            //meshComponent.mesh->DrawInstanced(static_cast<GLsizei>(meshComponent.instanceMatrices.size()), meshComponent.instanceMatrices);
+            meshComponent.mesh->Draw();  //<-Dibujado sin Instancia (el modelo Original)
+        }
+        else
+        {
+            std::cout << "MAAAAAAL" << std::endl;
+        }
+
+       
+        //meshComponent.mesh->Draw();
         //// Dibujar el mesh (instanciado o no)
         //if (!meshComponent.instanceMatrices.empty()) {
         //    meshComponent.mesh->DrawInstanced(static_cast<GLsizei>(meshComponent.instanceMatrices.size()), meshComponent.instanceMatrices);
@@ -601,6 +608,18 @@ namespace libCore
 
                 aabbComponent.aabb->DrawAABB();
             }
+        }
+    }
+    //------------------------------------------------------------------------------------
+
+
+    //--DRAW AABB Component (Son llamadas desde el Renderer cuando le toque)
+    void EntityManager::DrawSkeletons(const std::string& shader)
+    {
+        auto viewMesh = m_registry->view<MeshComponent>();
+        for (auto entity : viewMesh) {
+            auto& meshComponent = viewMesh.get<MeshComponent>(entity);
+            meshComponent.originalModel->DrawBones(shader);
         }
     }
     //------------------------------------------------------------------------------------

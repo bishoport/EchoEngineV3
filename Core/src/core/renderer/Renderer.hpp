@@ -189,7 +189,7 @@ namespace libCore {
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             }
 
-            EntityManager::GetInstance().DrawGameObjects("geometryPass");
+            //EntityManager::GetInstance().DrawGameObjects("geometryPass");
 
             // Desvinculamos el GBuffer
             viewport->gBuffer->unbindGBuffer();
@@ -368,7 +368,7 @@ namespace libCore {
             glClear(GL_COLOR_BUFFER_BIT); // No se limpia aquí el GL_DEPTH_BUFFER_BIT!!!!
             glDepthFunc(GL_LESS);
             //------------------------------------------------------------------------------------------
-
+            
 
             // PASADA SKYBOX
             dynamicSkybox->Render(viewport->camera->view, viewport->camera->projection);
@@ -380,6 +380,8 @@ namespace libCore {
             libCore::ShaderManager::Get("debug")->setMat4("projection", viewport->camera->projection);
             //------------------------------------------------------------------------------------------
              
+            //EntityManager::GetInstance().DrawSkeletons("debug");
+
             //DEBUG de Luces
             LightsManager::GetInstance().DrawDebugLights("debug");
             //------------------------------------------------------------------------------------------
@@ -387,7 +389,7 @@ namespace libCore {
             //DEBUG AABB
             EntityManager::GetInstance().DrawABBGameObjectMeshComponent("debug");
             //------------------------------------------------------------------------------------------
-
+            
 
 
             //GRID
@@ -424,7 +426,10 @@ namespace libCore {
             glEnable(GL_DEPTH_TEST);
             //------------------------------------------------------------------------------------------
  
-            
+            libCore::ShaderManager::Get("forwardGeometryPass")->use();
+            libCore::ShaderManager::Get("forwardGeometryPass")->setMat4("projection", viewport->camera->projection);
+            libCore::ShaderManager::Get("forwardGeometryPass")->setMat4("view", viewport->camera->view);
+            EntityManager::GetInstance().DrawGameObjects("forwardGeometryPass");
             
 
             // PASADA DE TEXTOS
@@ -439,13 +444,12 @@ namespace libCore {
             glBlendFunc(GL_ONE, GL_ZERO);//Acaba zona alpha
             //------------------------------------------------------------------------------------------
 
-
+            
 
 
             // Desligar el FBO forward
             viewport->framebuffer_forward->unbindFBO();
             PopDebugGroup();
-            //------------------------------------------------------------------------------------------
             //------------------------------------------------------------------------------------------
 
 
