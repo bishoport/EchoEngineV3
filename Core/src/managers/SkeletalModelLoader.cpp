@@ -29,8 +29,6 @@ namespace libCore
         unsigned int flags = aiProcess_Triangulate;
         flags |= aiProcess_CalcTangentSpace;
         flags |= aiProcess_GenSmoothNormals;
-        flags |= aiProcess_ValidateDataStructure;
-        flags |= aiProcess_GenBoundingBoxes;
 
         if (importOptions.invertUV == true) flags |= aiProcess_FlipUVs;
 
@@ -50,87 +48,49 @@ namespace libCore
 
         return modelParent;
     }
-
-
     void SkeletalModelLoader::processNode(aiNode* node, const aiScene* scene, Ref<Model> modelParent, aiMatrix4x4 _nodeTransform)
     {
-        glm::mat4 glmNodeTransform = aiMatrix4x4ToGlm(_nodeTransform);
-        glm::mat4 glmNodeTransformation = aiMatrix4x4ToGlm(node->mTransformation);
+        // Factor de escala global
+        float scaleFactor = 1.0f;  // Ajusta este valor según sea necesario
 
-        float globalRotationDeg_X = 0.0f;
-        if (current_importOptions.rotate90) globalRotationDeg_X = -90.0f;
+        // Escalar la transformación del nodo
+        glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(scaleFactor));
+        glm::mat4 glmNodeTransform = AssimpGLMHelpers::ConvertMatrixToGLMFormat(_nodeTransform);
+        glm::mat4 finalTransform = scaleMatrix * glmNodeTransform;
 
-        glm::mat4 rotationX = glm::rotate(glm::mat4(1.0f), glm::radians(globalRotationDeg_X), glm::vec3(1.0f, 0.0f, 0.0f));
-        glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(current_importOptions.globalScaleFactor, current_importOptions.globalScaleFactor, current_importOptions.globalScaleFactor));
-        glm::mat4 glmFinalTransform = rotationX * scaleMatrix * glmNodeTransform * glmNodeTransformation;
-        aiMatrix4x4 finalTransform = glmToAiMatrix4x4(glmFinalTransform);
+        // Convertir la transformación final de nuevo a aiMatrix4x4
+        aiMatrix4x4 aiFinalTransform = glmToAiMatrix4x4(finalTransform);
 
+        // Procesar las mallas en el nodo actual
         for (unsigned int i = 0; i < node->mNumMeshes; i++) {
 
             unsigned int meshIndex = node->mMeshes[i];
             aiMesh* mesh = scene->mMeshes[meshIndex];
 
-            auto modelChild = CreateRef<Model>();
-
-            // Aquí establecemos la relación padre-hijo
-            modelChild->modelParent = modelParent;
-
-            // Asignar el nombre del nodo de Assimp al modelo
-            modelChild->name = node->mName.C_Str();
-
-            // Establecer la posición del modelo basado en la transformación final
-            modelChild->transform->position = glm::vec3(finalTransform.a4, finalTransform.b4, finalTransform.c4);
-
-            // Resetear la traslación en la transformación final para que los vértices se procesen correctamente
-            finalTransform.a4 = 0.0;
-            finalTransform.b4 = 0.0;
-            finalTransform.c4 = 0.0;
-
             // Procesar la malla y almacenarla en el mapa
-            processMesh(mesh, scene, modelChild, finalTransform, meshIndex);
-            
-            processMaterials(mesh, scene, modelChild);
-
-            modelParent->children.push_back(modelChild);
+            processMesh(mesh, scene, modelParent, aiFinalTransform, meshIndex);
+            processMaterials(mesh, scene, modelParent);
         }
 
-        // Procesar los nodos hijos
-        for (unsigned int i = 0; i < node->mNumChildren; i++)
-        {
-            processNode(node->mChildren[i], scene, modelParent, finalTransform);
+        // Procesar los nodos hijos recursivamente
+        for (unsigned int i = 0; i < node->mNumChildren; i++) {
+            processNode(node->mChildren[i], scene, modelParent, _nodeTransform);
         }
     }
     void SkeletalModelLoader::processMesh(aiMesh* mesh, const aiScene* scene, Ref<Model> modelBuild, aiMatrix4x4 finalTransform, int meshIndex)
     {
-
         auto meshBuild = CreateRef<Mesh>();
+
+        // Convertir finalTransform a glm::mat4
+        //glm::mat4 glmFinalTransform = AssimpGLMHelpers::ConvertMatrixToGLMFormat(finalTransform);
 
         // Cargando los datos de los vértices y los índices
         for (unsigned int i = 0; i < mesh->mNumVertices; i++)
         {
             Vertex vertex;
-            SetVertexBoneDataToDefault(vertex);
+            vertex.position = AssimpGLMHelpers::GetGLMVec(mesh->mVertices[i]);
+            vertex.normal = AssimpGLMHelpers::GetGLMVec(mesh->mNormals[i]);
 
-
-            //--Vertex Position
-            if (current_importOptions.useCustomTransform == true)
-            {
-                glm::vec4 posFixed = aiMatrix4x4ToGlm(finalTransform) * glm::vec4(
-                    mesh->mVertices[i].x,
-                    mesh->mVertices[i].y,
-                    mesh->mVertices[i].z,
-                    1);
-
-                vertex.position = glm::vec3(posFixed.x, posFixed.y, posFixed.z);
-            }
-            else
-            {
-                vertex.position = AssimpGLMHelpers::GetGLMVec(mesh->mVertices[i]);
-            }
-            //--------------------------------------------------------------
-
-
-            //--Texture Coords
             if (mesh->mTextureCoords[0])
             {
                 glm::vec2 vec;
@@ -139,61 +99,13 @@ namespace libCore
                 vertex.texUV = vec;
             }
             else
-            {
                 vertex.texUV = glm::vec2(0.0f, 0.0f);
-            }
-            //--------------------------------------------------------------
 
-
-            //--Vertex Normal
-            if (current_importOptions.useCustomTransform == true)
-            {
-                glm::vec4 normFixed = aiMatrix4x4ToGlm(finalTransform) * glm::vec4(
-                    mesh->mNormals[i].x,
-                    mesh->mNormals[i].y,
-                    mesh->mNormals[i].z,
-                    1);
-
-                vertex.normal = glm::vec3(normFixed.x, normFixed.y, normFixed.z);
-            }
-            else
-            {
-                vertex.normal = AssimpGLMHelpers::GetGLMVec(mesh->mNormals[i]);
-            }
-            //--------------------------------------------------------------
-
-
-            //--Vertex Tangent
-            if (mesh->mTangents) {
-                glm::vec4 tangentFixed = aiMatrix4x4ToGlm(finalTransform) * glm::vec4(
-                    mesh->mTangents[i].x,
-                    mesh->mTangents[i].y,
-                    mesh->mTangents[i].z,
-                    1.0);
-
-                vertex.tangent = glm::vec3(tangentFixed.x, tangentFixed.y, tangentFixed.z);
-            }
-            else {
-                vertex.tangent = glm::vec3(0.0f, 0.0f, 0.0f);
-            }
-            //--------------------------------------------------------------
-
-            //--Vertex Bitangent
-            if (mesh->mBitangents) {
-                glm::vec4 bitangentFixed = aiMatrix4x4ToGlm(finalTransform) * glm::vec4(
-                    mesh->mBitangents[i].x,
-                    mesh->mBitangents[i].y,
-                    mesh->mBitangents[i].z,
-                    1.0);
-
-                vertex.bitangent = glm::vec3(bitangentFixed.x, bitangentFixed.y, bitangentFixed.z);
-            }
-            else {
-                vertex.bitangent = glm::vec3(0.0f, 0.0f, 0.0f);
-            }
-            //--------------------------------------------------------------
-
+            vertex.tangent = glm::vec3(0.0f, 0.0f, 0.0f);
+            vertex.bitangent = glm::vec3(0.0f, 0.0f, 0.0f);
+            SetVertexBoneDataToDefault(vertex);
             meshBuild->vertices.push_back(vertex);
+            //--------------------------------------------------------------
         }
 
         //-INDICES
@@ -203,41 +115,27 @@ namespace libCore
                 meshBuild->indices.push_back(face.mIndices[j]);
             }
         }
-
-        //-MESH ID
-        std::string meshNameBase = mesh->mName.C_Str();
-        meshBuild->meshName = meshNameBase;
-
-        modelBuild->meshes.push_back(meshBuild);
-
-        meshBuild->SetupMesh();
         meshBuild->drawLike = DRAW_GEOM_LIKE::TRIANGLE;
 
         ExtractBoneWeightForVertices(meshBuild, modelBuild, mesh, scene);
 
+        //-MESH ID
+        std::string meshNameBase = mesh->mName.C_Str();
+        meshBuild->meshName = meshNameBase;
+        meshBuild->SetupMesh();
+        modelBuild->meshes.push_back(meshBuild);
     }
     void SkeletalModelLoader::ExtractBoneWeightForVertices(Ref<Mesh> meshBuild, Ref<Model> modelBuild, aiMesh* mesh, const aiScene* scene)
     {
-        std::cout << "Extrayendo huesos de la malla: " << mesh->mName.C_Str() << std::endl;
-
-        // Referencia al mapa de huesos del modelo padre
         auto& boneInfoMap = modelBuild->m_BoneInfoMap;
         int& boneCount = modelBuild->m_BoneCounter;
 
-        // Verificar si el mesh tiene huesos
-        if (mesh->mNumBones == 0) {
-            std::cerr << "La malla " << mesh->mName.C_Str() << " no tiene huesos." << std::endl;
-            return;
-        }
-
-        for (int boneIndex = 0; boneIndex < mesh->mNumBones; ++boneIndex) {
-            std::string boneName = mesh->mBones[boneIndex]->mName.C_Str();
-            std::cout << "Procesando hueso: " << boneName << std::endl;
-
+        for (int boneIndex = 0; boneIndex < mesh->mNumBones; ++boneIndex)
+        {
             int boneID = -1;
-
-            // Si el hueso no está en el mapa, lo añadimos
-            if (boneInfoMap.find(boneName) == boneInfoMap.end()) {
+            std::string boneName = mesh->mBones[boneIndex]->mName.C_Str();
+            if (boneInfoMap.find(boneName) == boneInfoMap.end())
+            {
                 BoneInfo newBoneInfo;
                 newBoneInfo.id = boneCount;
                 newBoneInfo.offset = AssimpGLMHelpers::ConvertMatrixToGLMFormat(mesh->mBones[boneIndex]->mOffsetMatrix);
@@ -245,23 +143,19 @@ namespace libCore
                 boneID = boneCount;
                 boneCount++;
             }
-            else {
+            else
+            {
                 boneID = boneInfoMap[boneName].id;
             }
-
+            assert(boneID != -1);
             auto weights = mesh->mBones[boneIndex]->mWeights;
+            int numWeights = mesh->mBones[boneIndex]->mNumWeights;
 
-            // Asignar los pesos de los huesos a los vértices
-            for (int weightIndex = 0; weightIndex < mesh->mBones[boneIndex]->mNumWeights; ++weightIndex) {
+            for (int weightIndex = 0; weightIndex < numWeights; ++weightIndex)
+            {
                 int vertexId = weights[weightIndex].mVertexId;
                 float weight = weights[weightIndex].mWeight;
-
-                // Validar los índices de vértices
-                if (vertexId >= meshBuild->vertices.size()) {
-                    std::cerr << "Índice de vértice fuera de rango: " << vertexId << std::endl;
-                    continue;
-                }
-
+                assert(vertexId <= meshBuild->vertices.size());
                 SetVertexBoneData(meshBuild->vertices[vertexId], boneID, weight);
             }
         }
@@ -274,10 +168,6 @@ namespace libCore
             std::cout << "Total huesos procesados: " << boneCount << std::endl;
         }
     }
-
-
-
-
     void SkeletalModelLoader::SetVertexBoneDataToDefault(Vertex& vertex)
     {
         for (int i = 0; i < MAX_BONE_INFLUENCE; i++)
@@ -298,6 +188,9 @@ namespace libCore
             }
         }
     }
+
+
+
     void SkeletalModelLoader::processMaterials(aiMesh* mesh, const aiScene* scene, Ref<Model> modelBuild)
     {
         // Obtener el material del mesh

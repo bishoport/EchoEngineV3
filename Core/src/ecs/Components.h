@@ -6,6 +6,8 @@
 #include "../core/model/Model.h"
 #include "../tools/cameras/Camera.h"
 
+#include "../core/model/skeletal/animator.h"
+#include "../core/model/skeletal/animation.h"
 
 namespace libCore
 {
@@ -127,4 +129,10 @@ namespace libCore
     {
         std::string prueba = "";
     };
+    struct AnimationComponent
+    {
+        Ref<Animation> danceAnimation = nullptr;
+        Ref<Animator> animator = nullptr;
+    };
+
 }

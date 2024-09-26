@@ -147,3 +147,11 @@ struct Vertex
 	int m_BoneIDs[MAX_BONE_INFLUENCE]; //bone indexes which will influence this vertex
 	float m_Weights[MAX_BONE_INFLUENCE]; //weights from each bone
 };
+
+struct AssimpNodeData
+{
+	glm::mat4 transformation;
+	std::string name;
+	int childrenCount;
+	std::vector<AssimpNodeData> children;
+};

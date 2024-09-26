@@ -13,7 +13,9 @@ namespace libCore
 	class Animator
 	{
 	public:
-		Animator(Animation* animation)
+		Animator() = default;  // Constructor por defecto
+
+		Animator(Ref<Animation> animation) : m_DeltaTime(0.0f)
 		{
 			m_CurrentTime = 0.0;
 			m_CurrentAnimation = animation;
@@ -35,7 +37,7 @@ namespace libCore
 			}
 		}
 
-		void PlayAnimation(Animation* pAnimation)
+		void PlayAnimation(Ref<Animation> pAnimation)
 		{
 			m_CurrentAnimation = pAnimation;
 			m_CurrentTime = 0.0f;
@@ -75,9 +77,9 @@ namespace libCore
 
 	private:
 		std::vector<glm::mat4> m_FinalBoneMatrices;
-		Animation* m_CurrentAnimation;
-		float m_CurrentTime;
-		float m_DeltaTime;
+		Ref<Animation> m_CurrentAnimation;
+		float m_CurrentTime = 0.0f;
+		float m_DeltaTime = 0.0f;  // Inicialización directa en la declaración
 
 	};
 }
