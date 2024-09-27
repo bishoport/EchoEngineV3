@@ -41,7 +41,6 @@ namespace libCore
                         }
                     }
                 }
-
                 //--CreatedInRunTimeComponent_component
                 if (EntityManager::GetInstance().HasComponent<CreatedInRunTimeComponent>(selectedEntity)) {
                     auto& createdInRunTimeComponent = EntityManager::GetInstance().GetComponent<CreatedInRunTimeComponent>(selectedEntity);
@@ -162,7 +161,6 @@ namespace libCore
                         }
                     }
                 }
-                
                 //--ANIMATION_COMPONENT
                 if (EntityManager::GetInstance().HasComponent<AnimationComponent>(selectedEntity)) {
                     if (ImGui::CollapsingHeader(ICON_FA_FILM " Animation")) {  // Icono de "película" para el componente de animación
@@ -192,25 +190,33 @@ namespace libCore
 
                         ImGui::Separator();
 
-                        // Mostrar lista de animaciones y botones de reproducción
+                        // Mostrar lista de animaciones cargadas con botones Play, Pause y Stop con iconos
                         if (!animationComponent.animations.empty()) {
                             for (auto& [name, animation] : animationComponent.animations) {
-                                // Nombre de la animación
+                                // Mostrar el nombre de la animación
                                 ImGui::Text("%s", name.c_str());
 
-                                ImGui::SameLine();
-
-                                // Botón de reproducir para cada animación
-                                if (ImGui::Button(("Play##" + name).c_str())) {
-                                    animationComponent.SetCurrentAnimation(name);
-                                    animationComponent.isPlaying = true;  // Reproducir la animación
-                                }
-
-                                ImGui::SameLine();
-
-                                // Mostrar si la animación actual está siendo reproducida
+                                // Dependiendo del estado de la animación, mostramos los botones correspondientes
                                 if (animationComponent.currentAnimation == name && animationComponent.isPlaying) {
-                                    ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Playing");
+                                    // Si la animación está en reproducción, mostramos los botones Pause y Stop
+                                    ImGui::SameLine();
+                                    if (ImGui::Button(ICON_FA_PAUSE "##Pause")) {
+                                        animationComponent.isPlaying = false;  // Pausar la animación
+                                    }
+
+                                    ImGui::SameLine();
+                                    if (ImGui::Button(ICON_FA_STOP "##Stop")) {
+                                        animationComponent.isPlaying = false;  // Detener la animación
+                                        animationComponent.animationTime = 0.0f;  // Reiniciar el tiempo de la animación
+                                    }
+                                }
+                                else {
+                                    // Si la animación está parada, mostramos solo el botón Play
+                                    ImGui::SameLine();
+                                    if (ImGui::Button(ICON_FA_PLAY "##Play")) {
+                                        animationComponent.SetCurrentAnimation(name);
+                                        animationComponent.isPlaying = true;  // Reproducir la animación
+                                    }
                                 }
                             }
                         }
@@ -220,7 +226,12 @@ namespace libCore
                         // Control de la velocidad de reproducción
                         ImGui::SliderFloat("Playback Speed", &animationComponent.playbackSpeed, 0.1f, 3.0f);
 
-                        // Botón para pausar o reanudar la animación
+                        // Control del factor de escala del hueso
+                        ImGui::SliderFloat("Bone Scale Factor", &animationComponent.boneScaleFactor, 0.01f, 100.0f);
+
+                        ImGui::Separator();
+
+                        // Botón para pausar o reanudar la animación desde un control global
                         if (animationComponent.isPlaying) {
                             if (ImGui::Button("Pause Animation")) {
                                 animationComponent.isPlaying = false;  // Pausar la animación
@@ -239,11 +250,6 @@ namespace libCore
                         }
                     }
                 }
-
-
-
-
-
 
                 //--AABB_COMPONENT
                 if (EntityManager::GetInstance().HasComponent<AABBComponent>(selectedEntity)) {
@@ -348,6 +354,7 @@ namespace libCore
                     {
                         // Mostrar todos los scripts asignados
                         const auto& luaScripts = scriptComponent.GetLuaScriptsData();
+                        
                         for (const auto& scriptData : luaScripts) {
                             ImGui::Text(ICON_FA_FILE_CODE " Assigned Script: %s", scriptData.name.c_str());  // Ícono de archivo de script
 
@@ -469,13 +476,14 @@ namespace libCore
 
             // Lista de todos los componentes disponibles con sus iconos correspondientes
             std::vector<std::pair<std::string, const char*>> componentNames = {
-                {"TransformComponent", ICON_FA_ARROWS_ALT},        // Ícono para transformación
-                {"MeshComponent", ICON_FA_CUBE},                   // Ícono para mallas
-                {"MaterialComponent", ICON_FA_PAINT_BRUSH},        // Ícono para material
-                {"CameraComponent", ICON_FA_CAMERA},               // Ícono para cámara
-                {"LightComponent", ICON_FA_LIGHTBULB},             // Ícono para luz
-                {"DirectionalLightComponent", ICON_FA_SUN},        // Ícono para luz direccional
-                {"ScriptComponent", ICON_FA_CODE}                  // Ícono para scripts
+                {"TransformComponent", ICON_FA_ARROWS_ALT},        // Icono para transformación
+                {"MeshComponent", ICON_FA_CUBE},                   // Icono para mallas
+                {"MaterialComponent", ICON_FA_PAINT_BRUSH},        // Icono para material
+                {"CameraComponent", ICON_FA_CAMERA},               // Icono para cámara
+                {"LightComponent", ICON_FA_LIGHTBULB},             // Icono para luz
+                {"DirectionalLightComponent", ICON_FA_SUN},        // Icono para luz direccional
+                {"ScriptComponent", ICON_FA_CODE},                 // Icono para scripts
+                {"AnimationComponent", ICON_FA_FILM}               // Icono para scripts
             };
 
             // ComboBox para seleccionar el componente

@@ -104,6 +104,7 @@ namespace libCore
 
         // Asignar los componentes de MeshComponent si el modelo tiene mallas
         if (!model->meshes.empty()) {
+            //MESHES
             for (auto& mesh : model->meshes) {
                 auto& meshComponent = m_registry->emplace<MeshComponent>(entity, mesh, model, true);
                 // Agregar matriz de instancia
@@ -113,17 +114,10 @@ namespace libCore
                 abbComponent.aabb->CalculateAABB(mesh->vertices);
                 meshComponent.originalModel = model;
             }
-
             //SKELETAL
             if (model->importModelData.skeletal == true)
             {
-                auto& animationComponent = m_registry->emplace<AnimationComponent>(entity);
-                animationComponent.model = model;
-                //animationComponent.model = model;
-                //animationComponent.danceAnimation = CreateRef<Animation>("C:/Users/bisho/OneDrive/Escritorio/EchoEngine_2024/EchoEngine/EchoEditor/assets/models/vampire/dancing_vampire.dae", model);
-                //animationComponent.danceAnimation = CreateRef<Animation>("C:/Users/bisho/OneDrive/Escritorio/EchoEngine_2024/EchoEngine/EchoEditor/assets/models/tronco/Tronco.dae", model);
-                //animationComponent.danceAnimation = CreateRef<Animation>("C:/Users/bisho/OneDrive/Escritorio/EchoEngine_2024/EchoEngine/EchoEditor/assets/models/Exo/Exo_dancing.fbx", model);
-                //animationComponent.animator = CreateRef<Animator>(animationComponent.danceAnimation);
+                auto& animationComponent = m_registry->emplace<AnimationComponent>(entity,model);
             }
         }
 

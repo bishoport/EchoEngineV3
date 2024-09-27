@@ -155,8 +155,21 @@ namespace libCore
         // Método para agregar una animación
         void AddAnimation(const std::string& name, const std::string& filePath) {
             if (model != nullptr) {
-                std::cout << "Cargando animación desde: " << filePath << std::endl;
-                animations[name] = CreateRef<Animation>(filePath, model);
+                // Obtener el directorio actual de trabajo (ruta de la solución)
+                std::filesystem::path solutionPath = std::filesystem::current_path();
+                std::filesystem::path relativePath("assets/" + filePath);
+
+                // Concatenar la ruta de la solución con la ruta relativa
+                std::filesystem::path fullPath = solutionPath / relativePath;
+
+                // Convertir la ruta a string
+                std::string fullPathStr = fullPath.string();
+
+                // Imprimir la ruta completa para depuración
+                std::cout << "Cargando animación desde: " << fullPathStr << std::endl;
+
+                // Usar la ruta completa para cargar la animación
+                animations[name] = CreateRef<Animation>(fullPathStr, model);
 
                 if (animations[name]) {
                     std::cout << "Animación '" << name << "' agregada correctamente." << std::endl;
@@ -177,6 +190,7 @@ namespace libCore
             if (animations.find(name) != animations.end()) {
                 currentAnimation = name;
                 animationTime = 0.0f;  // Reinicia el tiempo de la animación
+                
                 if (animator) {
                     std::cout << "Estableciendo la animación actual en el animador: " << name << std::endl;
                     animator->SetAnimation(animations[name]);  // Usa SetAnimation en el animador
@@ -197,12 +211,8 @@ namespace libCore
         // Actualizar el tiempo de animación (se llama en cada frame)
         void Update(float deltaTime) {
             if (!isPlaying || currentAnimation.empty()) {
-                std::cout << "Animación en pausa o sin animación seleccionada." << std::endl;
                 return;
             }
-
-            std::cout << "Actualizando animación: " << currentAnimation << " con deltaTime: " << deltaTime << std::endl;
-
             animationTime += deltaTime * playbackSpeed;
             if (animator) {
                 animator->UpdateAnimation(deltaTime);
@@ -214,28 +224,14 @@ namespace libCore
 
         // Función que devuelve las matrices finales de los huesos
         std::vector<glm::mat4> GetFinalBoneMatrices() {
-            if (animator && animator->HasAnimation()) {
-                std::cout << "Obteniendo matrices finales de los huesos para la animación: " << currentAnimation << std::endl;
+            if (animator && animator->HasAnimation()) 
+            {
                 return animator->GetFinalBoneMatrices();
             }
             else {
-                std::cerr << "Advertencia: No hay animación activa o animador no inicializado. Devolviendo matrices de identidad." << std::endl;
                 // Devuelve una matriz de identidad si no hay animación activa
                 return std::vector<glm::mat4>(100, glm::mat4(1.0f));  // Ajusta el tamaño según tus necesidades
             }
         }
     };
-
-
-
-
-    
-    /*struct AnimationComponent
-    {
-        float boneScaleFactor = 1.0f;
-
-        Ref<Animation> danceAnimation = nullptr;
-        Ref<Animator> animator = nullptr;
-    };*/
-
 }
