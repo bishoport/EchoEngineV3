@@ -25,6 +25,7 @@ namespace libCore
                 EntityManager::GetInstance().runScripting = false;
                 EntityManager::GetInstance().CheckInstancesInRunTime();
                 DeserializeComponentsSceneTask();
+                //LoadComponentsScene();
                 break;
             case STOP:
                 std::cout << "Editor state: STOP\n";
@@ -38,6 +39,7 @@ namespace libCore
                 std::cout << "Editor state: PREPARE_PLAY\n";
                 //currentScene->SerializeComponents();
                 SerializeComponentsSceneTask();
+                //SaveComponentsScene();
                 break;
             case PLAY:
                 std::cout << "Editor state: PLAY\n";
@@ -47,7 +49,6 @@ namespace libCore
             }
         });
     }
-
 
     //--SCENE
     void SceneManager::CreateNewScene(const std::string& sceneName)

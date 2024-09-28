@@ -70,7 +70,8 @@ namespace libCore
 
             // Botón para guardar la escena actual con icono Font Awesome de "Guardar"
             if (ImGui::Button(ICON_FA_SAVE " Save Scene")) {
-                SceneManager::GetInstance().SerializeSceneTask();
+                //SceneManager::GetInstance().SerializeSceneTask();
+                SceneManager::GetInstance().SaveScene();
                 // Añadir la escena guardada al historial
                 SceneHistoryManager::GetInstance().AddSceneToHistory(currentScene->sceneName);
             }
@@ -101,8 +102,8 @@ namespace libCore
             // Botón para cargar la escena seleccionada con icono Font Awesome de "Cargar"
             if (selectedSceneIndex >= 0 && ImGui::Button(ICON_FA_FOLDER_OPEN " Load Scene")) {
                 std::string selectedScene = sceneHistory[selectedSceneIndex];
-                //SceneManager::GetInstance().LoadScene(selectedScene);
-                SceneManager::GetInstance().LoadSceneTask(selectedScene);
+                SceneManager::GetInstance().LoadScene(selectedScene);
+                //SceneManager::GetInstance().LoadSceneTask(selectedScene);
             }
 
             

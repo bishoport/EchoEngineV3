@@ -30,7 +30,7 @@ namespace libCore
 
     //--CHECK COMPONENTS
     template<typename T>
-    bool EntityManagerBridge::HasComponent(entt::entity entity) {
+    bool EntityManagerBridge::HasComponent(entt::entity entity0) {
         return EntityManager::GetInstance().HasComponent<T>(entity);
     }
     //----------------------------------------------------------------------------------------------

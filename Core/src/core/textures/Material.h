@@ -15,7 +15,8 @@ namespace libCore
         Material(const std::string& matName);
 
         std::string materialName = "default_material";
-        std::string shaderName = "default";
+        
+        //std::string shaderName = "default";
 
         // Valores
         glm::vec3 albedoColor = glm::vec3(1.0f, 1.0f, 1.0f);

@@ -311,6 +311,7 @@ namespace libCore
         {
             if (ImGui::Button(ICON_FA_STOP "")) {
                 Engine::GetInstance().SetEngineState(EditorStates::PREPARE_STOP);
+                //Engine::GetInstance().SetEngineState(EditorStates::STOP);
             }
             ImGui::SameLine();
             if (ImGui::Button(ICON_FA_PAUSE "")) {
@@ -319,6 +320,7 @@ namespace libCore
             ImGui::SameLine();
             if (ImGui::Button(ICON_FA_PLAY "")) {
                 Engine::GetInstance().SetEngineState(EditorStates::PREPARE_PLAY);
+                //Engine::GetInstance().SetEngineState(EditorStates::PLAY);
             }
 
             //-- ImGIZMO CONTROLS AREA

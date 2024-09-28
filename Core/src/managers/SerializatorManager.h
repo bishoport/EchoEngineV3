@@ -72,7 +72,7 @@ namespace YAML
         static Node encode(const libCore::Material& rhs) {
             Node node;
             node["MaterialName"] = rhs.materialName;
-            node["ShaderName"] = rhs.shaderName;
+            //node["ShaderName"] = rhs.shaderName;
             node["AlbedoColor"] = rhs.albedoColor;
             node["NormalStrength"] = rhs.normalStrength;
             node["MetallicValue"] = rhs.metallicValue;
@@ -87,7 +87,7 @@ namespace YAML
                 return false;
             }
             rhs.materialName = node["MaterialName"].as<std::string>();
-            rhs.shaderName = node["ShaderName"].as<std::string>();
+            //rhs.shaderName = node["ShaderName"].as<std::string>();
             rhs.albedoColor = node["AlbedoColor"].as<glm::vec3>();
             rhs.normalStrength = node["NormalStrength"].as<float>();
             rhs.metallicValue = node["MetallicValue"].as<float>();
@@ -221,10 +221,27 @@ namespace libCore {
     }
     //--------------------
 
+
+    //--MeshComponent
+    YAML::Node SerializeMeshComponent(const MeshComponent& meshComponent) {
+        YAML::Node node;
+        node["MeshName"] = meshComponent.mesh->meshName;
+        return node;
+    }
+    MeshComponent DeserializeMeshComponent(const YAML::Node& node) {
+        MeshComponent meshComponent;
+        meshComponent.mesh = AssetsManager::GetInstance().GetMesh(node["MeshName"].as<std::string>());
+        return meshComponent;
+    }
+    //--------------------
+
     //--MaterialComponent
     YAML::Node SerializeMaterialComponent(const MaterialComponent& materialComponent) {
         YAML::Node node;
-        node["Material"] = *materialComponent.material;
+
+        node["MaterialName"] = materialComponent.material->materialName;
+
+        /*node["Material"] = *materialComponent.material;
 
         if (materialComponent.material->albedoMap) {
             node["AlbedoMap"] = *materialComponent.material->albedoMap;
@@ -240,13 +257,15 @@ namespace libCore {
         }
         if (materialComponent.material->aOMap) {
             node["AOMap"] = *materialComponent.material->aOMap;
-        }
+        }*/
 
         return node;
     }
     MaterialComponent DeserializeMaterialComponent(const YAML::Node& node) {
         MaterialComponent materialComponent;
-        materialComponent.material = CreateRef<Material>();
+        materialComponent.material = AssetsManager::GetInstance().getMaterial(node["MaterialName"].as<std::string>());
+
+        /*materialComponent.material = CreateRef<Material>();
         *materialComponent.material = node["Material"].as<Material>();
 
         if (node["AlbedoMap"]) {
@@ -268,25 +287,14 @@ namespace libCore {
         if (node["AOMap"]) {
             materialComponent.material->aOMap = CreateRef<Texture>();
             *materialComponent.material->aOMap = node["AOMap"].as<Texture>();
-        }
+        }*/
 
         return materialComponent;
     }
     //--------------------
 
 
-    //--MeshComponent
-    YAML::Node SerializeMeshComponent(const MeshComponent& meshComponent) {
-        YAML::Node node;
-        node["MeshName"] = meshComponent.mesh->meshName;
-        return node;
-    }
-    MeshComponent DeserializeMeshComponent(const YAML::Node& node) {
-        MeshComponent meshComponent;
-        meshComponent.mesh = AssetsManager::GetInstance().GetMesh(node["MeshName"].as<std::string>());
-        return meshComponent;
-    }
-    //--------------------
+    
 
     //--AABBComponent
     YAML::Node SerializeAABBComponent(const AABBComponent& aabbComponent) {

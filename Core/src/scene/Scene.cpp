@@ -216,7 +216,8 @@ namespace libCore
 
 
     //--SERIALIZAR COMPONENTES
-    void Scene::SerializeComponents() {
+    void Scene::SerializeComponents() 
+    {
         YAML::Emitter out;
         out << YAML::BeginMap;
         out << YAML::Key << "Scene" << YAML::Value << sceneName + "_temp";
@@ -245,15 +246,15 @@ namespace libCore
                 out << YAML::Value << SerializeTransformComponent(entityManager.GetComponent<TransformComponent>(entity));
             }
 
-            if (entityManager.HasComponent<MeshComponent>(entity)) {
+            /*if (entityManager.HasComponent<MeshComponent>(entity)) {
                 out << YAML::Key << "MeshComponent";
                 out << YAML::Value << SerializeMeshComponent(entityManager.GetComponent<MeshComponent>(entity));
-            }
+            }*/
 
-            if (entityManager.HasComponent<MaterialComponent>(entity)) {
-                out << YAML::Key << "MaterialComponent";
-                out << YAML::Value << SerializeMaterialComponent(entityManager.GetComponent<MaterialComponent>(entity));
-            }
+            //if (entityManager.HasComponent<MaterialComponent>(entity)) {
+            //    out << YAML::Key << "MaterialComponent";
+            //    out << YAML::Value << SerializeMaterialComponent(entityManager.GetComponent<MaterialComponent>(entity));
+            //}
 
             if (entityManager.HasComponent<ScriptComponent>(entity)) {
                 out << YAML::Key << "ScriptComponent";
@@ -303,15 +304,15 @@ namespace libCore
                         entityManager.m_registry->emplace_or_replace<TransformComponent>(entity, transform_component);
                     }
 
-                    if (entityNode["MeshComponent"]) {
-                        auto mesh_component = DeserializeMeshComponent(entityNode["MeshComponent"]);
-                        entityManager.m_registry->emplace_or_replace<MeshComponent>(entity, mesh_component);
-                    }
+                    //if (entityNode["MeshComponent"]) {
+                    //    auto mesh_component = DeserializeMeshComponent(entityNode["MeshComponent"]);
+                    //    entityManager.m_registry->emplace_or_replace<MeshComponent>(entity, mesh_component);
+                    //}
 
-                    if (entityNode["MaterialComponent"]) {
-                        auto material_component = DeserializeMaterialComponent(entityNode["MaterialComponent"]);
-                        entityManager.m_registry->emplace_or_replace<MaterialComponent>(entity, material_component);
-                    }
+                    //if (entityNode["MaterialComponent"]) {
+                    //    auto material_component = DeserializeMaterialComponent(entityNode["MaterialComponent"]);
+                    //    entityManager.m_registry->emplace_or_replace<MaterialComponent>(entity, material_component);
+                    //}
 
                     if (entityNode["ScriptComponent"]) {
                         auto script_component = DeserializeScriptComponent(entityNode["ScriptComponent"]);

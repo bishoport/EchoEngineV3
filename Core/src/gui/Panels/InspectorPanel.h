@@ -10,11 +10,7 @@ namespace libCore
     {
     public:
         InspectorPanel() : PanelBase("Inspector") {}
-
-        void Init() override
-        {
-
-        }
+        void Init() override{}
         void Draw() override {
             if (!m_isVisible) return;
 
@@ -180,7 +176,11 @@ namespace libCore
                             ImGui::EndDragDropTarget();
                         }
 
-                        // Botón para agregar la animación
+                        ImGui::Separator();
+
+                        ImGui::SliderFloat("Playback Speed", &animationComponent.playbackSpeed, 0.1f, 3.0f);
+                        ImGui::SliderFloat("Bone Scale Factor", &animationComponent.boneScaleFactor, 0.01f, 200.0f);
+
                         if (ImGui::Button("Add Animation")) {
                             if (strlen(animationPath) > 0) {
                                 std::string name = "Animation_" + std::to_string(animationComponent.animations.size());
@@ -220,37 +220,8 @@ namespace libCore
                                 }
                             }
                         }
-
-                        ImGui::Separator();
-
-                        // Control de la velocidad de reproducción
-                        ImGui::SliderFloat("Playback Speed", &animationComponent.playbackSpeed, 0.1f, 3.0f);
-
-                        // Control del factor de escala del hueso
-                        ImGui::SliderFloat("Bone Scale Factor", &animationComponent.boneScaleFactor, 0.01f, 100.0f);
-
-                        ImGui::Separator();
-
-                        // Botón para pausar o reanudar la animación desde un control global
-                        if (animationComponent.isPlaying) {
-                            if (ImGui::Button("Pause Animation")) {
-                                animationComponent.isPlaying = false;  // Pausar la animación
-                            }
-                        }
-                        else {
-                            if (ImGui::Button("Resume Animation")) {
-                                animationComponent.isPlaying = true;  // Reanudar la animación
-                            }
-                        }
-
-                        // Botón para detener la animación
-                        if (ImGui::Button("Stop Animation")) {
-                            animationComponent.isPlaying = false;  // Detener la animación
-                            animationComponent.animationTime = 0.0f;  // Reiniciar el tiempo de la animación
-                        }
                     }
                 }
-
                 //--AABB_COMPONENT
                 if (EntityManager::GetInstance().HasComponent<AABBComponent>(selectedEntity)) {
                     if (ImGui::CollapsingHeader(ICON_FA_CUBE " AABB")) {  // Añadir icono de cubo para el AABB
@@ -477,13 +448,11 @@ namespace libCore
             // Lista de todos los componentes disponibles con sus iconos correspondientes
             std::vector<std::pair<std::string, const char*>> componentNames = {
                 {"TransformComponent", ICON_FA_ARROWS_ALT},        // Icono para transformación
-                {"MeshComponent", ICON_FA_CUBE},                   // Icono para mallas
-                {"MaterialComponent", ICON_FA_PAINT_BRUSH},        // Icono para material
-                {"CameraComponent", ICON_FA_CAMERA},               // Icono para cámara
-                {"LightComponent", ICON_FA_LIGHTBULB},             // Icono para luz
-                {"DirectionalLightComponent", ICON_FA_SUN},        // Icono para luz direccional
-                {"ScriptComponent", ICON_FA_CODE},                 // Icono para scripts
-                {"AnimationComponent", ICON_FA_FILM}               // Icono para scripts
+                {"MeshComponent",      ICON_FA_CUBE},              // Icono para mallas
+                {"MaterialComponent",  ICON_FA_PAINT_BRUSH},       // Icono para material
+                {"CameraComponent",    ICON_FA_CAMERA},            // Icono para cámara
+                {"LightComponent",     ICON_FA_LIGHTBULB},         // Icono para luz
+                {"ScriptComponent",    ICON_FA_CODE}               // Icono para scripts
             };
 
             // ComboBox para seleccionar el componente
@@ -526,9 +495,6 @@ namespace libCore
                 selectedComponent.clear(); // Limpiar la selección después de agregar el componente
             }
         }
-
-        void Shutdown() override {
-            // Liberación de recursos si es necesario
-        }
+        void Shutdown() override {}
     };
 }

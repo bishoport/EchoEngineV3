@@ -19,9 +19,6 @@ namespace libCore
 		LoadTextureAsset("checker", (defaultAssetsPathTexture).c_str(), "checker.jpg", TEXTURE_TYPES::ALBEDO);
 	}
 
-
-	//SetTexture(key, TextureLoader::getInstance().LoadTexture(directoryPath, fileName, type, slot));
-	
 	//--TEXTURES
 	Ref<Texture> AssetsManager::LoadTextureAsset(const std::string& key, const char* directoryPath, const char* fileName, TEXTURE_TYPES type)
 	{
@@ -74,12 +71,6 @@ namespace libCore
 	//---------------------------------------------------------------------------------------------------------------------------
 
 
-
-
-
-
-
-
 	//--MODELS
 	void AssetsManager::LoadModelAsset(ImportModelData importModelData)
 	{
@@ -105,7 +96,6 @@ namespace libCore
 			ConsoleLog::GetInstance().AddLog(LogLevel::L_ERROR, "Error Loading MODEL: " + model->name);
 		}
 	}
-	
 	Ref<Model> AssetsManager::GetModel(const std::string& name) {
 		// Primero, buscamos en el unordered_map de modelos cargados
 		auto it = loadedModels.find(name);
@@ -234,8 +224,4 @@ namespace libCore
 		return loadedMaterials;
 	}
 	//---------------------------------------------------------------------------------------------------------------------------
-
-
-	
-
 }

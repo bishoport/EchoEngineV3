@@ -1,17 +1,66 @@
 Scene: Prueba_1_temp
 Entities:
-  - Entity: 0
+  - Entity: 3
     IDComponent:
-      ID: 1b9ec4a199f38094
+      ID: a9524a3809e63db0
       MarkToDelete: false
     TagComponent:
-      Tag: new_GameObject
+      Tag: Board
     TransformComponent:
       Transform:
         Position:
-          - 2.09854364
           - 0
-          - -8.25688457
+          - 0
+          - 0
+        Rotation:
+          - 0
+          - 0
+          - 0
+        Scale:
+          - 1
+          - 1
+          - 1
+    ScriptComponent:
+      Scripts:
+        - filePath: assets\scripts\Tablero.lua
+          name: Tablero
+      ExposedVars:
+        Tablero:
+          int_width: 26
+          int_height: 19
+          selectedModel: Tile_floor
+  - Entity: 2
+    IDComponent:
+      ID: 57688a99f303e5ac
+      MarkToDelete: false
+    TagComponent:
+      Tag: Robot.fbx
+    TransformComponent:
+      Transform:
+        Position:
+          - 2.98054838
+          - 0
+          - 0
+        Rotation:
+          - 0
+          - -0
+          - 0
+        Scale:
+          - 0.200000003
+          - 0.200000003
+          - 0.200000003
+  - Entity: 1
+    IDComponent:
+      ID: 0d3418e101ad84a8
+      MarkToDelete: false
+    TagComponent:
+      Tag: Bot
+    TransformComponent:
+      Transform:
+        Position:
+          - 0
+          - 0
+          - 0
         Rotation:
           - 0
           - -0
@@ -20,13 +69,23 @@ Entities:
           - 1
           - 1
           - 1
-    ScriptComponent:
-      Scripts:
-        - filePath: assets\scripts\TransformTest.lua
-          name: TransformTest
-      ExposedVars:
-        TransformTest:
-          selectedModel: Cube
-          scale: 1
-          speed: 0.231000006
-          rotationSpeed: 30
+  - Entity: 0
+    IDComponent:
+      ID: 49a3b5643dfde6b6
+      MarkToDelete: false
+    TagComponent:
+      Tag: dancing_vampire.dae
+    TransformComponent:
+      Transform:
+        Position:
+          - 0
+          - 0
+          - 0
+        Rotation:
+          - 0
+          - 0
+          - 0
+        Scale:
+          - 0.00999999978
+          - 0.00999999978
+          - 0.00999999978
