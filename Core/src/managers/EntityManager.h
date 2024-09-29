@@ -86,6 +86,9 @@ namespace libCore
         void DebugPrintEntityHierarchy(entt::entity entity, const Ref<entt::registry>& registry, int level = 0);
         void DebugPrintAllEntityHierarchies();
         void DebugPrintAllEntitiesWithUUIDs();
+
+        void DestroyDeleteMarked();
+
     };
 }
 

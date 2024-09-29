@@ -193,6 +193,9 @@ namespace libCore
 				Renderer::getInstance().RenderViewport(ViewportManager::GetInstance().viewports[0], m_deltaTime);
 				//---------
 
+				EntityManager::GetInstance().DestroyDeleteMarked();
+
+
 				//--VIEWPORT OUT
 				if (m_EngineMode == EDITOR)
 				{

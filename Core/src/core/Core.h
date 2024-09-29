@@ -148,6 +148,7 @@ struct Vertex
 	float m_Weights[MAX_BONE_INFLUENCE]; //weights from each bone
 };
 
+
 struct AssimpNodeData
 {
 	glm::mat4 transformation;

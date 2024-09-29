@@ -423,16 +423,16 @@ namespace libCore
     //--ACTUALIZADOR DE FUNCIONES UPDATES ANTES DEL RENDER DE LOS COMPONENTES
     void EntityManager::UpdateGameObjects(Timestep deltaTime)
     {
-        //Destruccion real antes de actualizar
-        //(Quizá mejor crear un componente temporal para esto)
-        auto IDCompView = m_registry->view<IDComponent>();
-        for (auto entity : IDCompView) {
-            auto& idComponent = GetComponent<IDComponent>(entity);
+        ////Destruccion real antes de actualizar
+        ////(Quizá mejor crear un componente temporal para esto)
+        //auto IDCompView = m_registry->view<IDComponent>();
+        //for (auto entity : IDCompView) {
+        //    auto& idComponent = GetComponent<IDComponent>(entity);
 
-            if (idComponent.markToDelete == true) {
-                EntityManager::GetInstance().DestroyEntityRecursively(entity);
-            }
-        }
+        //    if (idComponent.markToDelete == true) {
+        //        EntityManager::GetInstance().DestroyEntityRecursively(entity);
+        //    }
+        //}
 
         // ACTUALIZACION DE LOS ANIMATION
         auto viewAnimation = m_registry->view<AnimationComponent>();
@@ -680,6 +680,19 @@ namespace libCore
         for (auto entity : view) {
             auto& idComponent = view.get<IDComponent>(entity);
             std::cout << "Entity: " << static_cast<uint32_t>(entity) << " UUID: " << idComponent.ID.ToString() << std::endl;
+        }
+    }
+    void EntityManager::DestroyDeleteMarked()
+    {
+        //Destruccion real antes de actualizar
+                //(Quizá mejor crear un componente temporal para esto)
+        auto IDCompView = m_registry->view<IDComponent>();
+        for (auto entity : IDCompView) {
+            auto& idComponent = GetComponent<IDComponent>(entity);
+
+            if (idComponent.markToDelete == true) {
+                EntityManager::GetInstance().DestroyEntityRecursively(entity);
+            }
         }
     }
     //------------------------------------------------------------------------------------
