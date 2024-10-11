@@ -293,7 +293,7 @@ namespace libCore
                 if (entityNode["IDComponent"]) {
                     auto id_component = DeserializeIDComponent(entityNode["IDComponent"]);
 
-                    entt::entity entity = entityManager.GetEntityByUUID(id_component.ID.ToString());
+                    entt::entity entity = entityManager.GetEntityByUUID(id_component.ID);
 
                     if (entityNode["TagComponent"]) {
                         auto tag_component = DeserializeTagComponent(entityNode["TagComponent"]);

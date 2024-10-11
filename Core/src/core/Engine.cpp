@@ -103,7 +103,7 @@ namespace libCore
 		ShaderManager::setShaderDataLoad("direct_light_depth_shadows", shadersDirectory + "shadows/directLight_shadow_mapping_depth_shader.vert", shadersDirectory + "shadows/directLight_shadow_mapping_depth_shader.fs");
 
 		//-STENCIL MOUSE PICKING
-		ShaderManager::setShaderDataLoad("stencil", shadersDirectory + "Stencil.vert", shadersDirectory + "Stencil.frag");
+		ShaderManager::setShaderDataLoad("picking", shadersDirectory + "picking.vert", shadersDirectory + "picking.frag");
 		ShaderManager::LoadAllShaders();
 		//-----------------------------------------------------------------
 
@@ -310,61 +310,139 @@ namespace libCore
 			ViewportManager::GetInstance().viewports[0]->camera = ViewportManager::GetInstance().viewports[0]->gameCamera;
 		}*/
 
-
-
-		if (m_CurrentState == EDITOR && GuiLayer::GetInstance().mouseInsideViewport == true)
+		if (m_EngineMode == EngineMode::EDITOR_MODE && GuiLayer::GetInstance().mouseInsideViewport == true)
 		{
-			//--MOUSE PICKING
-			if (usingGizmo == false)
+			//--MOUSE PICKING (Color Picking)
+			if (!usingGizmo)
 			{
 				if (GuiLayer::GetInstance().isSelectingObject == true)
 				{
-					return;
+					return;  // Salir si ya estamos en proceso de selección
 				}
 
 				GuiLayer::GetInstance().isSelectingObject = false;
 
+				// Obtener la posición del mouse
 				float mouseX, mouseY;
 				std::tie(mouseX, mouseY) = InputManager::Instance().GetMousePosition();
 
-				if (InputManager::Instance().IsMouseButtonJustPressed(GLFW_MOUSE_BUTTON_LEFT) && GuiLayer::GetInstance().isSelectingObject == false)
+				// Verificar si se ha presionado el botón izquierdo del mouse
+				if (InputManager::Instance().IsMouseButtonJustPressed(GLFW_MOUSE_BUTTON_LEFT) && !GuiLayer::GetInstance().isSelectingObject)
 				{
-					EntityManager::GetInstance().entitiesInRay.clear();
+					// Solo ejecutar la lógica de picking cuando se presiona el botón
+					Ref<Viewport> viewport = ViewportManager::GetInstance().viewports[0];  // Asegúrate de que el índice es correcto
 
-					float normalizedX = (2.0f * mouseX) / ViewportManager::GetInstance().viewports[0]->viewportSize.x - 1.0f;
-					float normalizedY = ((2.0f * mouseY) / ViewportManager::GetInstance().viewports[0]->viewportSize.y - 1.0f) * -1.0f;
+					// Aplicar el offset ajustado por el usuario
 
-					glm::vec3 clipSpaceCoordinates(normalizedX, normalizedY, -1.0);
-					glm::vec4 homogenousClipCoordinates = glm::vec4(clipSpaceCoordinates, 1.0);
-					glm::mat4 invProjView = glm::inverse(ViewportManager::GetInstance().viewports[0]->camera->cameraMatrix);
-					glm::vec4 homogenousWorldCoordinates = invProjView * homogenousClipCoordinates;
-					glm::vec3 worldCoordinates = glm::vec3(homogenousWorldCoordinates) / homogenousWorldCoordinates.w;
+					Engine::GetInstance().offSetMouseY = -viewport->viewportSize.y  - 25;
+					Engine::GetInstance().offSetMouseX = -10;
 
-					glm::vec3 rayOrigin = ViewportManager::GetInstance().viewports[0]->camera->Position;
-					glm::vec3 rayDirection = glm::normalize(worldCoordinates - rayOrigin);
+					float relativeMouseX = mouseX - viewport->viewportPos.x + Engine::GetInstance().offSetMouseX;
+					float relativeMouseY = mouseY - (viewport->viewportPos.y - viewport->viewportSize.y) + Engine::GetInstance().offSetMouseY;
 
-					EntityManager::GetInstance().CheckRayModelIntersection(rayOrigin, rayDirection);
-
-					if (EntityManager::GetInstance().entitiesInRay.size() == 1)
+					// Asegurarse de que el click está dentro de los límites del Viewport
+					if (relativeMouseX >= 0 && relativeMouseX <= viewport->viewportSize.x &&
+						relativeMouseY >= 0 && relativeMouseY <= viewport->viewportSize.y)
 					{
-						EntityManager::GetInstance().currentSelectedEntityInScene = EntityManager::GetInstance().entitiesInRay[0];
-						GuiLayer::GetInstance().isSelectingObject = false; // No need to select, auto-selected
-						GuiLayer::GetInstance().showModelSelectionCombo = false;
+						// Ajustar las coordenadas Y si es necesario para OpenGL (inversión del eje Y dentro del viewport)
+						int adjustedMouseY = viewport->viewportSize.y - static_cast<int>(relativeMouseY);
+
+						// Leer el color del framebuffer de picking
+						unsigned char pixelColor[3];
+						glBindFramebuffer(GL_READ_FRAMEBUFFER, viewport->framebuffer_picking->getFramebuffer());
+						glReadPixels(static_cast<int>(relativeMouseX), adjustedMouseY, 1, 1, GL_RGB, GL_UNSIGNED_BYTE, pixelColor);
+						glBindFramebuffer(GL_FRAMEBUFFER, 0); // Desvincular el framebuffer
+
+						// Convertir el color a un UUID (directamente 24 bits)
+						uint32_t pickedID = EntityManager::GetInstance().ColorToUUID(pixelColor[0], pixelColor[1], pixelColor[2]);
+
+						// Verificar si se ha seleccionado un objeto
+						if (pickedID > 0)  // Asumiendo que un ID válido es mayor que 0
+						{
+							std::cout << "Objeto seleccionado con UUID: " << pickedID << std::endl;
+							EntityManager::GetInstance().currentSelectedEntityInScene = EntityManager::GetInstance().GetEntityByUUID(pickedID);
+							GuiLayer::GetInstance().isSelectingObject = false; // Objeto seleccionado
+							GuiLayer::GetInstance().showModelSelectionCombo = false;
+						}
+						else
+						{
+							std::cout << "No se ha seleccionado ningún objeto" << std::endl;
+							GuiLayer::GetInstance().isSelectingObject = false;
+							GuiLayer::GetInstance().showModelSelectionCombo = false;
+							EntityManager::GetInstance().currentSelectedEntityInScene = entt::null; // Deselecciona la entidad
+						}
 					}
-					else if (EntityManager::GetInstance().entitiesInRay.size() > 1) {
-						GuiLayer::GetInstance().isSelectingObject = true; // Multiple options, need to select
-						GuiLayer::GetInstance().showModelSelectionCombo = true;
-						EntityManager::GetInstance().currentSelectedEntityInScene = entt::null;
-					}
-					else {
-						GuiLayer::GetInstance().isSelectingObject = false; // No selection
-						GuiLayer::GetInstance().showModelSelectionCombo = false;
-						EntityManager::GetInstance().currentSelectedEntityInScene = entt::null;
-						EntityManager::GetInstance().entitiesInRay.clear();
+					else
+					{
+						// Trazas: Click fuera del Viewport
+						std::cout << "Click detectado fuera del Viewport" << std::endl;
 					}
 				}
 			}
 		}
+
+
+
+
+
+
+
+		
+
+		//Con raycast y AABB
+		//if (m_EngineMode == EngineMode::EDITOR_MODE && GuiLayer::GetInstance().mouseInsideViewport == true)
+		//{
+		//	//--MOUSE PICKING
+		//	if (usingGizmo == false)
+		//	{
+		//		if (GuiLayer::GetInstance().isSelectingObject == true)
+		//		{
+		//			return;
+		//		}
+
+		//		GuiLayer::GetInstance().isSelectingObject = false;
+
+		//		float mouseX, mouseY;
+		//		std::tie(mouseX, mouseY) = InputManager::Instance().GetMousePosition();
+
+		//		if (InputManager::Instance().IsMouseButtonJustPressed(GLFW_MOUSE_BUTTON_LEFT) && GuiLayer::GetInstance().isSelectingObject == false)
+		//		{
+		//			EntityManager::GetInstance().entitiesInRay.clear();
+
+		//			float normalizedX = (2.0f * mouseX) / ViewportManager::GetInstance().viewports[0]->viewportSize.x - 1.0f;
+		//			float normalizedY = ((2.0f * mouseY) / ViewportManager::GetInstance().viewports[0]->viewportSize.y - 1.0f) * -1.0f;
+
+		//			glm::vec3 clipSpaceCoordinates(normalizedX, normalizedY, -1.0);
+		//			glm::vec4 homogenousClipCoordinates = glm::vec4(clipSpaceCoordinates, 1.0);
+		//			glm::mat4 invProjView = glm::inverse(ViewportManager::GetInstance().viewports[0]->camera->cameraMatrix);
+		//			glm::vec4 homogenousWorldCoordinates = invProjView * homogenousClipCoordinates;
+		//			glm::vec3 worldCoordinates = glm::vec3(homogenousWorldCoordinates) / homogenousWorldCoordinates.w;
+
+		//			glm::vec3 rayOrigin = ViewportManager::GetInstance().viewports[0]->camera->Position;
+		//			glm::vec3 rayDirection = glm::normalize(worldCoordinates - rayOrigin);
+
+		//			EntityManager::GetInstance().CheckRayModelIntersection(rayOrigin, rayDirection);
+
+		//			if (EntityManager::GetInstance().entitiesInRay.size() == 1)
+		//			{
+		//				EntityManager::GetInstance().currentSelectedEntityInScene = EntityManager::GetInstance().entitiesInRay[0];
+		//				GuiLayer::GetInstance().isSelectingObject = false; // No need to select, auto-selected
+		//				GuiLayer::GetInstance().showModelSelectionCombo = false;
+		//			}
+		//			else if (EntityManager::GetInstance().entitiesInRay.size() > 1) {
+		//				GuiLayer::GetInstance().isSelectingObject = true; // Multiple options, need to select
+		//				GuiLayer::GetInstance().showModelSelectionCombo = true;
+		//				EntityManager::GetInstance().currentSelectedEntityInScene = entt::null;
+		//			}
+		//			else {
+		//				GuiLayer::GetInstance().isSelectingObject = false; // No selection
+		//				GuiLayer::GetInstance().showModelSelectionCombo = false;
+		//				EntityManager::GetInstance().currentSelectedEntityInScene = entt::null;
+		//				EntityManager::GetInstance().entitiesInRay.clear();
+		//			}
+		//		}
+		//	}
+		//}
 		//-------------------------------------------
 	}
 	// -------------------------------------------------

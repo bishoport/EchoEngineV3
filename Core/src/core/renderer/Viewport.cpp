@@ -35,17 +35,31 @@ namespace libCore
         framebuffer_HDR->resize(width, height);
         framebuffer_SSAO->resize(width, height);
         framebuffer_SSAOBlur->resize(width, height);
+        framebuffer_picking->resize(width, height);
     }
 
     void Viewport::SetupEventSubscriptions()
     {
         // Suscribirse a eventos de cambio de tamaño del panel
+        //EventManager::OnPanelResizedEvent().subscribe([this](const std::string& name, const glm::vec2& size, const glm::vec2& position)
+        //    {
+        //        viewportSize = size;
+        //        viewportPos = glm::vec2(position.x, viewportSize.y - position.y);
+
+        //        // Redimensionar todos los framebuffers y la GBO de manera centralizada
+        //        ResizeBuffers(static_cast<int>(size.x), static_cast<int>(size.y));
+
+        //        // Actualizar el tamaño de la cámara
+        //        UpdateCameraSizeView(static_cast<int>(size.x), static_cast<int>(size.y));
+        //    });
+
         EventManager::OnPanelResizedEvent().subscribe([this](const std::string& name, const glm::vec2& size, const glm::vec2& position)
             {
+                // Actualiza la posición y tamaño del Viewport
                 viewportSize = size;
-                viewportPos = glm::vec2(position.x, viewportSize.y - position.y);
+                viewportPos = position;  // Esta posición ahora será la posición global corregida desde el panel
 
-                // Redimensionar todos los framebuffers y la GBO de manera centralizada
+                // Redimensionar los framebuffers
                 ResizeBuffers(static_cast<int>(size.x), static_cast<int>(size.y));
 
                 // Actualizar el tamaño de la cámara

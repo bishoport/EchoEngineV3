@@ -27,9 +27,8 @@ namespace libCore
                 if (EntityManager::GetInstance().HasComponent<IDComponent>(selectedEntity)) {
                     auto& idComponent = EntityManager::GetInstance().GetComponent<IDComponent>(selectedEntity);
                     if (ImGui::CollapsingHeader(ICON_FA_ID_BADGE " ID")) {
-                        std::string uuidStr = std::to_string(static_cast<uint64_t>(idComponent.ID));
-                        ImGui::Text("UUID: %s", uuidStr.c_str());
-                        ImGui::Checkbox("Mark To Delete", &idComponent.markToDelete);
+                        ImGui::Text("UUID: %s", idComponent.ID.ToString().c_str());
+
                         // Botón para eliminar la entidad
                         if (ImGui::Button(ICON_FA_TRASH " Delete Entity")) {
                             EntityManager::GetInstance().MarkToDeleteRecursively(EntityManager::GetInstance().currentSelectedEntityInScene);

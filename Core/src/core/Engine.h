@@ -29,6 +29,9 @@ namespace libCore
 
         bool usingGizmo = false;
 
+        int offSetMouseX = 0;
+        int offSetMouseY = -200;
+
     private:
         //ENGINE LIFE--CYCLE
         EngineMode   m_EngineMode = EngineMode::EDITOR_MODE;

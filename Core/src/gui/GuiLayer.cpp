@@ -6,7 +6,6 @@
 #include <IconFontCppHeaders/IconsFontAwesome5.h>
 
 #include "../managers/WindowManager.h"
-//#include "../managers/SceneManager.h"
 
 //--Panels
 #include "Panels/InspectorPanel.h"

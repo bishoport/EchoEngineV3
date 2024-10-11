@@ -40,20 +40,20 @@ namespace libCore
     //------------------------------------------------------------------------------------
 
     //--ACCESOS
-    entt::entity EntityManager::GetEntityByUUID(const std::string& uuid) {
+    entt::entity EntityManager::GetEntityByUUID(uint32_t uuid) {  // Asegúrate de usar uint32_t para 24 bits
         // Imprime el UUID que estás buscando
-        //std::cout << "Buscando entidad con UUID: " << uuid << std::endl;
+        std::cout << "Buscando entidad con UUID: " << uuid << std::endl;
 
         auto view = m_registry->view<IDComponent>();
         for (auto entity : view) {
             auto& idComponent = view.get<IDComponent>(entity);
-            std::string entityUUID = idComponent.ID.ToString();
+            uint32_t entityUUID = static_cast<uint32_t>(idComponent.ID);  // Convertir a uint32_t para asegurarse de que coincide con el UUID de 24 bits
 
             // Imprime cada UUID que se está revisando
-            //std::cout << "Revisando entidad con UUID: " << entityUUID << " (Entity ID: " << static_cast<uint32_t>(entity) << ")" << std::endl;
+            std::cout << "Revisando entidad con UUID: " << entityUUID << " (Entity ID: " << static_cast<uint32_t>(entity) << ")" << std::endl;
 
             if (entityUUID == uuid) {
-                //std::cout << "ENTITY_MANAGER -> Se encontró la entidad. Direccion de m_Entity: " << static_cast<uint32_t>(entity) << std::endl;
+                std::cout << "ENTITY_MANAGER -> Se encontró la entidad. Dirección de m_Entity: " << static_cast<uint32_t>(entity) << std::endl;
                 return entity;
             }
         }
@@ -63,6 +63,10 @@ namespace libCore
 
         return entt::null; // Retorna null si no se encuentra la entidad
     }
+
+
+
+
     entt::registry* EntityManager::GetRegistry() {
         assert(m_registry.get() != nullptr && "m_registry debe estar inicializado");
         return m_registry.get();
@@ -497,11 +501,13 @@ namespace libCore
             DrawOneGameObject(entity, shader);
         }
     }
+
     void EntityManager::DrawOneGameObject(entt::entity entity, const std::string& shader)
     {
         auto& transformComponent = GetComponent<TransformComponent>(entity);
         auto& meshComponent = GetComponent<MeshComponent>(entity);
         auto& materialComponent = GetComponent<MaterialComponent>(entity);
+        auto& idComponent = GetComponent<IDComponent>(entity);
 
         // Valores del material
         libCore::ShaderManager::Get(shader)->setVec3("albedoColor", materialComponent.material->albedoColor);
@@ -514,6 +520,11 @@ namespace libCore
         materialComponent.material->normalMap->Bind(shader);
         materialComponent.material->metallicMap->Bind(shader);
         materialComponent.material->roughnessMap->Bind(shader);
+
+        UUID objectID = idComponent.ID; 
+        glm::vec3 idColor = UUIDToColor(objectID);  // Convertir UUID a color
+
+        libCore::ShaderManager::Get(shader)->setVec3("objectIDColor", idColor);
 
         // Usar la transformación acumulada
         libCore::ShaderManager::Get(shader)->setMat4("model", transformComponent.accumulatedTransform);
@@ -542,54 +553,6 @@ namespace libCore
             //meshComponent.mesh->Draw();  //<-Dibujado sin Instancia (el modelo Original)
         }
     }
-    //void EntityManager::DrawOneGameObject(entt::entity entity, const std::string& shader)
-    //{
-    //    auto& transformComponent = GetComponent<TransformComponent>(entity);
-    //    auto& meshComponent = GetComponent<MeshComponent>(entity);
-    //    auto& materialComponent = GetComponent<MaterialComponent>(entity);
-
-    //    // Valores del material
-    //    libCore::ShaderManager::Get(shader)->setVec3("albedoColor", materialComponent.material->albedoColor);
-    //    libCore::ShaderManager::Get(shader)->setFloat("normalStrength", materialComponent.material->normalStrength);
-    //    libCore::ShaderManager::Get(shader)->setFloat("metallicValue", materialComponent.material->metallicValue);
-    //    libCore::ShaderManager::Get(shader)->setFloat("roughnessValue", materialComponent.material->roughnessValue);
-
-    //    // Texturas
-    //    materialComponent.material->albedoMap->Bind(shader);
-    //    materialComponent.material->normalMap->Bind(shader);
-    //    materialComponent.material->metallicMap->Bind(shader);
-    //    materialComponent.material->roughnessMap->Bind(shader);
-
-    //    // Usar la transformación acumulada
-    //    libCore::ShaderManager::Get(shader)->setMat4("model", transformComponent.accumulatedTransform);
-
-    //    //-SKELETAL
-    //    bool useBones = false;
-
-    //    if (HasComponent<AnimationComponent>(entity)) {
-    //        auto& animationComponent = GetComponent<AnimationComponent>(entity);
-    //        useBones = true;
-    //        auto boneTransforms = animationComponent.GetFinalBoneMatrices();
-
-    //        for (int i = 0; i < boneTransforms.size(); ++i) {
-    //            libCore::ShaderManager::Get(shader)->setMat4("finalBonesMatrices[" + std::to_string(i) + "]", boneTransforms[i]);
-    //            libCore::ShaderManager::Get(shader)->setFloat("boneScaleFactor", animationComponent.boneScaleFactor);
-    //        }
-    //    }
-    //    // Establecer el valor de 'useBones' en el shader
-    //    libCore::ShaderManager::Get(shader)->setBool("useBones", useBones);
-    //    //---
-
-    //    //DRAW INSTANCE
-    //    if (!meshComponent.instanceMatrices.empty())
-    //    {
-    //        meshComponent.mesh->DrawInstanced(static_cast<GLsizei>(meshComponent.instanceMatrices.size()), meshComponent.instanceMatrices);
-    //        //meshComponent.mesh->Draw();  //<-Dibujado sin Instancia (el modelo Original)
-    //    }
-    //}
-    //------------------------------------------------------------------------------------
-
-
     //--DRAW AABB Component (Son llamadas desde el Renderer cuando le toque)
     void EntityManager::DrawABBGameObjectMeshComponent(const std::string& shader)
     {
@@ -652,7 +615,7 @@ namespace libCore
 
 
     //--ESPECIALES
-    void libCore::EntityManager::CheckInstancesInRunTime()
+    void EntityManager::CheckInstancesInRunTime()
     {
         auto viewCreatedInRunTimeComponent = m_registry->view<CreatedInRunTimeComponent>();
         for (auto entity : viewCreatedInRunTimeComponent) {
@@ -661,6 +624,25 @@ namespace libCore
             }
         }
     }
+
+    glm::vec3 EntityManager::UUIDToColor(const UUID& uuid) {
+        uint32_t id = static_cast<uint32_t>(uuid);
+
+        // Extraer los 8 bits más bajos para el componente rojo
+        unsigned char r = (id & 0x0000FF);
+        // Extraer los siguientes 8 bits para el componente verde
+        unsigned char g = (id & 0x00FF00) >> 8;
+        // Extraer los últimos 8 bits para el componente azul
+        unsigned char b = (id & 0xFF0000) >> 16;
+
+        return glm::vec3(r / 255.0f, g / 255.0f, b / 255.0f);
+    }
+
+
+    uint32_t EntityManager::ColorToUUID(unsigned char r, unsigned char g, unsigned char b) {
+        return r + (g << 8) + (b << 16);
+    }
+
 
 
     //DEBUG ENTITIES

@@ -23,7 +23,7 @@ namespace libCore
         std::vector<entt::entity> entitiesInRay;
         entt::entity currentSelectedEntityInScene = entt::null;
 
-        entt::entity GetEntityByUUID(const std::string& uuid);
+        entt::entity GetEntityByUUID(uint32_t uuid);
         //Ref<entt::registry> GetRegistry();
         entt::registry* GetRegistry();
 
@@ -57,6 +57,9 @@ namespace libCore
         void CheckRayModelIntersection(const glm::vec3& rayOrigin, const glm::vec3& rayDirection);
         void CheckInstancesInRunTime();
         bool rayIntersectsBoundingBox(const glm::vec3& rayOrigin, const glm::vec3& rayDirection, glm::vec3 boxMin, glm::vec3 boxMax);
+
+        glm::vec3 UUIDToColor(const UUID& uuid);
+        uint32_t ColorToUUID(unsigned char r, unsigned char g, unsigned char b);
 
         template<typename T>
         bool ValidateEntityComponent(entt::entity entity, Ref<entt::registry> registry);

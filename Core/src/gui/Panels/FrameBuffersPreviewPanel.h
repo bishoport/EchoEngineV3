@@ -48,6 +48,7 @@ namespace libCore
                 DrawTexture("SSAO Blur Texture", ViewportManager::GetInstance().viewports[0]->framebuffer_SSAOBlur->getTexture("color"));
                 DrawTexture("Deferred FBO", ViewportManager::GetInstance().viewports[0]->framebuffer_deferred->getTexture("color"));
                 DrawTexture("Forward FBO", ViewportManager::GetInstance().viewports[0]->framebuffer_forward->getTexture("color"));
+                DrawTexture("Picking FBO", ViewportManager::GetInstance().viewports[0]->framebuffer_picking->getTexture("color"));
 
                 ImGui::Columns(1);  // Volver a una columna
             }

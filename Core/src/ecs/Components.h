@@ -12,7 +12,7 @@
 namespace libCore
 {
     struct IDComponent {
-        UUID ID;
+        UUID ID;  // Ahora es de 24 bits
         bool markToDelete = false;
 
         IDComponent() = default;
@@ -20,6 +20,7 @@ namespace libCore
         IDComponent(UUID id)
             : ID(id) {}
     };
+
     struct TagComponent {
         std::string Tag;
 

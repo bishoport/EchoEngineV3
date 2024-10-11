@@ -26,8 +26,6 @@ namespace libCore
             viewport->viewportName = name;
 
             viewport->viewportSize = glm::vec2(static_cast<float>(viewportWidth), static_cast<float>(viewportHeight));
-            //viewport->viewportSize.x = static_cast<float>(viewportWidth);
-            //viewport->viewportSize.y = static_cast<float>(viewportHeight);
 
             // Cameras
             viewport->camera = CreateRef<libCore::EditorCamera>(viewport->viewportSize.x, viewport->viewportSize.y, cameraPosition);
@@ -104,6 +102,16 @@ namespace libCore
             fbo6->closeSetup();
             viewport->framebuffer_shadowmap = std::move(fbo6);
             //----------------------------------------------------------
+
+            // F-Buffer Picking
+            auto fboPicking = CreateRef<FBO>();
+            fboPicking->init(static_cast<int>(viewport->viewportSize.x), static_cast<int>(viewport->viewportSize.y), GL_RGB8, "F-Buffer Picking", false, false, false);
+            fboPicking->addAttachment("color", GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE, GL_COLOR_ATTACHMENT0);
+            fboPicking->addAttachment("depth", GL_DEPTH_COMPONENT24, GL_DEPTH_COMPONENT, GL_FLOAT, GL_DEPTH_ATTACHMENT);
+            fboPicking->closeSetup();
+            viewport->framebuffer_picking = std::move(fboPicking);
+            //----------------------------------------------------------
+
 
             // Add Viewport to collection
             viewports.push_back(std::move(viewport));

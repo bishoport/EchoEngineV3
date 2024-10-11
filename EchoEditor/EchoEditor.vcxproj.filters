@@ -27,4 +27,8 @@
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="assets\shaders\picking.vert" />
+    <None Include="assets\shaders\picking.frag" />
+  </ItemGroup>
 </Project>

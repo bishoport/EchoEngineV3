@@ -53,6 +53,14 @@ namespace libCore
             ImGui::Spacing();
             ImGui::Spacing();
 
+            //Ref<Viewport> viewport = ViewportManager::GetInstance().viewports[0];  // Asegúrate de que el índice es correcto
+            //ImGui::Text("Panel Pos X: %.1f, Panel Pos Y: %.1f", viewport->viewportPos.x, viewport->viewportPos.y);
+            //ImGui::Text("Panel Size W: %.1f, Panel Size H: %.1f", viewport->viewportSize.x, viewport->viewportSize.y);
+            //ImGui::SliderInt("offset X", &Engine::GetInstance().offSetMouseX, -200, 200);
+            //ImGui::SliderInt("offset Y", &Engine::GetInstance().offSetMouseY, -200, 200);
+            //ImGui::Spacing();
+            //ImGui::Spacing();
+
             //-- Obtener la escena actual
             auto currentScene = SceneManager::GetInstance().GetCurrentScene();
 

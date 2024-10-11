@@ -125,6 +125,43 @@ namespace libCore {
 
             glEnable(GL_DEPTH_TEST); // Habilitar el test de profundidad
 
+
+
+
+
+            //---------------------------------------------------------------------------------
+            //-----------------------COLOR PICKING PASS (SOLO EN MODO EDITOR)------------------
+            //---------------------------------------------------------------------------------
+            PushDebugGroup("Color Picking Pass");
+            viewport->framebuffer_picking->bindFBO();
+            glViewport(0, 0, static_cast<GLsizei>(viewport->viewportSize.x), static_cast<GLsizei>(viewport->viewportSize.y));
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Limpiar color y profundidad
+
+            // Usar el shader de picking
+            libCore::ShaderManager::Get("picking")->use();
+
+            // Pasar las matrices de proyección y vista
+            libCore::ShaderManager::Get("picking")->setMat4("projection", viewport->camera->projection);
+            libCore::ShaderManager::Get("picking")->setMat4("view", viewport->camera->view);
+
+            // Dibujar los objetos con colores únicos
+            EntityManager::GetInstance().DrawGameObjects("picking");
+
+            viewport->framebuffer_picking->unbindFBO();
+            PopDebugGroup();
+            //--------------------------------------------------------------------------------
+            //--------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
             //--------------------------------------------------------------------------------
             //-----------------------DIRECTIONAL LIGHT SHADOW PASS----------------------------
             //--------------------------------------------------------------------------------
@@ -302,11 +339,7 @@ namespace libCore {
             sunLight->SetLightDataToShader("lightingPass");
 
             //-DIRECTIONAL Light
-            //if (LightsManager::GetInstance().GetDirectionalLight() != nullptr)
-            //{
-                libCore::ShaderManager::Get("lightingPass")->setMat4("lightSpaceMatrix", sunLight->shadowMVP);
-            //}
-
+            libCore::ShaderManager::Get("lightingPass")->setMat4("lightSpaceMatrix", sunLight->shadowMVP);
             libCore::ShaderManager::Get("lightingPass")->setBool("useSSAO", ssaoEnabled);
             libCore::ShaderManager::Get("lightingPass")->setFloat("exposure", hdrExposure);
             libCore::ShaderManager::Get("lightingPass")->setFloat("ambientLight", ambientLight);
@@ -419,18 +452,10 @@ namespace libCore {
 
             // Renderiza el grid
             renderGrid();
-            
-            
-
-            
-
 
             // Habilita nuevamente el depth test para el resto de la escena
             glEnable(GL_DEPTH_TEST);
             //------------------------------------------------------------------------------------------
- 
-            
-            
 
             // PASADA DE TEXTOS
             glm::mat4 model = glm::mat4(1.0f);
@@ -443,8 +468,6 @@ namespace libCore {
             glDisable(GL_BLEND); 
             glBlendFunc(GL_ONE, GL_ZERO);//Acaba zona alpha
             //------------------------------------------------------------------------------------------
-
-
 
 
             // Desligar el FBO forward
@@ -468,22 +491,18 @@ namespace libCore {
             viewport->framebuffer_SSAOBlur->bindTexture("color", 2);
             viewport->framebuffer_shadowmap->bindTexture("depth", 3);
 
-            //if (LightsManager::GetInstance().GetDirectionalLight() != nullptr)
-            //{
-                if (sunLight->drawShadows) {
-                    viewport->framebuffer_shadowmap->bindTexture("depth", 3);
-                }
-            //}
+            if (sunLight->drawShadows) 
+            {
+                viewport->framebuffer_shadowmap->bindTexture("depth", 3);
+            }
+
             libCore::ShaderManager::Get("combinePass")->setInt("deferredTexture", 0);
             libCore::ShaderManager::Get("combinePass")->setInt("forwardTexture", 1);
             libCore::ShaderManager::Get("combinePass")->setInt("ssaoTexture", 2);
             libCore::ShaderManager::Get("combinePass")->setInt("shadowTexture", 3);
-
             libCore::ShaderManager::Get("combinePass")->setBool("useSSAO", ssaoEnabled);
-            //if (LightsManager::GetInstance().GetDirectionalLight() != nullptr)
-            //{
-                libCore::ShaderManager::Get("combinePass")->setBool("useShadow", sunLight->drawShadows);
-            //}
+            libCore::ShaderManager::Get("combinePass")->setBool("useShadow", sunLight->drawShadows);
+
             renderQuad();
             viewport->framebuffer_final->unbindFBO();
             glBindFramebuffer(GL_FRAMEBUFFER, 0); // Desvincular cualquier framebuffer

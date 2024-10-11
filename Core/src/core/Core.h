@@ -156,3 +156,4 @@ struct AssimpNodeData
 	int childrenCount;
 	std::vector<AssimpNodeData> children;
 };
+

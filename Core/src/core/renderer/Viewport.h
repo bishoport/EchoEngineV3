@@ -5,7 +5,7 @@
 #include "FBO.hpp"
 #include "../../tools/cameras/Camera.h"
 #include "../../managers/EventManager.h"
-#include <glm/glm.hpp>  // Usamos glm en lugar de ImVec2
+#include <glm/glm.hpp>
 
 namespace libCore
 {
@@ -40,6 +40,8 @@ namespace libCore
         Ref<libCore::FBO> framebuffer_HDR = nullptr;
         Ref<libCore::FBO> framebuffer_SSAO = nullptr;
         Ref<libCore::FBO> framebuffer_SSAOBlur = nullptr;
+        Ref<libCore::FBO> framebuffer_picking = nullptr;
+
 
         // Geometry Buffer (GBO)
         Ref<libCore::GBO> gBuffer = nullptr;
