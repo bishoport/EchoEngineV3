@@ -1,0 +1,51 @@
+Scene: HQ_temp
+Entities:
+  - Entity: 1
+    IDComponent:
+      ID: 95db614d69b82f57
+      MarkToDelete: false
+    TagComponent:
+      Tag: Board
+    TransformComponent:
+      Transform:
+        Position:
+          - 0
+          - 0
+          - 0
+        Rotation:
+          - 0
+          - 0
+          - 0
+        Scale:
+          - 1
+          - 1
+          - 1
+    ScriptComponent:
+      Scripts:
+        - filePath: assets\scripts\Tablero.lua
+          name: Tablero
+      ExposedVars:
+        Tablero:
+          int_width: 26
+          selectedModel: Cube
+          int_height: 19
+  - Entity: 0
+    IDComponent:
+      ID: d80d6a7fe6f5af8b
+      MarkToDelete: false
+    TagComponent:
+      Tag: Bot
+    TransformComponent:
+      Transform:
+        Position:
+          - 1.06728709
+          - 0
+          - -1.46117461
+        Rotation:
+          - 0
+          - 1.01518822
+          - 0
+        Scale:
+          - 1.00000012
+          - 1
+          - 1.00000012

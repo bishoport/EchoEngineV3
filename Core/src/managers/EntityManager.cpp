@@ -95,6 +95,9 @@ namespace libCore
         auto& transformComponent = GetComponent<TransformComponent>(entity);
         transformComponent.transform->position = model->transform->position;
 
+
+        
+
         // Asignar los componentes de MaterialComponent si el modelo tiene materiales
         if (!model->materials.empty()) {
             for (auto& material : model->materials) {
@@ -114,11 +117,12 @@ namespace libCore
                 abbComponent.aabb->CalculateAABB(mesh->vertices);
                 meshComponent.originalModel = model;
             }
-            //SKELETAL
-            if (model->importModelData.skeletal == true)
-            {
-                auto& animationComponent = m_registry->emplace<AnimationComponent>(entity,model);
-            }
+        }
+
+        //SKELETAL
+        if (model->importModelData.skeletal == true)
+        {
+            auto& animationComponent = m_registry->emplace<AnimationComponent>(entity, model);
         }
 
         // Asignar los componentes de herencia
@@ -538,6 +542,51 @@ namespace libCore
             //meshComponent.mesh->Draw();  //<-Dibujado sin Instancia (el modelo Original)
         }
     }
+    //void EntityManager::DrawOneGameObject(entt::entity entity, const std::string& shader)
+    //{
+    //    auto& transformComponent = GetComponent<TransformComponent>(entity);
+    //    auto& meshComponent = GetComponent<MeshComponent>(entity);
+    //    auto& materialComponent = GetComponent<MaterialComponent>(entity);
+
+    //    // Valores del material
+    //    libCore::ShaderManager::Get(shader)->setVec3("albedoColor", materialComponent.material->albedoColor);
+    //    libCore::ShaderManager::Get(shader)->setFloat("normalStrength", materialComponent.material->normalStrength);
+    //    libCore::ShaderManager::Get(shader)->setFloat("metallicValue", materialComponent.material->metallicValue);
+    //    libCore::ShaderManager::Get(shader)->setFloat("roughnessValue", materialComponent.material->roughnessValue);
+
+    //    // Texturas
+    //    materialComponent.material->albedoMap->Bind(shader);
+    //    materialComponent.material->normalMap->Bind(shader);
+    //    materialComponent.material->metallicMap->Bind(shader);
+    //    materialComponent.material->roughnessMap->Bind(shader);
+
+    //    // Usar la transformación acumulada
+    //    libCore::ShaderManager::Get(shader)->setMat4("model", transformComponent.accumulatedTransform);
+
+    //    //-SKELETAL
+    //    bool useBones = false;
+
+    //    if (HasComponent<AnimationComponent>(entity)) {
+    //        auto& animationComponent = GetComponent<AnimationComponent>(entity);
+    //        useBones = true;
+    //        auto boneTransforms = animationComponent.GetFinalBoneMatrices();
+
+    //        for (int i = 0; i < boneTransforms.size(); ++i) {
+    //            libCore::ShaderManager::Get(shader)->setMat4("finalBonesMatrices[" + std::to_string(i) + "]", boneTransforms[i]);
+    //            libCore::ShaderManager::Get(shader)->setFloat("boneScaleFactor", animationComponent.boneScaleFactor);
+    //        }
+    //    }
+    //    // Establecer el valor de 'useBones' en el shader
+    //    libCore::ShaderManager::Get(shader)->setBool("useBones", useBones);
+    //    //---
+
+    //    //DRAW INSTANCE
+    //    if (!meshComponent.instanceMatrices.empty())
+    //    {
+    //        meshComponent.mesh->DrawInstanced(static_cast<GLsizei>(meshComponent.instanceMatrices.size()), meshComponent.instanceMatrices);
+    //        //meshComponent.mesh->Draw();  //<-Dibujado sin Instancia (el modelo Original)
+    //    }
+    //}
     //------------------------------------------------------------------------------------
 
 
@@ -697,3 +746,63 @@ namespace libCore
     }
     //------------------------------------------------------------------------------------
 }
+
+
+
+
+
+
+//// Asignar los componentes de MaterialComponent si el modelo tiene materiales válidos
+//if (!model->materials.empty()) {
+//    for (auto& material : model->materials) {
+//        // Verificar que el material no sea nulo o inválido
+//        if (material) {
+//            if (!m_registry->has<MaterialComponent>(entity)) {
+//                std::cout << "Intentando emplace de MaterialComponent para la entidad: " << static_cast<uint32_t>(entity) << std::endl;
+//                std::cout << "Material: " << material->materialName << std::endl;
+//                m_registry->emplace<MaterialComponent>(entity, material);
+//                std::cout << "MaterialComponent emplaced correctamente." << std::endl;
+//            }
+//            else {
+//                std::cerr << "La entidad " << static_cast<uint32_t>(entity) << " ya tiene un MaterialComponent. Omitiendo emplace." << std::endl;
+//            }
+//        }
+//        else {
+//            std::cerr << "Material inválido o nulo encontrado, omitiendo..." << std::endl;
+//        }
+//    }
+//}
+//else {
+//    std::cerr << "El modelo no tiene materiales, no se asignarán componentes de material." << std::endl;
+//}
+//
+//
+//
+//
+//
+//// Asignar los componentes de MeshComponent si el modelo tiene mallas
+//if (!model->meshes.empty()) {
+//    // MESHES
+//    for (auto& mesh : model->meshes) {
+//        // Verificar si el MeshComponent ya existe para esta entidad antes de intentar agregar uno nuevo
+//        if (!m_registry->has<MeshComponent>(entity)) {
+//            // Emplace el MeshComponent solo si no existe
+//            auto& meshComponent = m_registry->emplace<MeshComponent>(entity, mesh, model, true);
+//            std::cout << "MeshComponent emplaced correctamente con la malla: " << mesh->meshName << std::endl;
+//
+//            // Agregar matriz de instancia
+//            glm::mat4 instanceMatrix = glm::translate(glm::mat4(1.0f), model->transform->position);
+//            meshComponent.instanceMatrices.push_back(instanceMatrix);
+//
+//            // Crear el AABBComponent solo si no existe
+//            if (!m_registry->has<AABBComponent>(entity)) {
+//                auto& abbComponent = m_registry->emplace<AABBComponent>(entity);
+//                abbComponent.aabb->CalculateAABB(mesh->vertices);
+//                meshComponent.originalModel = model;
+//            }
+//        }
+//        else {
+//            std::cerr << "La entidad " << static_cast<uint32_t>(entity) << " ya tiene un MeshComponent. Omitiendo emplace." << std::endl;
+//        }
+//    }
+//}

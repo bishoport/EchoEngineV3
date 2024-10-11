@@ -208,6 +208,20 @@ namespace libCore
             }
         }
 
+        //// Actualizar el tiempo de animación (se llama en cada frame)
+        //void Update(float deltaTime) {
+        //    if (!isPlaying || currentAnimation.empty()) {
+        //        return;
+        //    }
+        //    animationTime += deltaTime * playbackSpeed;
+        //    if (animator) {
+        //        animator->UpdateAnimation(deltaTime);
+        //    }
+        //    else {
+        //        std::cerr << "Error: El animador no está inicializado." << std::endl;
+        //    }
+        //}
+
         // Actualizar el tiempo de animación (se llama en cada frame)
         void Update(float deltaTime) {
             if (!isPlaying || currentAnimation.empty()) {
@@ -216,11 +230,45 @@ namespace libCore
             animationTime += deltaTime * playbackSpeed;
             if (animator) {
                 animator->UpdateAnimation(deltaTime);
+
+                // Aquí actualizamos las matrices finales de los huesos para cada frame
+                auto finalBoneMatrices = animator->GetFinalBoneMatrices();
+
+                // Ahora iteramos sobre todas las meshes del modelo afectado y les pasamos las matrices de huesos
+                for (auto& mesh : model->meshes) {
+                    // Aquí aplicarías las matrices de huesos a los vértices de la mesh
+                    ApplyBoneMatricesToMesh(mesh, finalBoneMatrices);
+                }
             }
             else {
                 std::cerr << "Error: El animador no está inicializado." << std::endl;
             }
         }
+
+
+        void ApplyBoneMatricesToMesh(Ref<Mesh> mesh, const std::vector<glm::mat4>& finalBoneMatrices) {
+            for (Vertex& vertex : mesh->vertices) {
+                glm::vec4 finalPosition(0.0f);
+
+                // Aplicar la influencia de cada hueso en el vértice
+                for (int i = 0; i < MAX_BONE_INFLUENCE; ++i) {
+                    if (vertex.m_BoneIDs[i] != -1) {  // Verifica que el hueso tenga influencia
+                        int boneID = vertex.m_BoneIDs[i];
+                        const glm::mat4& boneMatrix = finalBoneMatrices[boneID];
+
+                        // Aplica la transformación del hueso al vértice ponderado por el peso
+                        finalPosition += boneMatrix * glm::vec4(vertex.position, 1.0f) * vertex.m_Weights[i];
+                    }
+                }
+
+                // Actualiza la posición final del vértice en función de la influencia de los huesos
+                vertex.position = glm::vec3(finalPosition);
+            }
+
+            // Después de actualizar los vértices, debes reenviar los datos al VBO
+            mesh->SetupMesh();  // Esto volverá a cargar los datos de los vértices en la GPU
+        }
+
 
         // Función que devuelve las matrices finales de los huesos
         std::vector<glm::mat4> GetFinalBoneMatrices() {

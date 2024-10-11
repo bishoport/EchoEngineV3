@@ -139,24 +139,52 @@ namespace libCore
                 if (EntityManager::GetInstance().HasComponent<MeshComponent>(selectedEntity)) {
                     if (ImGui::CollapsingHeader(ICON_FA_CUBES " Mesh")) {
                         auto& meshComponent = EntityManager::GetInstance().GetComponent<MeshComponent>(selectedEntity);
+
+                        // Mostrar nombre de la mesh e información básica
                         ImGui::Text("Mesh Name: %s", meshComponent.mesh->meshName.c_str());
                         ImGui::Text("Instance: %s", meshComponent.isInstance ? "Yes" : "No");
                         ImGui::Checkbox("Renderable", &meshComponent.renderable);
-                        ImGui::Spacing();
-                        ImGui::Spacing();
-                        // Mostrar información sobre huesos si existen
-                        if (meshComponent.originalModel && !meshComponent.originalModel->GetBoneInfoMap().empty()) {
-                            if (ImGui::CollapsingHeader("Bone Information")) {
-                                ImGui::Text("Number of Bones: %d", meshComponent.originalModel->GetBoneCount());
 
-                                // Listar huesos
-                                for (const auto& [boneName, boneInfo] : meshComponent.originalModel->GetBoneInfoMap()) {
-                                    ImGui::Text("Bone: %s, ID: %d", boneName.c_str(), boneInfo.id);
+                        // Mostrar huesos que afectan a esta Mesh
+                        if (ImGui::TreeNode("Influencing Bones")) {
+                            auto& boneInfoMap = meshComponent.originalModel->GetBoneInfoMap();
+                            for (int boneID : meshComponent.mesh->influencingBones) {
+                                // Busca el nombre del hueso en el mapa de huesos
+                                for (const auto& [boneName, boneInfo] : boneInfoMap) {
+                                    if (boneInfo.id == boneID) {
+                                        ImGui::Text("Bone Name: %s (Bone ID: %d)", boneName.c_str(), boneID);
+
+                                        // Contar los vértices afectados por este hueso
+                                        int affectedVerticesCount = 0;
+                                        for (const Vertex& vertex : meshComponent.mesh->vertices) {
+                                            for (int i = 0; i < MAX_BONE_INFLUENCE; ++i) {
+                                                if (vertex.m_BoneIDs[i] == boneID) {
+                                                    ++affectedVerticesCount;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                        ImGui::Text("Affected Vertices: %d", affectedVerticesCount);
+                                        break;
+                                    }
                                 }
                             }
+                            ImGui::TreePop();
                         }
                     }
                 }
+
+
+                ////--MESH_COMPONENT
+                //if (EntityManager::GetInstance().HasComponent<MeshComponent>(selectedEntity)) {
+                //    if (ImGui::CollapsingHeader(ICON_FA_CUBES " Mesh")) {
+                //        auto& meshComponent = EntityManager::GetInstance().GetComponent<MeshComponent>(selectedEntity);
+                //        ImGui::Text("Mesh Name: %s", meshComponent.mesh->meshName.c_str());
+                //        ImGui::Text("Instance: %s", meshComponent.isInstance ? "Yes" : "No");
+                //        ImGui::Checkbox("Renderable", &meshComponent.renderable);
+                //        
+                //    }
+                //}
                 //--ANIMATION_COMPONENT
                 if (EntityManager::GetInstance().HasComponent<AnimationComponent>(selectedEntity)) {
                     if (ImGui::CollapsingHeader(ICON_FA_FILM " Animation")) {  // Icono de "película" para el componente de animación

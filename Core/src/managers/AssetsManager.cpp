@@ -93,7 +93,7 @@ namespace libCore
 		}
 		else
 		{
-			ConsoleLog::GetInstance().AddLog(LogLevel::L_ERROR, "Error Loading MODEL: " + model->name);
+			ConsoleLog::GetInstance().AddLog(LogLevel::L_ERROR, "Error Loading MODEL: " + importModelData.fileName);
 		}
 	}
 	Ref<Model> AssetsManager::GetModel(const std::string& name) {
@@ -132,9 +132,11 @@ namespace libCore
 		// Si no se encuentra en este modelo ni en sus hijos, devolvemos nullptr
 		return nullptr;
 	}
-	Ref<Model> AssetsManager::GetModelByMeshName(const std::string& meshName) {
+	Ref<Model> AssetsManager::GetModelByMeshName(const std::string& meshName) 
+	{
 		// Función lambda recursiva para buscar en la jerarquía de modelos
 		std::function<Ref<Model>(const Ref<Model>&)> findModelByMeshName;
+
 		findModelByMeshName = [&](const Ref<Model>& model) -> Ref<Model> {
 			// Recorre todas las mallas en el modelo actual
 			for (const auto& mesh : model->meshes) {

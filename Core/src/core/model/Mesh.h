@@ -19,6 +19,9 @@ namespace libCore
         DRAW_GEOM_LIKE drawLike = DRAW_GEOM_LIKE::TRIANGLE;
         Ref<AABB> aabb = nullptr;
 
+        // Lista de IDs de huesos que afectan esta mesh
+        std::vector<int> influencingBones;
+
         //--THUMBNAIL TEXTURE ID
         GLuint thumbnailTextureID = 0; // Almacena el ID de la textura del thumbnail
 

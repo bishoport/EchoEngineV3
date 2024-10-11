@@ -48,11 +48,11 @@ namespace libCore
         aiMatrix4x4 nodeTransform = scene->mRootNode->mTransformation;
         modelParent->name = importOptions.fileName;
 
-        ModelLoader::processNode(scene->mRootNode, scene, modelParent, nodeTransform);
+        processNode(scene->mRootNode, scene, modelParent, nodeTransform);
 
         if (importOptions.processLights == true)
         {
-            ModelLoader::processLights(scene);
+            processLights(scene);
         }
         
         return modelParent;
@@ -68,6 +68,7 @@ namespace libCore
         glm::mat4 rotationX = glm::rotate(glm::mat4(1.0f), glm::radians(globalRotationDeg_X), glm::vec3(1.0f, 0.0f, 0.0f));
         glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(current_importOptions.globalScaleFactor, current_importOptions.globalScaleFactor, current_importOptions.globalScaleFactor));
         glm::mat4 glmFinalTransform = rotationX * scaleMatrix * glmNodeTransform * glmNodeTransformation;
+
         aiMatrix4x4 finalTransform = glmToAiMatrix4x4(glmFinalTransform);
 
         for (unsigned int i = 0; i < node->mNumMeshes; i++) {
@@ -165,19 +166,27 @@ namespace libCore
 
 
             //--Vertex Normal
-            if (current_importOptions.useCustomTransform == true)
+            if (mesh->HasNormals()) 
             {
-                glm::vec4 normFixed = aiMatrix4x4ToGlm(finalTransform) * glm::vec4(
-                    mesh->mNormals[i].x,
-                    mesh->mNormals[i].y,
-                    mesh->mNormals[i].z,
-                    1);
 
-                vertex.normal = glm::vec3(normFixed.x, normFixed.y, normFixed.z);
+                if (current_importOptions.useCustomTransform == true)
+                {
+                    glm::vec4 normFixed = aiMatrix4x4ToGlm(finalTransform) * glm::vec4(
+                        mesh->mNormals[i].x,
+                        mesh->mNormals[i].y,
+                        mesh->mNormals[i].z,
+                        1);
+
+                    vertex.normal = glm::vec3(normFixed.x, normFixed.y, normFixed.z);
+                }
+                else
+                {
+                    vertex.normal = AssimpGLMHelpers::GetGLMVec(mesh->mNormals[i]);
+                }
             }
-            else
-            {
-                vertex.normal = AssimpGLMHelpers::GetGLMVec(mesh->mNormals[i]);
+            else {
+                // Asignar un valor por defecto o simplemente omitir la normal
+                vertex.normal = glm::vec3(0.0f, 0.0f, 0.0f);  // Por ejemplo, una normal nula
             }
             //--------------------------------------------------------------
 

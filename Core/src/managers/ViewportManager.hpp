@@ -31,7 +31,7 @@ namespace libCore
 
             // Cameras
             viewport->camera = CreateRef<libCore::EditorCamera>(viewport->viewportSize.x, viewport->viewportSize.y, cameraPosition);
-            viewport->camera->SetPosition(glm::vec3(-20.0f, 8.0f, -20.0f));
+            viewport->camera->SetPosition(glm::vec3(-1.0f, 1.0f, 3.0f));
             viewport->camera->LookAt(glm::vec3(0.0f, 0.0f, 0.0f));
             //----------------------------------------------------------
 

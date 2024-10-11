@@ -1,0 +1,78 @@
+Scene: Untitled
+Models:
+  - ModelName: Primitives.glb
+    ImportModelData:
+      filePath: assets/models/
+      fileName: Primitives.glb
+      modelID: 0
+      invertUV: false
+      rotate90: false
+      skeletal: false
+      useCustomTransform: true
+      processLights: false
+      globalScaleFactor: 1
+  - ModelName: Robot.fbx
+    ImportModelData:
+      filePath: assets\models\PRUEBAS\Robot\
+      fileName: Robot.fbx
+      modelID: 0
+      invertUV: false
+      rotate90: false
+      skeletal: false
+      useCustomTransform: true
+      processLights: false
+      globalScaleFactor: 0.300000012
+Entities:
+  - Entity: 1
+    IDComponent:
+      ID: d80d6a7fe6f5af8b
+      MarkToDelete: false
+    TagComponent:
+      Tag: Bot
+    TransformComponent:
+      Transform:
+        Position:
+          - 1.06728709
+          - 0
+          - -1.46117461
+        Rotation:
+          - 0
+          - 1.01518822
+          - 0
+        Scale:
+          - 1.00000012
+          - 1
+          - 1.00000012
+    MeshComponent:
+      MeshName: mesh_bot
+    MaterialComponent:
+      MaterialName: Material.001
+  - Entity: 0
+    IDComponent:
+      ID: 95db614d69b82f57
+      MarkToDelete: false
+    TagComponent:
+      Tag: Board
+    TransformComponent:
+      Transform:
+        Position:
+          - 0
+          - 0
+          - 0
+        Rotation:
+          - 0
+          - 0
+          - 0
+        Scale:
+          - 1
+          - 1
+          - 1
+    ScriptComponent:
+      Scripts:
+        - filePath: assets\scripts\Tablero.lua
+          name: Tablero
+      ExposedVars:
+        Tablero:
+          int_width: 26
+          int_height: 19
+          selectedModel: Cube

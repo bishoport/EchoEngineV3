@@ -27,8 +27,8 @@ namespace libCore
         std::string completePath = importOptions.filePath + importOptions.fileName;
 
         unsigned int flags = aiProcess_Triangulate;
-        flags |= aiProcess_CalcTangentSpace;
-        flags |= aiProcess_GenSmoothNormals;
+                     flags |= aiProcess_CalcTangentSpace;
+                     flags |= aiProcess_GenSmoothNormals;
 
         if (importOptions.invertUV == true) flags |= aiProcess_FlipUVs;
 
@@ -67,9 +67,28 @@ namespace libCore
             unsigned int meshIndex = node->mMeshes[i];
             aiMesh* mesh = scene->mMeshes[meshIndex];
 
+
+            auto modelChild = CreateRef<Model>();
+            // Aquí establecemos la relación padre-hijo
+            modelChild->modelParent = modelParent;
+
+            // Asignar el nombre del nodo de Assimp al modelo
+            modelChild->name = node->mName.C_Str();
+
+            // Establecer la posición del modelo basado en la transformación final
+            modelChild->transform->position = glm::vec3(aiFinalTransform.a4, aiFinalTransform.b4, aiFinalTransform.c4);
+
+            // Resetear la traslación en la transformación final para que los vértices se procesen correctamente
+            aiFinalTransform.a4 = 0.0;
+            aiFinalTransform.b4 = 0.0;
+            aiFinalTransform.c4 = 0.0;
+
+
             // Procesar la malla y almacenarla en el mapa
-            processMesh(mesh, scene, modelParent, aiFinalTransform, meshIndex);
-            processMaterials(mesh, scene, modelParent);
+            processMesh(mesh, scene, modelChild, aiFinalTransform, meshIndex);
+            processMaterials(mesh, scene, modelChild);
+
+            modelParent->children.push_back(modelChild);
         }
 
         // Procesar los nodos hijos recursivamente
@@ -89,7 +108,15 @@ namespace libCore
         {
             Vertex vertex;
             vertex.position = AssimpGLMHelpers::GetGLMVec(mesh->mVertices[i]);
-            vertex.normal = AssimpGLMHelpers::GetGLMVec(mesh->mNormals[i]);
+            
+            if (mesh->HasNormals()) {
+                vertex.normal = AssimpGLMHelpers::GetGLMVec(mesh->mNormals[i]);
+            }
+            else {
+                // Asignar un valor por defecto o simplemente omitir la normal
+                vertex.normal = glm::vec3(0.0f, 0.0f, 0.0f);  // Por ejemplo, una normal nula
+            }
+
 
             if (mesh->mTextureCoords[0])
             {
@@ -134,6 +161,8 @@ namespace libCore
         {
             int boneID = -1;
             std::string boneName = mesh->mBones[boneIndex]->mName.C_Str();
+
+            // Asegúrate de que el hueso esté registrado en el BoneInfoMap
             if (boneInfoMap.find(boneName) == boneInfoMap.end())
             {
                 BoneInfo newBoneInfo;
@@ -147,7 +176,11 @@ namespace libCore
             {
                 boneID = boneInfoMap[boneName].id;
             }
-            assert(boneID != -1);
+
+            // Añade este hueso a la lista de huesos que influyen en la Mesh
+            meshBuild->influencingBones.push_back(boneID);
+
+            // Asigna los pesos de hueso a los vértices
             auto weights = mesh->mBones[boneIndex]->mWeights;
             int numWeights = mesh->mBones[boneIndex]->mNumWeights;
 
@@ -159,15 +192,51 @@ namespace libCore
                 SetVertexBoneData(meshBuild->vertices[vertexId], boneID, weight);
             }
         }
-
-        // Confirmar que se ha extraído información de huesos
-        if (boneInfoMap.empty()) {
-            std::cerr << "No se ha procesado ningún hueso." << std::endl;
-        }
-        else {
-            std::cout << "Total huesos procesados: " << boneCount << std::endl;
-        }
     }
+
+    //void SkeletalModelLoader::ExtractBoneWeightForVertices(Ref<Mesh> meshBuild, Ref<Model> modelBuild, aiMesh* mesh, const aiScene* scene)
+    //{
+    //    auto& boneInfoMap = modelBuild->m_BoneInfoMap;
+    //    int& boneCount = modelBuild->m_BoneCounter;
+
+    //    for (int boneIndex = 0; boneIndex < mesh->mNumBones; ++boneIndex)
+    //    {
+    //        int boneID = -1;
+    //        std::string boneName = mesh->mBones[boneIndex]->mName.C_Str();
+    //        if (boneInfoMap.find(boneName) == boneInfoMap.end())
+    //        {
+    //            BoneInfo newBoneInfo;
+    //            newBoneInfo.id = boneCount;
+    //            newBoneInfo.offset = AssimpGLMHelpers::ConvertMatrixToGLMFormat(mesh->mBones[boneIndex]->mOffsetMatrix);
+    //            boneInfoMap[boneName] = newBoneInfo;
+    //            boneID = boneCount;
+    //            boneCount++;
+    //        }
+    //        else
+    //        {
+    //            boneID = boneInfoMap[boneName].id;
+    //        }
+    //        assert(boneID != -1);
+    //        auto weights = mesh->mBones[boneIndex]->mWeights;
+    //        int numWeights = mesh->mBones[boneIndex]->mNumWeights;
+
+    //        for (int weightIndex = 0; weightIndex < numWeights; ++weightIndex)
+    //        {
+    //            int vertexId = weights[weightIndex].mVertexId;
+    //            float weight = weights[weightIndex].mWeight;
+    //            assert(vertexId <= meshBuild->vertices.size());
+    //            SetVertexBoneData(meshBuild->vertices[vertexId], boneID, weight);
+    //        }
+    //    }
+
+    //    // Confirmar que se ha extraído información de huesos
+    //    if (boneInfoMap.empty()) {
+    //        std::cerr << "No se ha procesado ningún hueso." << std::endl;
+    //    }
+    //    else {
+    //        std::cout << "Total huesos procesados: " << boneCount << std::endl;
+    //    }
+    //}
     void SkeletalModelLoader::SetVertexBoneDataToDefault(Vertex& vertex)
     {
         for (int i = 0; i < MAX_BONE_INFLUENCE; i++)
@@ -188,6 +257,46 @@ namespace libCore
             }
         }
     }
+
+
+
+    
+
+    //-------------------------------------TOOLS---------------------------
+    glm::mat4 SkeletalModelLoader::aiMatrix4x4ToGlm(const aiMatrix4x4& from)
+    {
+        glm::mat4 to;
+
+        // Transponer y convertir a glm
+        to[0][0] = from.a1; to[1][0] = from.a2; to[2][0] = from.a3; to[3][0] = from.a4;
+        to[0][1] = from.b1; to[1][1] = from.b2; to[2][1] = from.b3; to[3][1] = from.b4;
+        to[0][2] = from.c1; to[1][2] = from.c2; to[2][2] = from.c3; to[3][2] = from.c4;
+        to[0][3] = from.d1; to[1][3] = from.d2; to[2][3] = from.d3; to[3][3] = from.d4;
+
+        return to;
+    }
+    aiMatrix4x4 SkeletalModelLoader::glmToAiMatrix4x4(const glm::mat4& from)
+    {
+        aiMatrix4x4 to;
+
+        // Transponer y convertir a Assimp
+        to.a1 = from[0][0]; to.a2 = from[1][0]; to.a3 = from[2][0]; to.a4 = from[3][0];
+        to.b1 = from[0][1]; to.b2 = from[1][1]; to.b3 = from[2][1]; to.b4 = from[3][1];
+        to.c1 = from[0][2]; to.c2 = from[1][2]; to.c3 = from[2][2]; to.c4 = from[3][2];
+        to.d1 = from[0][3]; to.d2 = from[1][3]; to.d3 = from[2][3]; to.d4 = from[3][3];
+
+        return to;
+    }
+    std::string SkeletalModelLoader::getFileName(const std::string& path) {
+        size_t lastSlash = path.find_last_of("\\/");
+        if (lastSlash == std::string::npos) {
+            return path; // No hay ningún separador, toda la cadena es el nombre del archivo
+        }
+        return path.substr(lastSlash + 1);
+    }
+
+
+
 
 
 
@@ -318,39 +427,6 @@ namespace libCore
 
         // Añadir el material al modelo
         modelBuild->materials.push_back(material);
-    }
-
-    //-------------------------------------TOOLS---------------------------
-    glm::mat4 SkeletalModelLoader::aiMatrix4x4ToGlm(const aiMatrix4x4& from)
-    {
-        glm::mat4 to;
-
-        // Transponer y convertir a glm
-        to[0][0] = from.a1; to[1][0] = from.a2; to[2][0] = from.a3; to[3][0] = from.a4;
-        to[0][1] = from.b1; to[1][1] = from.b2; to[2][1] = from.b3; to[3][1] = from.b4;
-        to[0][2] = from.c1; to[1][2] = from.c2; to[2][2] = from.c3; to[3][2] = from.c4;
-        to[0][3] = from.d1; to[1][3] = from.d2; to[2][3] = from.d3; to[3][3] = from.d4;
-
-        return to;
-    }
-    aiMatrix4x4 SkeletalModelLoader::glmToAiMatrix4x4(const glm::mat4& from)
-    {
-        aiMatrix4x4 to;
-
-        // Transponer y convertir a Assimp
-        to.a1 = from[0][0]; to.a2 = from[1][0]; to.a3 = from[2][0]; to.a4 = from[3][0];
-        to.b1 = from[0][1]; to.b2 = from[1][1]; to.b3 = from[2][1]; to.b4 = from[3][1];
-        to.c1 = from[0][2]; to.c2 = from[1][2]; to.c3 = from[2][2]; to.c4 = from[3][2];
-        to.d1 = from[0][3]; to.d2 = from[1][3]; to.d3 = from[2][3]; to.d4 = from[3][3];
-
-        return to;
-    }
-    std::string SkeletalModelLoader::getFileName(const std::string& path) {
-        size_t lastSlash = path.find_last_of("\\/");
-        if (lastSlash == std::string::npos) {
-            return path; // No hay ningún separador, toda la cadena es el nombre del archivo
-        }
-        return path.substr(lastSlash + 1);
     }
 }
 

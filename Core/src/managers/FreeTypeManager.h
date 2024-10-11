@@ -35,8 +35,7 @@ namespace libCore
             }
 
             // find path to font
-            std::string font_name = "C:/Users/bisho/OneDrive/Escritorio/OPENGL_GAME/OpenGL_ShooterV2/Core/assets/fonts/Antonio-Bold.ttf";
-            //std::string font_name = "C:/Produccion/PROPIOS/OpenGL_DEV/OpenGLSandbox/Core/assets/fonts/Antonio-Bold.ttf";
+            std::string font_name = "C:/Users/bisho/OneDrive/Escritorio/EchoEngine_2024/EchoEngine/EchoEditor/assets/fonts/Antonio-Bold.ttf";
             if (font_name.empty())
             {
                 ConsoleLog::GetInstance().AddLog(LogLevel::L_ERROR, "FREETYPE: Failed to load font_name");
