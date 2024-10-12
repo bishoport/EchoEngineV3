@@ -15,6 +15,8 @@ namespace libCore {
         std::string GetEntityName(entt::entity entity);
         //----------------------------------------------------------------------------------------
 
+        entt::entity GetEntityByUUID(uint32_t uuid);
+
         //--CHECK COMPONENTS
         template<typename T>
         bool HasComponent(entt::entity entity);

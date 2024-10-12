@@ -1,6 +1,6 @@
-Scene: HQ_temp
+Scene: new_scene_temp
 Entities:
-  - Entity: 1
+  - Entity: 0
     IDComponent:
       ID: 12913725
     TagComponent:
@@ -26,25 +26,6 @@ Entities:
           name: Tablero
       ExposedVars:
         Tablero:
-          int_height: 19
           int_width: 26
+          int_height: 19
           selectedModel: Cube
-  - Entity: 0
-    IDComponent:
-      ID: 4034470
-    TagComponent:
-      Tag: Bot
-    TransformComponent:
-      Transform:
-        Position:
-          - 0
-          - 0
-          - -4.48552704
-        Rotation:
-          - 0
-          - -0
-          - 0
-        Scale:
-          - 1
-          - 1
-          - 1

@@ -20,40 +20,13 @@ namespace libCore
         }
     }
 
-    //--CARGADOR DLL SCRIPTS
-    std::wstring EntityManager::GetExecutablePath() {
-        wchar_t buffer[MAX_PATH];
-        GetModuleFileNameW(NULL, buffer, MAX_PATH);
-        std::wstring::size_type pos = std::wstring(buffer).find_last_of(L"\\/");
-        return std::wstring(buffer).substr(0, pos);
-    }
-    std::string EntityManager::wstring_to_string(const std::wstring& wstr) {
-        std::string str(wstr.begin(), wstr.end());
-        return str;
-    }
-    void EntityManager::LoadScriptsFromDLL() {
-        std::wstring buildDir = GetExecutablePath();
-        std::wstring dllPath = buildDir + L"\\TestScript.dll";
-
-        LuaManager::GetInstance();
-    }
-    //------------------------------------------------------------------------------------
-
     //--ACCESOS
     entt::entity EntityManager::GetEntityByUUID(uint32_t uuid) {  // Asegúrate de usar uint32_t para 24 bits
-        // Imprime el UUID que estás buscando
-        std::cout << "Buscando entidad con UUID: " << uuid << std::endl;
-
         auto view = m_registry->view<IDComponent>();
         for (auto entity : view) {
             auto& idComponent = view.get<IDComponent>(entity);
             uint32_t entityUUID = static_cast<uint32_t>(idComponent.ID);  // Convertir a uint32_t para asegurarse de que coincide con el UUID de 24 bits
-
-            // Imprime cada UUID que se está revisando
-            std::cout << "Revisando entidad con UUID: " << entityUUID << " (Entity ID: " << static_cast<uint32_t>(entity) << ")" << std::endl;
-
             if (entityUUID == uuid) {
-                std::cout << "ENTITY_MANAGER -> Se encontró la entidad. Dirección de m_Entity: " << static_cast<uint32_t>(entity) << std::endl;
                 return entity;
             }
         }
@@ -63,29 +36,25 @@ namespace libCore
 
         return entt::null; // Retorna null si no se encuentra la entidad
     }
-
-
-
-
     entt::registry* EntityManager::GetRegistry() {
         assert(m_registry.get() != nullptr && "m_registry debe estar inicializado");
         return m_registry.get();
     }
     //------------------------------------------------------------------------------------
 
-
     //--CREADOR DE ENTITIES
     entt::entity EntityManager::CreateEmptyGameObject(const std::string& name) {
         entt::entity entity = m_registry->create();
-        m_registry->emplace<IDComponent>(entity, UUID());
-        auto& tag = m_registry->emplace<TagComponent>(entity);
-        tag.Tag = name.empty() ? "Entity" : name;
-        m_registry->emplace<TransformComponent>(entity);
 
+        AddComponent<IDComponent>(entity);
+        auto& tag = AddComponent<TagComponent>(entity);
+        tag.Tag = name.empty() ? "Entity" : name;
+        AddComponent<TransformComponent>(entity);
 
         if(Engine::GetInstance().GetEngineState() == PLAY)
         {
-            m_registry->emplace<CreatedInRunTimeComponent>(entity);
+            AddComponent<CreatedInRunTimeComponent>(entity);
+            //m_registry->emplace<CreatedInRunTimeComponent>(entity);
         }
 
         return entity;
@@ -98,9 +67,6 @@ namespace libCore
         // Crear un nuevo TransformComponent para la entidad
         auto& transformComponent = GetComponent<TransformComponent>(entity);
         transformComponent.transform->position = model->transform->position;
-
-
-        
 
         // Asignar los componentes de MaterialComponent si el modelo tiene materiales
         if (!model->materials.empty()) {
@@ -145,17 +111,6 @@ namespace libCore
     {
         entt::entity gameObject = CreateEmptyGameObject("MainCamera");
         AddComponent<CameraComponent>(gameObject);
-    }
-    entt::entity EntityManager::GetEntityByName(const std::string& name)
-    {
-        auto view = m_registry->view<TagComponent>();
-        for (auto entity : view) {
-            auto& tag = view.get<TagComponent>(entity);
-            if (tag.Tag == name) {
-                return entity;
-            }
-        }
-        return entt::null; // Si no se encuentra ninguna entidad con el nombre dado
     }
     void EntityManager::AddChild(entt::entity parent, entt::entity child)
     {
@@ -405,7 +360,6 @@ namespace libCore
     }
     //------------------------------------------------------------------------------------
 
-
     //--INIT SCRIPTS Components
     void EntityManager::InitScripts() 
     {
@@ -425,7 +379,6 @@ namespace libCore
         }
     }
     //------------------------------------------------------------------------------------
-
 
 
     //--ACTUALIZADOR DE FUNCIONES UPDATES ANTES DEL RENDER DE LOS COMPONENTES
@@ -501,7 +454,6 @@ namespace libCore
             DrawOneGameObject(entity, shader);
         }
     }
-
     void EntityManager::DrawOneGameObject(entt::entity entity, const std::string& shader)
     {
         auto& transformComponent = GetComponent<TransformComponent>(entity);
@@ -553,6 +505,8 @@ namespace libCore
             //meshComponent.mesh->Draw();  //<-Dibujado sin Instancia (el modelo Original)
         }
     }
+    //------------------------------------------------------------------------------------
+
     //--DRAW AABB Component (Son llamadas desde el Renderer cuando le toque)
     void EntityManager::DrawABBGameObjectMeshComponent(const std::string& shader)
     {
@@ -624,7 +578,6 @@ namespace libCore
             }
         }
     }
-
     glm::vec3 EntityManager::UUIDToColor(const UUID& uuid) {
         uint32_t id = static_cast<uint32_t>(uuid);
 
@@ -637,12 +590,10 @@ namespace libCore
 
         return glm::vec3(r / 255.0f, g / 255.0f, b / 255.0f);
     }
-
-
     uint32_t EntityManager::ColorToUUID(unsigned char r, unsigned char g, unsigned char b) {
         return r + (g << 8) + (b << 16);
     }
-
+    //------------------------------------------------------------------------------------
 
 
     //DEBUG ENTITIES

@@ -72,7 +72,6 @@ namespace YAML
         static Node encode(const libCore::Material& rhs) {
             Node node;
             node["MaterialName"] = rhs.materialName;
-            //node["ShaderName"] = rhs.shaderName;
             node["AlbedoColor"] = rhs.albedoColor;
             node["NormalStrength"] = rhs.normalStrength;
             node["MetallicValue"] = rhs.metallicValue;
@@ -87,7 +86,6 @@ namespace YAML
                 return false;
             }
             rhs.materialName = node["MaterialName"].as<std::string>();
-            //rhs.shaderName = node["ShaderName"].as<std::string>();
             rhs.albedoColor = node["AlbedoColor"].as<glm::vec3>();
             rhs.normalStrength = node["NormalStrength"].as<float>();
             rhs.metallicValue = node["MetallicValue"].as<float>();
@@ -133,7 +131,7 @@ namespace YAML
     struct convert<libCore::UUID> {
         static Node encode(const libCore::UUID& rhs) {
             Node node;
-            node = rhs.ToString(); // Usar ToString para convertir el UUID a cadena
+            node = static_cast<uint32_t>(rhs); // Guardar UUID como uint32_t
             return node;
         }
 
@@ -141,7 +139,7 @@ namespace YAML
             if (!node.IsScalar()) {
                 return false;
             }
-            rhs = libCore::UUID(node.as<std::string>()); // Reconstruir UUID desde la cadena
+            rhs = libCore::UUID(node.as<uint32_t>()); // Reconstruir UUID desde uint32_t
             return true;
         }
     };
@@ -318,13 +316,6 @@ namespace libCore {
         node["ImportModelData"] = model->importModelData;
         return node;
     }
-    YAML::Node SerializeAllModels() {
-        YAML::Node node;
-        for (const auto& pair : AssetsManager::GetInstance().GetAllModels()) {
-            node.push_back(SerializeModel(pair.second));
-        }
-        return node;
-    }
     Ref<Model> DeserializeModel(const YAML::Node& node) {
         std::string modelName = node["ModelName"].as<std::string>();
         ImportModelData importData = node["ImportModelData"].as<ImportModelData>();
@@ -336,6 +327,13 @@ namespace libCore {
 
         return AssetsManager::GetInstance().GetModel(modelName);
     }
+    YAML::Node SerializeAllModels() {
+        YAML::Node node;
+        for (const auto& pair : AssetsManager::GetInstance().GetAllModels()) {
+            node.push_back(SerializeModel(pair.second));
+        }
+        return node;
+    }
     void DeserializeAllModels(const YAML::Node& node) {
         for (const auto& modelNode : node) {
             DeserializeModel(modelNode);
@@ -343,21 +341,19 @@ namespace libCore {
     }
     //--------------------
 
-
     //--IDComponent
     YAML::Node SerializeIDComponent(const IDComponent& idComponent) {
         YAML::Node node;
-        node["ID"] = idComponent.ID;
-        node["MarkToDelete"] = idComponent.markToDelete;
+        node["ID"] = static_cast<uint32_t>(idComponent.ID); // Guardar el UUID como uint32_t
         return node;
     }
     IDComponent DeserializeIDComponent(const YAML::Node& node) {
         IDComponent idComponent;
-        idComponent.ID = node["ID"].as<UUID>();
-        idComponent.markToDelete = node["MarkToDelete"].as<bool>();
+        idComponent.ID = node["ID"].as<uint32_t>(); // Leer como uint32_t
         return idComponent;
     }
     //--------------------
+
 
     //--TagComponent
     YAML::Node SerializeTagComponent(const TagComponent& tagComponent) {
@@ -398,8 +394,13 @@ namespace libCore {
             scriptComponent.AddLuaScript(scriptData);
         }
     }
+    
+
     YAML::Node SerializeScriptComponent(const ScriptComponent& scriptComponent) {
         YAML::Node node;
+
+        // Serializar el UUID de la entidad
+        node["EntityUUID"] = scriptComponent.GetEntityUUID();
 
         // Serializar los datos de todos los scripts
         auto luaScripts = scriptComponent.GetLuaScriptsData();
@@ -430,8 +431,16 @@ namespace libCore {
 
         return node;
     }
+
+
     ScriptComponent DeserializeScriptComponent(const YAML::Node& node) {
         ScriptComponent scriptComponent;
+
+        // Deserializar el UUID de la entidad asociado a este componente
+        if (node["EntityUUID"]) {
+            uint32_t entityUUID = node["EntityUUID"].as<uint32_t>();
+            scriptComponent.SetEntityUUID(entityUUID);
+        }
 
         // Deserializar todos los scripts
         if (node["Scripts"]) {
@@ -452,8 +461,7 @@ namespace libCore {
                 for (const auto& varNode : exposedVarsNode) {
                     std::string varName = varNode.first.as<std::string>();
 
-                    // Detectar el tipo basado en el prefijo del nombre de la variable
-                    if (varName.rfind("int_", 0) == 0) {  // Si el nombre tiene el prefijo "int_"
+                    if (varName.rfind("int_", 0) == 0) {
                         vars[varName] = sol::make_object(lua, varNode.second.as<int>());
                     }
                     else if (varNode.second.IsScalar() && varNode.second.Tag() == "!!float") {
@@ -474,5 +482,7 @@ namespace libCore {
 
         return scriptComponent;
     }
+
+
     //--------------------
 }

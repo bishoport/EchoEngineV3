@@ -8,9 +8,8 @@
 namespace libCore
 {
     // Constructor que recibe el nombre de la escena
-    Scene::Scene(const std::string& name): sceneName(name)
-    {
-    }
+    Scene::Scene(const std::string& name): sceneName(name){}
+    //---------------------------------------------------------------------------------------------
 
     //--SAVE/LOAD PROJECT
     void Scene::SerializeScene() {
@@ -133,9 +132,16 @@ namespace libCore
                 }
 
                 if (entityNode["IDComponent"]) {
+                    // Deserializar el componente IDComponent
                     auto id_component = DeserializeIDComponent(entityNode["IDComponent"]);
+
+                    // Obtener el UUID desde el IDComponent deserializado
+                    uint32_t entityUUID = static_cast<uint32_t>(id_component.ID);
+
+                    // Asignar o reemplazar el IDComponent en la entidad con el UUID deserializado
                     entityManager.m_registry->emplace_or_replace<IDComponent>(entity, id_component);
                 }
+
 
                 if (entityNode["TransformComponent"]) {
                     auto transform_component = DeserializeTransformComponent(entityNode["TransformComponent"]);
@@ -176,8 +182,21 @@ namespace libCore
                 // Deserializar ScriptComponent con múltiples scripts
                 if (entityNode["ScriptComponent"]) {
                     auto component = DeserializeScriptComponent(entityNode["ScriptComponent"]);
+
+                    // Obtener el UUID desde el IDComponent deserializado (ya deserializado antes de este punto)
+                    if (entityNode["IDComponent"]) {
+                        auto id_component = DeserializeIDComponent(entityNode["IDComponent"]);
+
+                        // Obtener el UUID desde el IDComponent deserializado
+                        uint32_t entityUUID = static_cast<uint32_t>(id_component.ID);
+
+                        // Ahora asignamos ese UUID al ScriptComponent
+                        component.SetEntityUUID(entityUUID);
+                    }
+
                     entityManager.m_registry->emplace_or_replace<ScriptComponent>(entity, component);
                 }
+
 
                 // Almacenar la correspondencia entre el ID de la entidad y la entidad creada
                 entityMap[entityID] = entity;
@@ -212,8 +231,6 @@ namespace libCore
         }
     }
     //---------------------------------------------------------------------------------------------
-
-
 
     //--SERIALIZAR COMPONENTES
     void Scene::SerializeComponents() 
@@ -271,6 +288,7 @@ namespace libCore
         std::ofstream fout("assets/Scenes/" + sceneName + "_temp.yaml");
         fout << out.c_str();
     }
+    //---------------------------------------------------------------------------------------------
 
     //--DESERIALIZAR COMPONENTES
     void Scene::DeserializeComponents() {
@@ -291,6 +309,7 @@ namespace libCore
                 uint32_t entityID = entityNode["Entity"].as<uint32_t>();
 
                 if (entityNode["IDComponent"]) {
+
                     auto id_component = DeserializeIDComponent(entityNode["IDComponent"]);
 
                     entt::entity entity = entityManager.GetEntityByUUID(id_component.ID);

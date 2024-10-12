@@ -16,6 +16,14 @@ namespace libCore
         }
         return EntityManager::GetInstance().CreateGameObjectFromModel(model, entt::null);
     }
+
+    entt::entity EntityManagerBridge::GetEntityByUUID(uint32_t uuid) 
+    {
+        return EntityManager::GetInstance().GetEntityByUUID(uuid);
+    }
+
+
+
     void EntityManagerBridge::DestroyEntity(entt::entity entity) {
         EntityManager::GetInstance().DestroyEntity(entity);
     }

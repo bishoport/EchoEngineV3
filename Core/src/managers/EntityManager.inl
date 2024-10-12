@@ -35,10 +35,17 @@ namespace libCore
         return EntityManager::GetInstance().GetRegistry()->has<T>(entity);
     }
 
+   /* template<typename T, typename... Args>
+    T& EntityManager::AddComponent(entt::entity entity, Args&&... args) {
+        return EntityManager::GetInstance().GetRegistry()->emplace<T>(entity, std::forward<Args>(args)...);
+    }*/
+
     template<typename T, typename... Args>
     T& EntityManager::AddComponent(entt::entity entity, Args&&... args) {
         return EntityManager::GetInstance().GetRegistry()->emplace<T>(entity, std::forward<Args>(args)...);
     }
+
+
 
     template<typename T>
     void EntityManager::RemoveComponent(entt::entity entity) {

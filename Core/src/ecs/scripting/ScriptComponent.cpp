@@ -1,8 +1,6 @@
 #include "ScriptComponent.h"
-
 #include "../../managers/EntityManager.h"
 #include "../../managers/LuaManager.h"
-
 #include "../../managers/AssetsManager.h"
 
 namespace libCore
@@ -11,19 +9,27 @@ namespace libCore
     void ScriptComponent::AddLuaScript(const ImportLUA_ScriptData& scriptData) {
         luaScriptsData.push_back(scriptData);  // Agregar un nuevo script
     }
+
     void ScriptComponent::RemoveLuaScript(const std::string& scriptName) {
         luaScriptsData.erase(std::remove_if(luaScriptsData.begin(), luaScriptsData.end(),
             [&](const ImportLUA_ScriptData& data) { return data.name == scriptName; }), luaScriptsData.end());
     }
+
     //-------------------------------------------------------------------------------------------------------------------------
-    
+
     //--LIFE CYCLE
     void ScriptComponent::Init() {
         for (const auto& scriptData : luaScriptsData) {
             sol::state& lua = LuaManager::GetInstance().GetLuaState(scriptData.name);
 
-            // Exponer la entidad a Lua
-            lua["entity"] = entity;  // O podrías mapear una interfaz si es necesario
+            // Obtener la entidad desde el UUID
+            entity = EntityManager::GetInstance().GetEntityByUUID(entityUUID);
+
+            std::cout << "UUID PARENT -> " << entityUUID << std::endl;
+
+            // Exponer el UUID de la entidad a Lua
+            lua["entityUUID"] = static_cast<uint32_t>(entityUUID);  // Exponer el UUID como uint32_t
+            lua["entity"] = entity;  // Exponer la entidad directamente
 
             sol::function initFunc = lua["Init"];
             if (initFunc.valid()) {
@@ -31,6 +37,8 @@ namespace libCore
             }
         }
     }
+
+
     void ScriptComponent::Update(float deltaTime) {
         for (const auto& scriptData : luaScriptsData) {
             sol::state& lua = LuaManager::GetInstance().GetLuaState(scriptData.name);
@@ -43,6 +51,7 @@ namespace libCore
             }
         }
     }
+
     //-------------------------------------------------------------------------------------------------------------------------
 
 
@@ -62,6 +71,7 @@ namespace libCore
         }
         return vars;
     }
+
     void ScriptComponent::SetExposedVars(const std::string& scriptName, const std::unordered_map<std::string, sol::object>& vars) {
         sol::state& lua = LuaManager::GetInstance().GetLuaState(scriptName);
         sol::table exposedVars = lua["exposedVars"];

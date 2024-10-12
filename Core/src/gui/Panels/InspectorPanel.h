@@ -3,7 +3,6 @@
 #include "../../managers/EntityManager.h"
 #include "../../managers/LuaManager.h"
 
-
 namespace libCore
 {
     class InspectorPanel : public PanelBase
@@ -27,7 +26,8 @@ namespace libCore
                 if (EntityManager::GetInstance().HasComponent<IDComponent>(selectedEntity)) {
                     auto& idComponent = EntityManager::GetInstance().GetComponent<IDComponent>(selectedEntity);
                     if (ImGui::CollapsingHeader(ICON_FA_ID_BADGE " ID")) {
-                        ImGui::Text("UUID: %s", idComponent.ID.ToString().c_str());
+                        // Mostrar el UUID en su formato numérico original (uint32_t)
+                        ImGui::Text("UUID: %u", static_cast<uint32_t>(idComponent.ID));  // Mostrar como número de 32 bits
 
                         // Botón para eliminar la entidad
                         if (ImGui::Button(ICON_FA_TRASH " Delete Entity")) {
@@ -172,18 +172,6 @@ namespace libCore
                         }
                     }
                 }
-
-
-                ////--MESH_COMPONENT
-                //if (EntityManager::GetInstance().HasComponent<MeshComponent>(selectedEntity)) {
-                //    if (ImGui::CollapsingHeader(ICON_FA_CUBES " Mesh")) {
-                //        auto& meshComponent = EntityManager::GetInstance().GetComponent<MeshComponent>(selectedEntity);
-                //        ImGui::Text("Mesh Name: %s", meshComponent.mesh->meshName.c_str());
-                //        ImGui::Text("Instance: %s", meshComponent.isInstance ? "Yes" : "No");
-                //        ImGui::Checkbox("Renderable", &meshComponent.renderable);
-                //        
-                //    }
-                //}
                 //--ANIMATION_COMPONENT
                 if (EntityManager::GetInstance().HasComponent<AnimationComponent>(selectedEntity)) {
                     if (ImGui::CollapsingHeader(ICON_FA_FILM " Animation")) {  // Icono de "película" para el componente de animación
@@ -513,11 +501,17 @@ namespace libCore
                 /*else if (selectedComponent == "LightComponent") {
                     entityManager.AddComponent<LightComponent>(entity);
                 }
-                else if (selectedComponent == "DirectionalLightComponent") {
-                    entityManager.AddComponent<DirectionalLightComponent>(entity);
-                }*/
+                */
                 else if (selectedComponent == "ScriptComponent") {
-                    entityManager.AddComponent<ScriptComponent>(entity);
+                    // Obtener el UUID como uint32_t desde el IDComponent
+                    uint32_t entityUUID = static_cast<uint32_t>(EntityManager::GetInstance().GetComponent<IDComponent>(entity).ID);
+
+                    // Debug: Mostrar el UUID que se está pasando
+                    std::cout << "Debug: UUID en 32 bits que se está pasando a ScriptComponent: " << entityUUID << std::endl;
+
+                    // Añadir el ScriptComponent con el UUID
+                    entityManager.AddComponent<ScriptComponent>(entity, entityUUID);
+
                 }
                 selectedComponent.clear(); // Limpiar la selección después de agregar el componente
             }

@@ -16,6 +16,8 @@ namespace libCore
     class EntityManager {
     public:
 
+        static EntityManager& GetInstance();
+
         bool runScripting = false;
 
         Scope<entt::registry> m_registry;
@@ -24,17 +26,11 @@ namespace libCore
         entt::entity currentSelectedEntityInScene = entt::null;
 
         entt::entity GetEntityByUUID(uint32_t uuid);
-        //Ref<entt::registry> GetRegistry();
         entt::registry* GetRegistry();
-
-        std::wstring GetExecutablePath();
-        std::string wstring_to_string(const std::wstring& wstr);
-        void LoadScriptsFromDLL();
 
         entt::entity CreateEmptyGameObject(const std::string& name = "");
         entt::entity CreateGameObjectFromModel(Ref<Model> model, entt::entity parent);
         void CreateCamera();
-        entt::entity GetEntityByName(const std::string& name);
         void AddChild(entt::entity parent, entt::entity child);
 
         void DuplicateEntity();
@@ -52,7 +48,6 @@ namespace libCore
         void UpdateGameObjects(Timestep deltaTime);
         void DrawGameObjects(const std::string& shader);
         void DrawOneGameObject(entt::entity entity, const std::string& shader);
-        //void DrawOneGameObject(TransformComponent& transformComponent, MeshComponent& meshComponent, MaterialComponent& materialComponent, const std::string& shader);
         void DrawABBGameObjectMeshComponent(const std::string& shader);
         void CheckRayModelIntersection(const glm::vec3& rayOrigin, const glm::vec3& rayDirection);
         void CheckInstancesInRunTime();
@@ -61,6 +56,8 @@ namespace libCore
         glm::vec3 UUIDToColor(const UUID& uuid);
         uint32_t ColorToUUID(unsigned char r, unsigned char g, unsigned char b);
 
+
+        //--TEMPLATES
         template<typename T>
         bool ValidateEntityComponent(entt::entity entity, Ref<entt::registry> registry);
 
@@ -73,12 +70,8 @@ namespace libCore
         template<typename T, typename... Args>
         T& AddComponent(entt::entity entity, Args&&... args);
 
-
-
         template<typename T>
         void RemoveComponent(entt::entity entity);
-
-        static EntityManager& GetInstance();
 
     private:
         EntityManager();
@@ -89,9 +82,7 @@ namespace libCore
         void DebugPrintEntityHierarchy(entt::entity entity, const Ref<entt::registry>& registry, int level = 0);
         void DebugPrintAllEntityHierarchies();
         void DebugPrintAllEntitiesWithUUIDs();
-
         void DestroyDeleteMarked();
-
     };
 }
 

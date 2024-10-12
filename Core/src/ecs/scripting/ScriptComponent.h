@@ -5,14 +5,12 @@
 #include <entt.hpp>
 #include <sol/sol.hpp>
 
-
-
 namespace libCore
 {
     class ScriptComponent {
     public:
         ScriptComponent() = default;
-        ScriptComponent(entt::entity entityRef) : entity(entityRef) {}
+        ScriptComponent(uint32_t entityUUID) : entityUUID(entityUUID) {}
 
         void AddLuaScript(const ImportLUA_ScriptData& scriptData);
 
@@ -22,8 +20,8 @@ namespace libCore
 
         void RemoveLuaScript(const std::string& scriptName);
 
-
-        entt::entity GetEntity() const { return entity; }
+        void SetEntityUUID(uint32_t uuid) { this->entityUUID = uuid; }
+        uint32_t GetEntityUUID() const { return entityUUID; }
 
         std::unordered_map<std::string, sol::object> GetExposedVars(const std::string& scriptName) const;
 
@@ -35,7 +33,8 @@ namespace libCore
         void Update(float deltaTime);
 
     private:
-        entt::entity entity;
+        entt::entity entity;  // Mantener esto si es necesario internamente
+        uint32_t entityUUID;  // Exponer el UUID como uint32_t
         std::vector<ImportLUA_ScriptData> luaScriptsData;  // Cambiado a lista para múltiples scripts
     };
 }

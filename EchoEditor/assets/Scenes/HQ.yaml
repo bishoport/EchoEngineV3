@@ -23,34 +23,32 @@ Models:
       processLights: false
       globalScaleFactor: 0.300000012
 Entities:
-  - Entity: 1
+  - Entity: 1048577
     IDComponent:
-      ID: d80d6a7fe6f5af8b
-      MarkToDelete: false
+      ID: 4034470
     TagComponent:
       Tag: Bot
     TransformComponent:
       Transform:
         Position:
-          - 1.06728709
           - 0
-          - -1.46117461
+          - 0
+          - -4.48552704
         Rotation:
           - 0
-          - 1.01518822
+          - -0
           - 0
         Scale:
-          - 1.00000012
           - 1
-          - 1.00000012
+          - 1
+          - 1
     MeshComponent:
       MeshName: mesh_bot
     MaterialComponent:
       MaterialName: Material.001
   - Entity: 0
     IDComponent:
-      ID: 95db614d69b82f57
-      MarkToDelete: false
+      ID: 12913725
     TagComponent:
       Tag: Board
     TransformComponent:
@@ -67,12 +65,15 @@ Entities:
           - 1
           - 1
           - 1
+    ChildComponent:
+      []
     ScriptComponent:
+      EntityUUID: 12913725
       Scripts:
         - filePath: assets\scripts\Tablero.lua
           name: Tablero
       ExposedVars:
         Tablero:
+          selectedModel: Cube
           int_width: 26
           int_height: 19
-          selectedModel: Cube

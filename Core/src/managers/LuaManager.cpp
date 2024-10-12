@@ -63,6 +63,7 @@ namespace libCore {
             "CreateEntityFromModel", &EntityManagerBridge::CreateEntityFromModel,
             "GetEntityName", &EntityManagerBridge::GetEntityName,
             "DestroyEntity", &EntityManagerBridge::DestroyEntity,
+            "GetEntityByUUID", &EntityManagerBridge::GetEntityByUUID, // Exponer GetEntityByUUID
 
             "GetPosition", &EntityManagerBridge::GetPosition,
             "SetPosition", &EntityManagerBridge::SetPosition,
@@ -71,12 +72,13 @@ namespace libCore {
             "GetScale", &EntityManagerBridge::GetScale,
             "SetScale", &EntityManagerBridge::SetScale,
 
-            "AddChild", & EntityManagerBridge::AddChild
+            "AddChild", &EntityManagerBridge::AddChild
         );
 
         static EntityManagerBridge entityManagerBridge;
         luaState["EntityManager"] = &entityManagerBridge;
     }
+
 
     sol::state& LuaManager::GetLuaState(const std::string& scriptName) const {
         auto it = scripts.find(scriptName);
