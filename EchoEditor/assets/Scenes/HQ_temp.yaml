@@ -1,8 +1,8 @@
 Scene: HQ_temp
 Entities:
-  - Entity: 1
+  - Entity: 1048576
     IDComponent:
-      ID: 12913725
+      ID: 15442120
     TagComponent:
       Tag: Board
     TransformComponent:
@@ -14,35 +14,6 @@ Entities:
         Rotation:
           - 0
           - 0
-          - 0
-        Scale:
-          - 1
-          - 1
-          - 1
-    ScriptComponent:
-      EntityUUID: 12913725
-      Scripts:
-        - filePath: assets\scripts\Tablero.lua
-          name: Tablero
-      ExposedVars:
-        Tablero:
-          int_height: 19
-          int_width: 26
-          selectedModel: Cube
-  - Entity: 0
-    IDComponent:
-      ID: 4034470
-    TagComponent:
-      Tag: Bot
-    TransformComponent:
-      Transform:
-        Position:
-          - 0
-          - 0
-          - -4.48552704
-        Rotation:
-          - 0
-          - -0
           - 0
         Scale:
           - 1

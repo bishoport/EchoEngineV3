@@ -18,6 +18,7 @@
 #include <mutex>
 #include <windows.h>
 #include <random>
+#include <variant>
 
 
 //GLM
@@ -155,5 +156,10 @@ struct AssimpNodeData
 	std::string name;
 	int childrenCount;
 	std::vector<AssimpNodeData> children;
+};
+
+// Tipos primitivos para almacenar variables en C++
+struct ExposedVar {
+	std::variant<int, float, bool, std::string> value;
 };
 

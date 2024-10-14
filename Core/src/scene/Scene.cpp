@@ -27,6 +27,12 @@ namespace libCore
             out << YAML::Key << "Models" << YAML::Value << YAML::BeginSeq << YAML::EndSeq; // Lista vacía
         }
 
+        // **Serializar todos los scripts cargados en LuaManager**
+        auto loadedScripts = LuaManager::GetInstance().GetLoadedScripts();
+        if (!loadedScripts.empty()) {
+            out << YAML::Key << "Scripts" << YAML::Value << SerializeAllLUAScripts(loadedScripts);
+        }
+
 
         // Serializar las entidades
         out << YAML::Key << "Entities" << YAML::Value << YAML::BeginSeq;
@@ -113,6 +119,11 @@ namespace libCore
             DeserializeAllModels(data["Models"]);
         }
 
+        if (data["Scripts"])
+        {
+            DeserializeAllLUAScripts(data["Scripts"]);
+        }
+
         auto& entityManager = EntityManager::GetInstance();
         auto entities = data["Entities"];
 
@@ -179,8 +190,12 @@ namespace libCore
                     entityManager.m_registry->emplace_or_replace<MaterialComponent>(entity, component);
                 }
 
+
+
+
                 // Deserializar ScriptComponent con múltiples scripts
                 if (entityNode["ScriptComponent"]) {
+                    
                     auto component = DeserializeScriptComponent(entityNode["ScriptComponent"]);
 
                     // Obtener el UUID desde el IDComponent deserializado (ya deserializado antes de este punto)
@@ -273,10 +288,10 @@ namespace libCore
             //    out << YAML::Value << SerializeMaterialComponent(entityManager.GetComponent<MaterialComponent>(entity));
             //}
 
-            if (entityManager.HasComponent<ScriptComponent>(entity)) {
+            /*if (entityManager.HasComponent<ScriptComponent>(entity)) {
                 out << YAML::Key << "ScriptComponent";
                 out << YAML::Value << SerializeScriptComponent(entityManager.GetComponent<ScriptComponent>(entity));
-            }
+            }*/
 
             out << YAML::EndMap; // Entity
             });
@@ -333,10 +348,10 @@ namespace libCore
                     //    entityManager.m_registry->emplace_or_replace<MaterialComponent>(entity, material_component);
                     //}
 
-                    if (entityNode["ScriptComponent"]) {
+                    /*if (entityNode["ScriptComponent"]) {
                         auto script_component = DeserializeScriptComponent(entityNode["ScriptComponent"]);
                         entityManager.m_registry->emplace_or_replace<ScriptComponent>(entity, script_component);
-                    }
+                    }*/
 
                     entityMap[entityID] = entity;
                 }

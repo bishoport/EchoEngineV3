@@ -105,7 +105,27 @@ namespace libCore
                         ImGui::SameLine();
                         ImGui::DragFloat("##PosZ", &transform->position.z, 0.1f, -FLT_MAX, FLT_MAX, "Z: %.2f");
 
+
+                        // Rotation (Euler Angles in Degrees)
                         ImGui::Text("Rotation");
+                        glm::vec3 eulerAnglesDegrees = glm::degrees(transform->GetEulerAngles()); // Convertir a grados para mostrar en el inspector
+                        ImGui::TextColored(ImVec4(1, 0, 0, 1), "X");
+                        ImGui::SameLine();
+                        if (ImGui::DragFloat("##RotX", &eulerAnglesDegrees.x, 0.1f, -360.0f, 360.0f, "X: %.2f")) {
+                            transform->SetEulerAngles(glm::radians(eulerAnglesDegrees)); // Convertir de nuevo a radianes para almacenar
+                        }
+                        ImGui::TextColored(ImVec4(0, 1, 0, 1), "Y");
+                        ImGui::SameLine();
+                        if (ImGui::DragFloat("##RotY", &eulerAnglesDegrees.y, 0.1f, -360.0f, 360.0f, "Y: %.2f")) {
+                            transform->SetEulerAngles(glm::radians(eulerAnglesDegrees)); // Convertir de nuevo a radianes para almacenar
+                        }
+                        ImGui::TextColored(ImVec4(0, 0, 1, 1), "Z");
+                        ImGui::SameLine();
+                        if (ImGui::DragFloat("##RotZ", &eulerAnglesDegrees.z, 0.1f, -360.0f, 360.0f, "Z: %.2f")) {
+                            transform->SetEulerAngles(glm::radians(eulerAnglesDegrees)); // Convertir de nuevo a radianes para almacenar
+                        }
+
+                        /*ImGui::Text("Rotation");
                         ImGui::TextColored(ImVec4(1, 0, 0, 1), "X");
                         ImGui::SameLine();
                         if (ImGui::DragFloat("##RotX", &transform->eulerAngles.x, 0.1f, -360.0f, 360.0f, "X: %.2f")) {
@@ -120,7 +140,7 @@ namespace libCore
                         ImGui::SameLine();
                         if (ImGui::DragFloat("##RotZ", &transform->eulerAngles.z, 0.1f, -360.0f, 360.0f, "Z: %.2f")) {
                             transform->updateRotationFromEulerAngles();
-                        }
+                        }*/
 
                         ImGui::Text("Scale");
                         ImGui::TextColored(ImVec4(1, 0, 0, 1), "X");
@@ -333,81 +353,87 @@ namespace libCore
                     }
                 }
                 //--SCRIPT_COMPONENT
-                if (EntityManager::GetInstance().HasComponent<ScriptComponent>(selectedEntity)) {
+                if (EntityManager::GetInstance().HasComponent<ScriptComponent>(selectedEntity) && LuaManager::GetInstance().reloading == false) {
                     auto& scriptComponent = EntityManager::GetInstance().GetComponent<ScriptComponent>(selectedEntity);
 
                     if (ImGui::CollapsingHeader(ICON_FA_CODE " Scripts", ImGuiTreeNodeFlags_DefaultOpen))  // Ícono de código
                     {
                         // Mostrar todos los scripts asignados
                         const auto& luaScripts = scriptComponent.GetLuaScriptsData();
-                        
+
                         for (const auto& scriptData : luaScripts) {
                             ImGui::Text(ICON_FA_FILE_CODE " Assigned Script: %s", scriptData.name.c_str());  // Ícono de archivo de script
 
                             if (ImGui::Button((ICON_FA_SYNC_ALT " Reload " + scriptData.name).c_str())) {  // Ícono de recargar
-                                LuaManager::GetInstance().ReloadLuaFile(scriptData.name);
+                                scriptComponent.ReloadLuaScript(scriptData.name);
                             }
 
-                            sol::state& lua = LuaManager::GetInstance().GetLuaState(scriptData.name);
-                            sol::table exposedVars = lua["exposedVars"];
-
-                            if (!exposedVars.valid()) {
-                                ImGui::Text(ICON_FA_EXCLAMATION_TRIANGLE " No exposed variables found");  // Ícono de advertencia
-                                continue;
+                            if (scriptComponent.isReloading) {
+                                ImGui::Text("Script is being reloaded, please wait...");
                             }
+                            else {
+                                // Obtener las exposedVars desde el ScriptComponent
+                                auto exposedVars = scriptComponent.GetExposedVars(scriptData.name);
 
-                            // Mostrar variables expuestas
-                            for (auto& kvp : exposedVars) {
-                                std::string varName = kvp.first.as<std::string>();
-                                sol::object varValue = kvp.second;
+                                if (exposedVars.empty()) {
+                                    ImGui::Text(ICON_FA_EXCLAMATION_TRIANGLE " No exposed variables found");
+                                    continue;
+                                }
 
-                                if (varName.rfind("int_", 0) == 0) {
-                                    int value = static_cast<int>(varValue.as<float>());
-                                    if (ImGui::SliderInt(varName.c_str(), &value, 0, 100)) {
-                                        exposedVars[varName] = value;
+                                // Mostrar las variables expuestas
+                                for (auto& kvp : exposedVars) {
+                                    const std::string& varName = kvp.first;
+                                    ExposedVar& varValue = kvp.second;
+
+                                    // Mostrar UUID como valor fijo
+                                    if (varName.rfind("uuid_", 0) == 0) {
+                                        int32_t uuid = std::get<int>(varValue.value);
+                                        ImGui::Text("%s: %d", varName.c_str(), uuid);
                                     }
-                                }
-                                else if (varValue.is<float>()) {
-                                    float value = varValue.as<float>();
-                                    if (ImGui::SliderFloat(varName.c_str(), &value, 0.0f, 10.0f)) {
-                                        exposedVars[varName] = value;
-                                    }
-                                }
-                                else if (varValue.is<bool>()) {
-                                    bool value = varValue.as<bool>();
-                                    if (ImGui::Checkbox(varName.c_str(), &value)) {
-                                        exposedVars[varName] = value;
-                                    }
-                                }
-                                else if (varName == "selectedModel" && varValue.is<std::string>()) {
-                                    char buffer[256];
-                                    strncpy_s(buffer, sizeof(buffer), varValue.as<std::string>().c_str(), _TRUNCATE);
-                                    if (ImGui::InputText(varName.c_str(), buffer, sizeof(buffer))) {
-                                        exposedVars[varName] = std::string(buffer);
-                                    }
-                                    if (ImGui::BeginDragDropTarget()) {
-                                        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("MODEL_PAYLOAD")) {
-                                            const char* droppedModelName = (const char*)payload->Data;
-                                            strncpy_s(buffer, sizeof(buffer), droppedModelName, _TRUNCATE);
-                                            exposedVars[varName] = std::string(buffer);
-                                        }
-                                        ImGui::EndDragDropTarget();
-                                    }
-                                }
-                                else if (varValue.is<sol::table>()) {
-                                    sol::table vectorTable = varValue.as<sol::table>();
-                                    if (vectorTable.size() == 3) {
-                                        float vec3[3];
-                                        vec3[0] = vectorTable[1].get<float>();
-                                        vec3[1] = vectorTable[2].get<float>();
-                                        vec3[2] = vectorTable[3].get<float>();
-                                        if (ImGui::InputFloat3(varName.c_str(), vec3)) {
-                                            vectorTable[1] = vec3[0];
-                                            vectorTable[2] = vec3[1];
-                                            vectorTable[3] = vec3[2];
+                                    // Mostrar int como slider
+                                    else if (std::holds_alternative<int>(varValue.value) && varName.rfind("int_", 0) == 0) {
+                                        int value = std::get<int>(varValue.value);
+                                        if (ImGui::SliderInt(varName.c_str(), &value, 0, 100)) {
+                                            varValue.value = value;  // Actualizar el valor en ExposedVar
                                         }
                                     }
+                                    // Mostrar float como slider
+                                    else if (std::holds_alternative<float>(varValue.value)) {
+                                        float value = std::get<float>(varValue.value);
+                                        if (ImGui::SliderFloat(varName.c_str(), &value, 0.0f, 10.0f)) {
+                                            varValue.value = value;  // Actualizar el valor en ExposedVar
+                                        }
+                                    }
+                                    // Mostrar boolean como checkbox
+                                    else if (std::holds_alternative<bool>(varValue.value)) {
+                                        bool value = std::get<bool>(varValue.value);
+                                        if (ImGui::Checkbox(varName.c_str(), &value)) {
+                                            varValue.value = value;  // Actualizar el valor en ExposedVar
+                                        }
+                                    }
+                                    // Mostrar string con InputText y soporte para Drag & Drop
+                                    else if (std::holds_alternative<std::string>(varValue.value)) {
+                                        char buffer[256];
+                                        strncpy_s(buffer, sizeof(buffer), std::get<std::string>(varValue.value).c_str(), _TRUNCATE);
+                                        if (ImGui::InputText(varName.c_str(), buffer, sizeof(buffer))) {
+                                            varValue.value = std::string(buffer);  // Actualizar el valor en ExposedVar
+                                        }
+
+                                        // Soporte para Drag and Drop en campos de tipo string
+                                        if (ImGui::BeginDragDropTarget()) {
+                                            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("MODEL_PAYLOAD")) {
+                                                const char* droppedModelName = (const char*)payload->Data;
+                                                strncpy_s(buffer, sizeof(buffer), droppedModelName, _TRUNCATE);
+                                                varValue.value = std::string(buffer);  // Actualizar el valor en ExposedVar con el modelo droppeado
+                                            }
+                                            ImGui::EndDragDropTarget();
+                                        }
+                                    }
                                 }
+
+                                // Guardar las exposedVars modificadas de vuelta al ScriptComponent
+                                scriptComponent.SetExposedVars(scriptData.name, exposedVars);
+                                scriptComponent.SaveExposedVars(scriptData.name);  // Guardar los cambios en Lua
                             }
 
                             if (ImGui::Button((ICON_FA_TRASH_ALT " Remove " + scriptData.name).c_str())) {  // Ícono de eliminación

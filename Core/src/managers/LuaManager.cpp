@@ -31,6 +31,8 @@ namespace libCore {
     }
     void LuaManager::ReloadLuaFile(const std::string& scriptName)
     {
+        reloading = true;
+
         auto it = scripts.find(scriptName);
         if (it != scripts.end()) {
             const std::string& path = it->second.first.filePath;
@@ -53,7 +55,10 @@ namespace libCore {
         {
             ConsoleLog::GetInstance().AddLog(LogLevel::L_ERROR, "Script not found to reload::" + std::string(scriptName));
         }
+
+        reloading = false;
     }
+
 
     void LuaManager::RegisterCommonFunctions(sol::state& luaState) {
         luaState.new_usertype<entt::entity>("entity");
@@ -96,5 +101,14 @@ namespace libCore {
             scriptDataList.push_back(pair.second.first);
         }
         return scriptDataList;
+    }
+
+
+    ImportLUA_ScriptData LuaManager::GetScriptData(const std::string& scriptName) const {
+        auto it = scripts.find(scriptName);
+        if (it != scripts.end()) {
+            return it->second.first;
+        }
+        throw std::runtime_error("Script data not found for script: " + scriptName);
     }
 }

@@ -32,9 +32,9 @@ namespace libCore
 
                 // Crear una tabla con dos columnas: nombre y acciones
                 if (ImGui::BeginTable("LuaScriptsTable", 3)) {
-                    ImGui::TableSetupColumn(ICON_FA_FILE " Script Name");
-                    ImGui::TableSetupColumn(ICON_FA_FOLDER_OPEN " Script Path");
-                    ImGui::TableSetupColumn(ICON_FA_PLAY " Actions");
+                    ImGui::TableSetupColumn("NAME");
+                    ImGui::TableSetupColumn("PATH");
+                    ImGui::TableSetupColumn("ACTIONS");
                     ImGui::TableHeadersRow();
 
                     // Iterar sobre los scripts cargados

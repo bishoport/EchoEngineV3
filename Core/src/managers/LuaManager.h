@@ -33,6 +33,10 @@ namespace libCore {
         // Obtener lista de scripts cargados
         std::vector<ImportLUA_ScriptData> GetLoadedScripts() const;
 
+        ImportLUA_ScriptData GetScriptData(const std::string& scriptName) const;
+
+        bool reloading = false;
+
     private:
         LuaManager() {}
         ~LuaManager() {}

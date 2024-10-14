@@ -1,5 +1,16 @@
 Scene: Untitled
 Models:
+  - ModelName: Hero_Quest_Kit_1.gltf
+    ImportModelData:
+      filePath: assets\models\Hero_Quest\
+      fileName: Hero_Quest_Kit_1.gltf
+      modelID: 0
+      invertUV: false
+      rotate90: false
+      skeletal: false
+      useCustomTransform: true
+      processLights: false
+      globalScaleFactor: 1
   - ModelName: Primitives.glb
     ImportModelData:
       filePath: assets/models/
@@ -11,44 +22,13 @@ Models:
       useCustomTransform: true
       processLights: false
       globalScaleFactor: 1
-  - ModelName: Robot.fbx
-    ImportModelData:
-      filePath: assets\models\PRUEBAS\Robot\
-      fileName: Robot.fbx
-      modelID: 0
-      invertUV: false
-      rotate90: false
-      skeletal: false
-      useCustomTransform: true
-      processLights: false
-      globalScaleFactor: 0.300000012
+Scripts:
+  - filePath: assets\scripts\Tablero.lua
+    name: Tablero
 Entities:
-  - Entity: 1048577
+  - Entity: 1048576
     IDComponent:
-      ID: 4034470
-    TagComponent:
-      Tag: Bot
-    TransformComponent:
-      Transform:
-        Position:
-          - 0
-          - 0
-          - -4.48552704
-        Rotation:
-          - 0
-          - -0
-          - 0
-        Scale:
-          - 1
-          - 1
-          - 1
-    MeshComponent:
-      MeshName: mesh_bot
-    MaterialComponent:
-      MaterialName: Material.001
-  - Entity: 0
-    IDComponent:
-      ID: 12913725
+      ID: 15442120
     TagComponent:
       Tag: Board
     TransformComponent:
@@ -68,12 +48,11 @@ Entities:
     ChildComponent:
       []
     ScriptComponent:
-      EntityUUID: 12913725
       Scripts:
         - filePath: assets\scripts\Tablero.lua
           name: Tablero
       ExposedVars:
         Tablero:
-          selectedModel: Cube
           int_width: 26
+          selectedModel: Tile_0
           int_height: 19

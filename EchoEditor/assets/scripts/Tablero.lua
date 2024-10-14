@@ -1,72 +1,169 @@
--- Tabla especial para las variables expuestas a ImGui
+ï»¿-- Tabla especial para las variables expuestas a ImGui
 exposedVars = {
-    int_width = 26,   -- Ancho de la matriz del suelo
-    int_height = 19,  -- Alto de la matriz del suelo
-    selectedModel = ""  -- Modelo de losa
+    int_width    = 27,   -- Ancho de la matriz del suelo
+    int_height   = 21,  -- Alto de la matriz del suelo
+    model_Floor  = "", -- Modelo de losa      1
+    model_Corner = "",  -- Modelo de  Esquina 2,3,4,5
+    model_Wall   = ""     -- Modelo de  Pared   6,7,8,9
 }
 
 local modelEntities = {}
 
 -- Matriz predefinida de 1s y 0s (20x20)
-local heroQuestBoard = {
-    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
+local heroQuestBoard = { 
+    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    {1, 1, 2, 6, 6, 6, 6, 6, 6, 6, 6, 6, 3, 1, 1, 2, 6, 6, 6, 6, 6, 6, 6, 6, 6, 3, 1, 1},
+    {1, 1, 8, 1, 1, 1, 1, 1, 1, 1, 1, 1, 9, 1, 1, 8, 1, 1, 1, 1, 1, 1, 1, 1, 1, 9, 1, 1},
+    {1, 1, 8, 1, 1, 1, 1, 1, 1, 1, 1, 1, 9, 1, 1, 8, 1, 1, 1, 1, 1, 1, 1, 1, 1, 9, 1, 1},
+    {1, 1, 8, 1, 1, 1, 1, 1, 1, 1, 1, 1, 9, 1, 1, 8, 1, 1, 1, 1, 1, 1, 1, 1, 1, 9, 1, 1},
+    {1, 1, 8, 1, 1, 1, 1, 1, 1, 1, 7, 7, 5, 1, 1, 4, 7, 7, 1, 1, 1, 1, 1, 1, 1, 9, 1, 1},
+    {1, 1, 8, 1, 1, 1, 1, 1, 1, 9, 1, 1, 1, 1, 1, 1, 1, 1, 8, 1, 1, 1, 1, 1, 1, 9, 1, 1},
+    {1, 1, 8, 1, 1, 1, 1, 1, 1, 9, 1, 2, 6, 1, 1, 6, 3, 1, 8, 1, 1, 1, 1, 1, 1, 9, 1, 1},
+    {1, 1, 4, 7, 7, 7, 7, 7, 7, 5, 1, 8, 1, 1, 1, 1, 9, 1, 4, 7, 7, 7, 7, 7, 7, 5, 1, 1},
+    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    {1, 1, 2, 6, 6, 6, 6, 6, 6, 3, 1, 8, 1, 1, 1, 1, 9, 1, 2, 6, 6, 6, 6, 6, 6, 3, 1, 1},
+    {1, 1, 8, 1, 1, 1, 1, 1, 1, 9, 1, 4, 7, 1, 1, 7, 5, 1, 8, 1, 1, 1, 1, 1, 1, 9, 1, 1},
+    {1, 1, 8, 1, 1, 1, 1, 1, 1, 9, 1, 1, 1, 1, 1, 1, 1, 1, 8, 1, 1, 1, 1, 1, 1, 9, 1, 1},
+    {1, 1, 8, 1, 1, 1, 1, 1, 1, 1, 6, 6, 3, 1, 1, 2, 6, 6, 1, 1, 1, 1, 1, 1, 1, 9, 1, 1},
+    {1, 1, 8, 1, 1, 1, 1, 1, 1, 1, 1, 1, 9, 1, 1, 8, 1, 1, 1, 1, 1, 1, 1, 1, 1, 9, 1, 1},
+    {1, 1, 8, 1, 1, 1, 1, 1, 1, 1, 1, 1, 9, 1, 1, 8, 1, 1, 1, 1, 1, 1, 1, 1, 1, 9, 1, 1},
+    {1, 1, 8, 1, 1, 1, 1, 1, 1, 1, 1, 1, 9, 1, 1, 8, 1, 1, 1, 1, 1, 1, 1, 1, 1, 9, 1, 1},
+    {1, 1, 4, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 1, 1, 4, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 1, 1},
+    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
 }
 
 
 
 
 
--- Inicializar el suelo en función de la matriz
+-- Inicializar el suelo en funciÃ³n de la matriz
 function Init()
-    -- Iterar sobre la matriz para instanciar objetos según el valor de cada celda
+    -- Iterar sobre la matriz para instanciar objetos segÃºn el valor de cada celda
     for i = 1, exposedVars.int_height do
         for j = 1, exposedVars.int_width do
-            if heroQuestBoard[i][j] == 1 then
-                -- Crear entidad para losas en las posiciones donde hay un 1
-                local posX = i * 1.0  -- Escala de la posición X
-                local posZ = j * 1.0  -- Escala de la posición Z
 
-                local tileEntity = EntityManager:CreateEntityFromModel(exposedVars.selectedModel)
+            --------------------------------------------------------------------------------------------------
+            --_FLOOR
+            -------------------------------------------------------------------------------------------------- 
+            if heroQuestBoard[i][j] == 1 then -- Crear entidad para losas en las posiciones donde hay un 2
+                local posX = j * 1.0  -- Escala de la posiciÃ³n X
+                local posZ = i * 1.0  -- Escala de la posiciÃ³n Z
+
+                local instancedEntity = EntityManager:CreateEntityFromModel(exposedVars.model_Floor)
+                EntityManager:AddChild(entity, instancedEntity)
+                EntityManager:SetPosition(instancedEntity, posX, 0.0, posZ) 
+
+            --------------------------------------------------------------------------------------------------
+            --_CORNERS
+            -------------------------------------------------------------------------------------------------- 
+            elseif heroQuestBoard[i][j] == 2 then
+                local posX = j * 1.0
+                local posZ = i * 1.0
+            
+                local instancedEntity = EntityManager:CreateEntityFromModel(exposedVars.model_Corner)
+                EntityManager:AddChild(entity, instancedEntity)
+                EntityManager:SetPosition(instancedEntity, posX, 0.0, posZ)
+
+                local rx, ry, rz = EntityManager:GetRotation(instancedEntity)
+                ry = ry + 180.0
+                EntityManager:SetRotation(instancedEntity, rx, ry, rz)
+            elseif heroQuestBoard[i][j] == 3 then -- Crear entidad para losas en las posiciones donde hay un 3
+                local posX = j * 1.0
+                local posZ = i * 1.0
+            
+                local instancedEntity = EntityManager:CreateEntityFromModel(exposedVars.model_Corner)
+                EntityManager:AddChild(entity, instancedEntity)
+                EntityManager:SetPosition(instancedEntity, posX, 0.0, posZ)
+            
+                local rx, ry, rz = EntityManager:GetRotation(instancedEntity)
+                ry = ry + 90
+                EntityManager:SetRotation(instancedEntity, rx, ry, rz)
+            elseif heroQuestBoard[i][j] == 4 then -- Crear entidad para losas en las posiciones donde hay un 4
+               
+               local posX = j * 1.0
+               local posZ = i * 1.0
+            
+               local instancedEntity = EntityManager:CreateEntityFromModel(exposedVars.model_Corner)
+               EntityManager:AddChild(entity, instancedEntity)
+               EntityManager:SetPosition(instancedEntity, posX, 0.0, posZ)
+            
+               local rx, ry, rz = EntityManager:GetRotation(instancedEntity)
+               ry = ry + 270.0
+               EntityManager:SetRotation(instancedEntity, rx, ry, rz)
+            elseif heroQuestBoard[i][j] == 5 then -- Crear entidad para losas en las posiciones donde hay un 5
                 
-                -- Convertir UUID a entidad para el padre
-                local parentEntity = EntityManager:GetEntityByUUID(entityUUID)
+                local posX = j * 1.0
+                local posZ = i * 1.0
+            
+                local instancedEntity = EntityManager:CreateEntityFromModel(exposedVars.model_Corner)
+                EntityManager:AddChild(entity, instancedEntity)
+                EntityManager:SetPosition(instancedEntity, posX, 0.0, posZ)
+            
+                local rx, ry, rz = EntityManager:GetRotation(instancedEntity)
+                --ry = ry + 90
+                EntityManager:SetRotation(instancedEntity, rx, ry, rz)
 
-                if parentEntity then
-                    print("Parent Entity UUID: ", entityUUID)
-                    print("Parent Entity: ", parentEntity)
+            --------------------------------------------------------------------------------------------------
+            --_WALLS
+            --------------------------------------------------------------------------------------------------
+            elseif heroQuestBoard[i][j] == 6 then -- Crear entidad para losas en las posiciones donde hay un 6
+                
+                local posX = j * 1.0
+                local posZ = i * 1.0
+            
+                local instancedEntity = EntityManager:CreateEntityFromModel(exposedVars.model_Wall)
+                EntityManager:AddChild(entity, instancedEntity)
+                EntityManager:SetPosition(instancedEntity, posX, 0.0, posZ)
+            
+                local rx, ry, rz = EntityManager:GetRotation(instancedEntity)
+                ry = ry + 180.0
+                EntityManager:SetRotation(instancedEntity, rx, ry, rz)
+            elseif heroQuestBoard[i][j] == 7 then -- Crear entidad para losas en las posiciones donde hay un 7
+                
+                local posX = j * 1.0
+                local posZ = i * 1.0
+            
+                local instancedEntity = EntityManager:CreateEntityFromModel(exposedVars.model_Wall)
+                EntityManager:AddChild(entity, instancedEntity)
+                EntityManager:SetPosition(instancedEntity, posX, 0.0, posZ)
+            
+                local rx, ry, rz = EntityManager:GetRotation(instancedEntity)
+                --ry = ry + 180.0
+                EntityManager:SetRotation(instancedEntity, rx, ry, rz)
+            elseif heroQuestBoard[i][j] == 8 then -- Crear entidad para losas en las posiciones donde hay un 8
+                
+                local posX = j * 1.0
+                local posZ = i * 1.0
+            
+                local instancedEntity = EntityManager:CreateEntityFromModel(exposedVars.model_Wall)
+                EntityManager:AddChild(entity, instancedEntity)
+                EntityManager:SetPosition(instancedEntity, posX, 0.0, posZ)
+            
+                local rx, ry, rz = EntityManager:GetRotation(instancedEntity)
+                ry = ry + 270.0
+                EntityManager:SetRotation(instancedEntity, rx, ry, rz)
+            elseif heroQuestBoard[i][j] == 9 then -- Crear entidad para losas en las posiciones donde hay un 9
+                
+                local posX = j * 1.0
+                local posZ = i * 1.0
+            
+                local instancedEntity = EntityManager:CreateEntityFromModel(exposedVars.model_Wall)
+                EntityManager:AddChild(entity, instancedEntity)
+                EntityManager:SetPosition(instancedEntity, posX, 0.0, posZ)
+            
+                local rx, ry, rz = EntityManager:GetRotation(instancedEntity)
+                ry = ry + 90.0
+                EntityManager:SetRotation(instancedEntity, rx, ry, rz)
 
-                    -- Añadir como hijo del parentEntity
-                    EntityManager:AddChild(parentEntity, tileEntity)
-
-                    -- Posicionar la entidad creada
-                    EntityManager:SetPosition(tileEntity, posX, 0.0, posZ)
-                else
-                    print("No se pudo obtener la entidad padre a partir del UUID.")
-                end
             end
         end
     end
 end
 
 
--- Dejar vacío el Update por ahora
+
+-- Dejar vacÃ­o el Update por ahora
 function Update(deltaTime)
 end

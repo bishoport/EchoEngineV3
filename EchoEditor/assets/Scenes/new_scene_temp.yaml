@@ -2,9 +2,9 @@ Scene: new_scene_temp
 Entities:
   - Entity: 0
     IDComponent:
-      ID: 12913725
+      ID: 10416657
     TagComponent:
-      Tag: Board
+      Tag: new_GameObject
     TransformComponent:
       Transform:
         Position:
@@ -19,13 +19,3 @@ Entities:
           - 1
           - 1
           - 1
-    ScriptComponent:
-      EntityUUID: 12913725
-      Scripts:
-        - filePath: assets\scripts\Tablero.lua
-          name: Tablero
-      ExposedVars:
-        Tablero:
-          int_width: 26
-          int_height: 19
-          selectedModel: Cube

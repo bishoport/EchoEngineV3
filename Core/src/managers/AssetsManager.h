@@ -21,7 +21,6 @@ namespace libCore
 		}
 
 		//--TEXTURES
-
 		std::string defaultAssetsPathTexture = "C:/Users/bisho/OneDrive/Escritorio/EchoEngine_2024/EchoEngine/EchoEditor/assets/textures";
 		void UnloadTexture(const std::string& name);
 		void LoadDefaultAssets();
@@ -57,9 +56,9 @@ namespace libCore
 		// Constructor privado
 		AssetsManager() 
 		{
-			std::filesystem::path basePath = std::filesystem::path("../../");
-			std::filesystem::path fullPath = basePath / "path/to/your/file.txt";
-			std::string fullPathStr = fullPath.string();
+			//std::filesystem::path basePath = std::filesystem::path("../../");
+			//std::filesystem::path fullPath = basePath / "path/to/your/file.txt";
+			//std::string fullPathStr = fullPath.string();
 		}
 
 		//-CARGADOS EN MEMORIA
