@@ -18,6 +18,12 @@ namespace libCore {
 
         void init(int width, int height, GLenum internalFormat, std::string name,
             bool enableDepth = false, bool enableStencil = false, bool enableRBO = false) {
+            // Validar dimensiones antes de continuar
+            if (width <= 0 || height <= 0) {
+                std::cerr << "ERROR: Framebuffer dimensions must be greater than zero. Width: " << width << ", Height: " << height << std::endl;
+                return;
+            }
+
             nameFBO = name;
             fboWidth = width;
             fboHeight = height;
@@ -27,6 +33,12 @@ namespace libCore {
             this->enableRBO = enableRBO;
 
             glGenFramebuffers(1, &framebuffer);
+
+            if (framebuffer == 0) {
+                std::cerr << "ERROR: Failed to generate framebuffer." << std::endl;
+                return;
+            }
+
             bindFBO();
 
             if (enableRBO) {
@@ -35,16 +47,35 @@ namespace libCore {
         }
 
         void addAttachment(const std::string& name, GLenum internalFormat, GLenum format, GLenum type, GLenum attachmentType = GL_COLOR_ATTACHMENT0) {
+            // Comprobación de las dimensiones del framebuffer antes de añadir un attachment
+            if (fboWidth <= 0 || fboHeight <= 0) {
+                std::cerr << "ERROR: Framebuffer dimensions invalid for attachment. Width: " << fboWidth << ", Height: " << fboHeight << std::endl;
+                return;
+            }
+
             GLuint texture;
             glGenTextures(1, &texture);
+            if (texture == 0) {
+                std::cerr << "ERROR: Failed to generate texture for attachment: " << name << std::endl;
+                return;
+            }
+
             glBindTexture(GL_TEXTURE_2D, texture);
             glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, fboWidth, fboHeight, 0, format, type, nullptr);
             setTextureParameters(attachmentType);
 
-            if (attachmentType == GL_COLOR_ATTACHMENT0) {
-                colorAttachments.push_back(texture);
+            if (glGetError() != GL_NO_ERROR) {
+                std::cerr << "ERROR: Failed to create texture for attachment: " << name << std::endl;
+                return;
             }
+
+            // Verificación adicional del framebuffer después de agregar el attachment
             glFramebufferTexture2D(GL_FRAMEBUFFER, attachmentType, GL_TEXTURE_2D, texture, 0);
+            GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+            if (status != GL_FRAMEBUFFER_COMPLETE) {
+                std::cerr << "ERROR: Framebuffer not complete after adding attachment: " << name << std::endl;
+            }
+
             attachments[name] = texture;
 
             if (attachmentType != GL_DEPTH_ATTACHMENT && attachmentType != GL_STENCIL_ATTACHMENT && attachmentType != GL_DEPTH_STENCIL_ATTACHMENT) {
@@ -60,11 +91,14 @@ namespace libCore {
                 glDrawBuffer(GL_NONE);
                 glReadBuffer(GL_NONE);
             }
-            checkFBOStatus();
             unbindFBO();
         }
 
         void bindFBO() const {
+            if (framebuffer == 0) {
+                std::cerr << "ERROR: Attempted to bind an invalid framebuffer." << std::endl;
+                return;
+            }
             glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
         }
 
@@ -72,10 +106,21 @@ namespace libCore {
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
         }
 
+
         void bindTexture(const std::string& attachmentType, int textureSlot) const {
-            glActiveTexture(GL_TEXTURE0 + textureSlot);
-            glBindTexture(GL_TEXTURE_2D, attachments.at(attachmentType));
+            // Comprobar si el attachmentType existe en el mapa de attachments
+            auto it = attachments.find(attachmentType);
+            if (it != attachments.end()) {
+                glActiveTexture(GL_TEXTURE0 + textureSlot);
+                glBindTexture(GL_TEXTURE_2D, it->second);
+            }
+            else {
+                // Mostrar un error si no se encuentra el attachment
+                std::cerr << "ERROR: Attachment type \"" << attachmentType << "\" not found in attachments." << std::endl;
+            }
         }
+
+
 
         GLuint getTexture(const std::string& attachmentType) const {
             return attachments.at(attachmentType);
@@ -94,6 +139,12 @@ namespace libCore {
         }
 
         void resize(int newWidth, int newHeight) {
+            // Validar las nuevas dimensiones antes de cambiar el tamaño
+            if (newWidth <= 0 || newHeight <= 0) {
+                std::cerr << "ERROR: Invalid dimensions for framebuffer resize. Width: " << newWidth << ", Height: " << newHeight << std::endl;
+                return;
+            }
+
             fboWidth = newWidth;
             fboHeight = newHeight;
 
@@ -105,6 +156,11 @@ namespace libCore {
                 }
                 else {
                     glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, fboWidth, fboHeight, 0, GL_RGB, GL_FLOAT, nullptr);
+                }
+
+                GLenum error = glGetError();
+                if (error != GL_NO_ERROR) {
+                    std::cerr << "ERROR: Failed to resize texture: " << attachment.first << ". OpenGL error: " << error << std::endl;
                 }
             }
             unbindFBO();
@@ -148,6 +204,8 @@ namespace libCore {
                 glBindRenderbuffer(GL_RENDERBUFFER, rboDepthId);
                 glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, fboWidth, fboHeight);
                 glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepthId);
+                glBindRenderbuffer(GL_RENDERBUFFER, 0);  // Desvincular renderbuffer
+
             }
 
             if (enableStencil) {
@@ -155,6 +213,8 @@ namespace libCore {
                 glBindRenderbuffer(GL_RENDERBUFFER, rboStencilId);
                 glRenderbufferStorage(GL_RENDERBUFFER, GL_STENCIL_INDEX8, fboWidth, fboHeight);
                 glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rboStencilId);
+                glBindRenderbuffer(GL_RENDERBUFFER, 0);  // Desvincular renderbuffer
+
             }
         }
 
@@ -177,9 +237,24 @@ namespace libCore {
         }
 
         void checkFBOStatus() const {
-            if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-                std::cerr << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+            GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+            if (status != GL_FRAMEBUFFER_COMPLETE) {
+                std::cerr << "ERROR::FRAMEBUFFER:: Framebuffer is not complete: ";
+                switch (status) {
+                case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+                    std::cerr << "Incomplete Attachment." << std::endl;
+                    break;
+                case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+                    std::cerr << "Missing Attachment." << std::endl;
+                    break;
+                case GL_FRAMEBUFFER_UNSUPPORTED:
+                    std::cerr << "Unsupported Framebuffer." << std::endl;
+                    break;
+                default:
+                    std::cerr << "Unknown error." << std::endl;
+                }
             }
         }
+
     };
 }

@@ -53,10 +53,7 @@ namespace libCore
 		glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, GL_FALSE);
 
 		// Optionally, you can further filter by source and type
-		// Example: Ignore performance warnings
 		glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_PERFORMANCE, GL_DEBUG_SEVERITY_LOW, 0, nullptr, GL_FALSE);
-
-		// Example: Ignore all messages except for high severity errors
 		glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_HIGH, 0, nullptr, GL_TRUE);
 		//-----------------------------
 
@@ -66,6 +63,8 @@ namespace libCore
         glDepthFunc(GL_LESS);
         glfwWindowHint(GLFW_SAMPLES, 4);
         glEnable(GL_MULTISAMPLE);  // always enable to ensure multisampling
+
+
 
 		// -- SHADERS
 		std::string shadersDirectory = "assets/shaders/";
@@ -128,8 +127,10 @@ namespace libCore
         {
             // -- IMGUI
             GuiLayer::GetInstance().Init();
-            // -- VIEWPORT
+            
+			// -- VIEWPORT
             ViewportManager::GetInstance().CreateViewport("EDITOR CAMERA", glm::vec3(0.0f, 20.0f, 0.0f), 800, 600, CAMERA_CONTROLLERS::EDITOR);
+			/*ViewportManager::GetInstance().CreateViewport("MAIN CAMERA", glm::vec3(0.0f, 20.0f, 1.0f), 800, 600, CAMERA_CONTROLLERS::GAME);*/
         }
         else if (m_EngineMode == FULL_PLAY_MODE)
         {
@@ -190,7 +191,17 @@ namespace libCore
 				//---------
 
 				//--RENDER SCENE
-				Renderer::getInstance().RenderViewport(ViewportManager::GetInstance().viewports[0], m_deltaTime);
+				//Renderer::getInstance().RenderViewport(ViewportManager::GetInstance().viewports[0], m_deltaTime);
+				
+				auto& viewports = ViewportManager::GetInstance().viewports;
+
+				for (auto& viewport : viewports) {
+					if (viewport != nullptr) {
+						Renderer::getInstance().RenderViewport(viewport, m_deltaTime);
+					}
+				}
+
+
 				//---------
 
 				EntityManager::GetInstance().DestroyDeleteMarked();
@@ -463,5 +474,9 @@ namespace libCore
     {
         return m_deltaTime;
     }
+	void Engine::AddMainCamera()
+	{
+		ViewportManager::GetInstance().CreateViewport("MAIN CAMERA", glm::vec3(0.0f, 20.0f, 1.0f), 800, 600, CAMERA_CONTROLLERS::GAME);
+	}
 	// -------------------------------------------------
 }

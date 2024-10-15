@@ -56,7 +56,13 @@ namespace libCore
         void blitFBO2FBO(Ref<libCore::FBO> src, Ref<libCore::FBO> target, GLbitfield mask, GLenum filter = GL_NEAREST);
         void blitGBO2FBO(Ref<libCore::GBO> src, Ref<libCore::FBO> target, GLbitfield mask, GLenum filter = GL_NEAREST);
 
-    private:
+        // Desvincula todos los framebuffers, G-buffers y otros objetos OpenGL
+        void UnbindAll();
+
+        // Función para revisar si los framebuffers y el G-buffer son válidos
+        void CheckBuffers() const;
+
+   // private:
         // Centralizar inicialización y redimensionamiento de buffers
         void InitializeBuffers(int width, int height);
 
@@ -71,5 +77,8 @@ namespace libCore
 
         // Redimensiona los buffers y framebuffers
         void ResizeBuffers(int width, int height);
+
+        // Función auxiliar para verificar el estado de un framebuffer
+        void CheckFramebuffer(const std::string& name, Ref<FBO> framebuffer) const;
     };
 }

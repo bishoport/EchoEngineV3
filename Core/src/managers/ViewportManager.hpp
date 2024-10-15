@@ -24,22 +24,27 @@ namespace libCore
         {
             auto viewport = CreateRef<Viewport>();
             viewport->viewportName = name;
-
             viewport->viewportSize = glm::vec2(static_cast<float>(viewportWidth), static_cast<float>(viewportHeight));
 
-            // Cameras
-            viewport->camera = CreateRef<libCore::EditorCamera>(viewport->viewportSize.x, viewport->viewportSize.y, cameraPosition);
-            viewport->camera->SetPosition(glm::vec3(-1.0f, 1.0f, 3.0f));
-            viewport->camera->LookAt(glm::vec3(0.0f, 0.0f, 0.0f));
-            //----------------------------------------------------------
+            // Camera
+            if (controller == EDITOR)
+            {
+                viewport->camera = CreateRef<libCore::EditorCamera>(viewport->viewportSize.x, viewport->viewportSize.y, cameraPosition);
+                viewport->camera->SetPosition(glm::vec3(-1.0f, 1.0f, 3.0f));
+                viewport->camera->LookAt(glm::vec3(0.0f, 0.0f, 0.0f));
+            }
+            else if (controller == GAME)
+            {
+                viewport->camera = CreateRef<libCore::GameCamera>();
+                viewport->camera->SetPosition(glm::vec3(-1.0f, 4.0f, 3.0f));
+                viewport->camera->LookAt(glm::vec3(0.0f, 0.0f, 0.0f));
+            }
 
             // G-Buffer
             auto gbo = CreateRef<GBO>();
             gbo->init(static_cast<int>(viewport->viewportSize.x), static_cast<int>(viewport->viewportSize.y));
             viewport->gBuffer = std::move(gbo);
             //----------------------------------------------------------
-
-
 
             // F-Buffer Deferred + lighting
             auto fbo0 = CreateRef<FBO>();
@@ -112,9 +117,11 @@ namespace libCore
             viewport->framebuffer_picking = std::move(fboPicking);
             //----------------------------------------------------------
 
-
+            //----------------------------------------------------------
             // Add Viewport to collection
             viewports.push_back(std::move(viewport));
+
+            
         }
 
         GLuint CubemapFaceTo2DTexture(GLuint cubemap, GLenum face, int width, int height, GLuint captureFBO)

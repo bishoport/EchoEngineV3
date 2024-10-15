@@ -25,6 +25,7 @@
     <ClInclude Include="src\core\model\skeletal\AnimData.h" />
     <ClInclude Include="src\core\model\skeletal\bone.h" />
     <ClInclude Include="src\gui\Panels\DynamicSkyboxPanel.h" />
+    <ClInclude Include="src\gui\Panels\GameViewportPanel.h" />
     <ClInclude Include="src\gui\Panels\MeshesPanel.h" />
     <ClInclude Include="src\gui\Panels\ScenePanel.h" />
     <ClInclude Include="src\gui\PopupManager.h" />
@@ -74,7 +75,7 @@
     <ClInclude Include="src\gui\Panels\PanelBase.h" />
     <ClInclude Include="src\gui\Panels\InspectorPanel.h" />
     <ClInclude Include="src\gui\Panels\TexturesPanel.h" />
-    <ClInclude Include="src\gui\Panels\ViewportPanel.h" />
+    <ClInclude Include="src\gui\Panels\EditorViewportPanel.h" />
     <ClInclude Include="src\managers\AssetsManager.h" />
     <ClInclude Include="src\managers\AssimpGlmHelpers.h" />
     <ClInclude Include="src\managers\EventManager.h" />

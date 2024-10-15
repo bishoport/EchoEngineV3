@@ -10,7 +10,7 @@
 //--Panels
 #include "Panels/InspectorPanel.h"
 #include "Panels/FrameBuffersPreviewPanel.h"
-#include "Panels/ViewportPanel.h"
+#include "Panels/EditorViewportPanel.h"
 #include "Panels/EditorCameraPanel.h"
 #include "Panels/AssetsPanel.h"
 #include "Panels/ModelsPanel.h"
@@ -23,6 +23,7 @@
 #include "Panels/DynamicSkyboxPanel.h"
 #include "Panels/MeshesPanel.h"
 #include "Panels/ScenePanel.h"
+#include "Panels/GameViewportPanel.h"
 
 
 namespace libCore
@@ -54,7 +55,8 @@ namespace libCore
         //--
 
         //ADD PANELS
-        auto viewportPanel                 = CreateRef<ViewportPanel>();
+        auto editorViewportPanel           = CreateRef<EditorViewportPanel>();
+        auto gameViewportPanel             = CreateRef<GameViewportPanel>();
         auto inspectorPanel                = CreateRef<InspectorPanel>();
         auto frameBuffersPreviewPanel      = CreateRef<FrameBuffersPreviewPanel>();
         auto editorCameraPanel             = CreateRef<EditorCameraPanel>();
@@ -86,8 +88,13 @@ namespace libCore
         AddPanel(frameBuffersPreviewPanel);
         AddPanel(dynamicSkyboxPanel);
         
-        AddPanel(viewportPanel); //<- El ultimo
+        
+
+        //<- El ultimo
+        AddPanel(editorViewportPanel); 
+        AddPanel(gameViewportPanel);
         //--
+
 
         // Inicializar todos los paneles
         for (auto& panel : m_panels)

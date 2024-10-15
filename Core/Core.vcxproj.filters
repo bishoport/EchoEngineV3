@@ -144,7 +144,7 @@
     <ClInclude Include="src\gui\Panels\PanelBase.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\gui\Panels\ViewportPanel.h">
+    <ClInclude Include="src\gui\Panels\EditorViewportPanel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\gui\Panels\InspectorPanel.h">
@@ -274,6 +274,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\managers\SkeletalModelLoader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gui\Panels\GameViewportPanel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

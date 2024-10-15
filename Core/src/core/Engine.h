@@ -32,6 +32,8 @@ namespace libCore
         int offSetMouseX = 0;
         int offSetMouseY = -200;
 
+        void AddMainCamera();
+
     private:
         //ENGINE LIFE--CYCLE
         EngineMode   m_EngineMode = EngineMode::EDITOR_MODE;

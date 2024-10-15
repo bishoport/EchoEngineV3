@@ -301,7 +301,6 @@ namespace libCore
 
                 std::string key = materialName + "_NORMAL";
                 Ref<Texture> texture = AssetsManager::GetInstance().LoadTextureAsset(key, directoryPath.c_str(), fileName.c_str(), TEXTURE_TYPES::NORMAL);
-                //Ref<Texture> texture = libCore::TextureManager::LoadTexture(directoryPath.c_str(), fileName.c_str(), TEXTURE_TYPES::NORMAL, 1);
 
                 if (texture != nullptr)
                 {
@@ -326,8 +325,6 @@ namespace libCore
 
                 std::string key = materialName + "_METALLIC";
                 Ref<Texture> texture = AssetsManager::GetInstance().LoadTextureAsset(key, directoryPath.c_str(), fileName.c_str(), TEXTURE_TYPES::METALLIC);
-
-                //Ref<Texture> texture = libCore::TextureManager::LoadTexture(directoryPath.c_str(), fileName.c_str(), TEXTURE_TYPES::METALLIC, 2);
 
                 if (texture != nullptr) {
                     material->metallicMap = texture;
