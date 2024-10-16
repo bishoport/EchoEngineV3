@@ -11,6 +11,8 @@
 
 #include "../managers/SceneManager.h"
 
+#include "renderer/Renderer.h"
+
 namespace libCore
 {
     //--INIT & LIFE CYCLE
@@ -128,9 +130,9 @@ namespace libCore
             // -- IMGUI
             GuiLayer::GetInstance().Init();
             
-			// -- VIEWPORT
+			// -- VIEWPORTS
             ViewportManager::GetInstance().CreateViewport("EDITOR CAMERA", glm::vec3(0.0f, 20.0f, 0.0f), 800, 600, CAMERA_CONTROLLERS::EDITOR);
-			/*ViewportManager::GetInstance().CreateViewport("MAIN CAMERA", glm::vec3(0.0f, 20.0f, 1.0f), 800, 600, CAMERA_CONTROLLERS::GAME);*/
+			ViewportManager::GetInstance().CreateViewport("MAIN CAMERA",   glm::vec3(0.0f, 20.0f, 0.0f), 800, 600, CAMERA_CONTROLLERS::GAME);
         }
         else if (m_EngineMode == FULL_PLAY_MODE)
         {
@@ -190,18 +192,16 @@ namespace libCore
 				UpdateBeforeRender();
 				//---------
 
-				//--RENDER SCENE
-				//Renderer::getInstance().RenderViewport(ViewportManager::GetInstance().viewports[0], m_deltaTime);
-				
+				//--RENDER SCENE FROM VIEWPORTS
 				auto& viewports = ViewportManager::GetInstance().viewports;
-
 				for (auto& viewport : viewports) {
 					if (viewport != nullptr) {
-						Renderer::getInstance().RenderViewport(viewport, m_deltaTime);
+						if (viewport->isRenderable == true)
+						{
+							Renderer::getInstance().RenderViewport(viewport, m_deltaTime);
+						}
 					}
 				}
-
-
 				//---------
 
 				EntityManager::GetInstance().DestroyDeleteMarked();
@@ -225,9 +225,6 @@ namespace libCore
 				//---------
 			}
 			
-
-            
-
             //--CLOSE INPUT
             InputManager::Instance().EndFrame();
 
@@ -285,45 +282,23 @@ namespace libCore
 			}
 		}
 		//------------------------------------------------------------------------------
-		//------------------------------------------------------------------------------
+
 
 		//--UPDATE DynamicSkyBox & SunLight
 		//Renderer::getInstance().dynamicSkybox->sunLight->UpdateSceneRadius();
 		//Renderer::getInstance().dynamicSkybox->SyncSunLightWithSkybox();
 		//-------------------------------------------------------------------
 
+
 		//--UPDATE ENTITIES WITH TRANSFORM & AABB
 		EntityManager::GetInstance().UpdateGameObjects(m_deltaTime);
 		//-------------------------------------------
 
-		//--UPDATE GAME CAMERA IN VIEWPORT
-		/*entt::entity mainCameraEntity = EntityManager::GetInstance().GetEntityByName("MainCamera");
-		if (mainCameraEntity != entt::null)
-		{
-			auto& cameraComponent = EntityManager::GetInstance().GetComponent<CameraComponent>(mainCameraEntity);
-			auto& transformComponent = EntityManager::GetInstance().GetComponent<TransformComponent>(mainCameraEntity);
 
-			if (cameraComponent.camera == nullptr)
-			{
-				cameraComponent.camera = ViewportManager::GetInstance().viewports[0]->camera;
-			}
-
-			ViewportManager::GetInstance().viewports[0]->camera->Position = transformComponent.transform->GetPosition();
-		}*/
-
-
-		/*if (engineState == EDITOR || engineState == EDITOR_PLAY)
-		{
-			ViewportManager::GetInstance().viewports[0]->camera = ViewportManager::GetInstance().viewports[0]->camera;
-		}
-		else if (engineState == PLAY)
-		{
-			ViewportManager::GetInstance().viewports[0]->camera = ViewportManager::GetInstance().viewports[0]->gameCamera;
-		}*/
-
+		//--MOUSE PICKING (Color Picking)
 		if (m_EngineMode == EngineMode::EDITOR_MODE && GuiLayer::GetInstance().mouseInsideViewport == true)
 		{
-			//--MOUSE PICKING (Color Picking)
+			
 			if (!usingGizmo)
 			{
 				if (GuiLayer::GetInstance().isSelectingObject == true)
@@ -391,7 +366,7 @@ namespace libCore
 				}
 			}
 		}
-
+		//-------------------------------------------
 
 
 
@@ -459,6 +434,9 @@ namespace libCore
 	// -------------------------------------------------
 
 
+	
+
+
     //--OTHERS
 	void Engine::SetEngineState(EditorStates newState)
 	{
@@ -474,9 +452,5 @@ namespace libCore
     {
         return m_deltaTime;
     }
-	void Engine::AddMainCamera()
-	{
-		ViewportManager::GetInstance().CreateViewport("MAIN CAMERA", glm::vec3(0.0f, 20.0f, 1.0f), 800, 600, CAMERA_CONTROLLERS::GAME);
-	}
 	// -------------------------------------------------
 }

@@ -4,48 +4,54 @@
 namespace libCore
 {
     Camera::Camera(int width, int height, glm::vec3 position)
+        : width(width), height(height), Position(position), WorldUp(Up)
     {
-        this->width = width;
-        this->height = height;
-        this->Position = position;
-        this->OrientationQuat = glm::quat(Orientation); // Inicializar cuaternión desde los ángulos de Euler
+        OrientationQuat = glm::quat(Orientation);
 
-        setupFrustumBuffers();
+        // Crear el frustum inicial utilizando los parámetros actuales de la cámara
+        frustum = createFrustumFromCamera(static_cast<float>(width) / height, glm::radians(FOVdeg), nearPlane, farPlane);
+
+        // Actualizar la matriz de la cámara para sincronizarla con los valores iniciales
+        updateMatrix();
     }
+
 
     void Camera::updateMatrix()
     {
-        // Limitar el pitch para evitar el Gimbal Lock
         pitch = glm::clamp(pitch, -89.0f, 89.0f);
 
-        // Actualizar la orientación usando los ángulos de Euler en yaw y pitch
+        updateCameraVectors();
+
+        view = glm::lookAt(Position, Position + Front, Up);
+
+        if (isOrthographic)
+        {
+            float orthoSize = 10.0f;
+            projection = glm::ortho(-orthoSize, orthoSize, -orthoSize, orthoSize, nearPlane, farPlane);
+        }
+        else
+        {
+            projection = glm::perspective(glm::radians(FOVdeg), static_cast<float>(width) / height, nearPlane, farPlane);
+        }
+
+        cameraMatrix = projection * view;
+
+        // Actualizar el frustum después de actualizar la cámara
+        updateFrustum();
+    }
+
+    void Camera::updateCameraVectors()
+    {
         glm::vec3 front;
         front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
         front.y = sin(glm::radians(pitch));
         front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-        Orientation = glm::normalize(front);
+        Front = glm::normalize(front);
 
-        // Actualizar el cuaternión
-        OrientationQuat = glm::quat(glm::vec3(glm::radians(pitch), glm::radians(yaw), 0.0f));
-
-        this->view = glm::lookAt(Position, Position + Orientation, Up);
-
-        // Seleccionar la matriz de proyección en función del modo
-        if (isOrthographic)
-        {
-            float orthoSize = 10.0f; // Tamaño de la cámara ortográfica (ajustable)
-            this->projection = glm::ortho(-orthoSize, orthoSize, -orthoSize, orthoSize, nearPlane, farPlane);
-        }
-        else
-        {
-            this->projection = glm::perspective(glm::radians(FOVdeg), (float)width / height, nearPlane, farPlane);
-        }
-
-        this->cameraMatrix = projection * view;
-
-        // Update Frustum
-        UpdateFrustum();
+        Right = glm::normalize(glm::cross(Front, WorldUp));
+        Up = glm::normalize(glm::cross(Right, Front));
     }
+
 
     void Camera::SetPosition(const glm::vec3& position)
     {
@@ -108,173 +114,95 @@ namespace libCore
 
     void Camera::UpdateOrientationFromEuler()
     {
-        // Convertir la orientación de Euler a un cuaternión
-        this->OrientationQuat = glm::quat(glm::vec3(glm::radians(pitch), glm::radians(yaw), 0.0f));
+        OrientationQuat = glm::quat(glm::vec3(glm::radians(pitch), glm::radians(yaw), 0.0f));
     }
 
     void Camera::UpdateOrientationFromQuaternion()
     {
-        // Convertir el cuaternión a ángulos de Euler
         glm::vec3 euler = glm::eulerAngles(OrientationQuat);
-        this->pitch = glm::degrees(euler.x);
-        this->yaw = glm::degrees(euler.y);
+        pitch = glm::degrees(euler.x);
+        yaw = glm::degrees(euler.y);
     }
 
     void Camera::LookAt(const glm::vec3& targetPosition)
     {
-        // Calcula la dirección hacia el objetivo
         glm::vec3 direction = glm::normalize(targetPosition - Position);
-
-        // Calcula el nuevo pitch y yaw
-        pitch = glm::degrees(asin(direction.y)); // Pitch: inclinación hacia arriba o abajo
-        yaw = glm::degrees(atan2(direction.z, direction.x)); // Yaw: rotación alrededor del eje Y
-
-        // Limitar el pitch para evitar el Gimbal Lock
+        yaw = glm::degrees(atan2(direction.x, -direction.z));
+        pitch = glm::degrees(asin(direction.y));
         pitch = glm::clamp(pitch, -89.0f, 89.0f);
-
-        // Ajustar la orientación usando los nuevos valores de pitch y yaw
         updateMatrix();
     }
 
-    void Camera::UpdateFrustum()
+    Frustum Camera::createFrustumFromCamera(float aspect, float fovY, float zNear, float zFar)
     {
-        glm::mat4 viewProjectionMatrix = this->projection * this->view;
-        ExtractPlanes(viewProjectionMatrix);
+        Frustum frustum;
+        const float halfVSide = zFar * tanf(fovY * 0.5f);
+        const float halfHSide = halfVSide * aspect;
+        const glm::vec3 frontMultFar = zFar * Front;
+
+        frustum.nearFace = { Position + zNear * Front, Front };
+        frustum.farFace = { Position + frontMultFar, -Front };
+        frustum.rightFace = { Position, glm::cross(Up, frontMultFar + Right * halfHSide) };
+        frustum.leftFace = { Position, glm::cross(frontMultFar - Right * halfHSide, Up) };
+        frustum.topFace = { Position, glm::cross(Right, frontMultFar - Up * halfVSide) };
+        frustum.bottomFace = { Position, glm::cross(frontMultFar + Up * halfVSide, Right) };
+
+        return frustum;
     }
 
-    void Camera::ExtractPlanes(const glm::mat4& viewProjectionMatrix)
+    bool Camera::IsBoxInFrustum(const glm::mat4& transform, const glm::vec3& min, const glm::vec3& max) const
     {
-        // Left
-        planes[Left].normal.x = viewProjectionMatrix[0][3] + viewProjectionMatrix[0][0];
-        planes[Left].normal.y = viewProjectionMatrix[1][3] + viewProjectionMatrix[1][0];
-        planes[Left].normal.z = viewProjectionMatrix[2][3] + viewProjectionMatrix[2][0];
-        planes[Left].distance = viewProjectionMatrix[3][3] + viewProjectionMatrix[3][0];
+        // Obtener el centro del AABB en espacio local
+        glm::vec3 localCenter = (min + max) * 0.5f;
 
-        // Right
-        planes[Right].normal.x = viewProjectionMatrix[0][3] - viewProjectionMatrix[0][0];
-        planes[Right].normal.y = viewProjectionMatrix[1][3] - viewProjectionMatrix[1][0];
-        planes[Right].normal.z = viewProjectionMatrix[2][3] - viewProjectionMatrix[2][0];
-        planes[Right].distance = viewProjectionMatrix[3][3] - viewProjectionMatrix[3][0];
+        // Transformar el centro al espacio global
+        glm::vec3 globalCenter = glm::vec3(transform * glm::vec4(localCenter, 1.0f));
 
-        // Bottom
-        planes[Bottom].normal.x = viewProjectionMatrix[0][3] + viewProjectionMatrix[0][1];
-        planes[Bottom].normal.y = viewProjectionMatrix[1][3] + viewProjectionMatrix[1][1];
-        planes[Bottom].normal.z = viewProjectionMatrix[2][3] + viewProjectionMatrix[2][1];
-        planes[Bottom].distance = viewProjectionMatrix[3][3] + viewProjectionMatrix[3][1];
+        // Calcular las extensiones del AABB en espacio local
+        glm::vec3 localExtents = (max - min) * 0.5f;
 
-        // Top
-        planes[Top].normal.x = viewProjectionMatrix[0][3] - viewProjectionMatrix[0][1];
-        planes[Top].normal.y = viewProjectionMatrix[1][3] - viewProjectionMatrix[1][1];
-        planes[Top].normal.z = viewProjectionMatrix[2][3] - viewProjectionMatrix[2][1];
-        planes[Top].distance = viewProjectionMatrix[3][3] - viewProjectionMatrix[3][1];
+        // Obtener las direcciones escaladas en el espacio global usando la matriz de transformación
+        glm::vec3 right = glm::vec3(transform[0]) * localExtents.x;
+        glm::vec3 up = glm::vec3(transform[1]) * localExtents.y;
+        glm::vec3 forward = glm::vec3(transform[2]) * localExtents.z;
 
-        // Near
-        planes[Near].normal.x = viewProjectionMatrix[0][3] + viewProjectionMatrix[0][2];
-        planes[Near].normal.y = viewProjectionMatrix[1][3] + viewProjectionMatrix[1][2];
-        planes[Near].normal.z = viewProjectionMatrix[2][3] + viewProjectionMatrix[2][2];
-        planes[Near].distance = viewProjectionMatrix[3][3] + viewProjectionMatrix[3][2];
-
-        // Far
-        planes[Far].normal.x = viewProjectionMatrix[0][3] - viewProjectionMatrix[0][2];
-        planes[Far].normal.y = viewProjectionMatrix[1][3] - viewProjectionMatrix[1][2];
-        planes[Far].normal.z = viewProjectionMatrix[2][3] - viewProjectionMatrix[2][2];
-        planes[Far].distance = viewProjectionMatrix[3][3] - viewProjectionMatrix[3][2];
-
-        // Normalize planes
-        for (auto& plane : planes)
+        // Verificar cada plano del frustum
+        for (const auto& plane : { frustum.nearFace, frustum.farFace, frustum.leftFace, frustum.rightFace, frustum.topFace, frustum.bottomFace })
         {
-            float length = glm::length(plane.normal);
-            plane.normal /= length;
-            plane.distance /= length;
+            // Calcular el radio proyectado del AABB en el plano actual
+            float r = std::abs(glm::dot(plane.normal, right)) +
+                std::abs(glm::dot(plane.normal, up)) +
+                std::abs(glm::dot(plane.normal, forward));
+
+            // Calcular la distancia del centro del AABB al plano
+            float d = plane.getSignedDistanceToPlane(globalCenter);
+
+            // Si la distancia es menor que el radio proyectado, el AABB está completamente fuera de este plano
+            if (d < -r)
+            {
+                return false; // AABB está fuera del frustum
+            }
         }
-    }
 
-    bool Camera::IsBoxInFrustum(const glm::vec3& min, const glm::vec3& max) const
-    {
-        for (const auto& plane : planes)
-        {
-            glm::vec3 p = min;
-
-            if (plane.normal.x >= 0)
-                p.x = max.x;
-            if (plane.normal.y >= 0)
-                p.y = max.y;
-            if (plane.normal.z >= 0)
-                p.z = max.z;
-
-            if (plane.GetDistanceToPoint(p) < 0)
-                return false;
-        }
+        // Si el AABB no está completamente fuera de ningún plano, está dentro (o intersectando)
         return true;
     }
-
-    void Camera::setupFrustumBuffers()
+    void Camera::updateFrustum()
     {
-        glGenVertexArrays(1, &frustumVAO);
-        glGenBuffers(1, &frustumVBO);
+        const float aspect = static_cast<float>(width) / height;
+        const float fovY = glm::radians(FOVdeg);
+        const float zNear = nearPlane;
+        const float zFar = farPlane;
 
-        glBindVertexArray(frustumVAO);
-        glBindBuffer(GL_ARRAY_BUFFER, frustumVBO);
-        glBufferData(GL_ARRAY_BUFFER, 8 * sizeof(glm::vec3), nullptr, GL_DYNAMIC_DRAW);
+        const float halfVSide = zFar * tanf(fovY * 0.5f);
+        const float halfHSide = halfVSide * aspect;
+        const glm::vec3 frontMultFar = zFar * Front;
 
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)0);
-
-        glBindVertexArray(0);
-    }
-
-    void Camera::renderFrustumLines(const std::vector<glm::vec3>& vertices, const glm::mat4& modelMatrix)
-    {
-        glBindBuffer(GL_ARRAY_BUFFER, frustumVBO);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(glm::vec3), vertices.data());
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-        libCore::ShaderManager::Get("frustum")->use();
-        libCore::ShaderManager::Get("frustum")->setMat4("view", view);
-        libCore::ShaderManager::Get("frustum")->setMat4("projection", projection);
-        libCore::ShaderManager::Get("frustum")->setMat4("model", modelMatrix);
-
-        glLineWidth(2.0f); // Grosor de las líneas
-
-        glBindVertexArray(frustumVAO);
-        glDrawArrays(GL_LINES, 0, 24); // 24 vértices para dibujar las líneas del frustum
-        glBindVertexArray(0);
-
-        glLineWidth(1.0f); // Volver al grosor predeterminado si es necesario
-    }
-
-    void Camera::RenderFrustum()
-    {
-        std::vector<glm::vec3> vertices;
-
-        // Esquinas del frustum en espacio NDC
-        glm::vec4 corners[] =
-        {
-            { -1, -1, -1, 1 }, // near-bottom-left
-            {  1, -1, -1, 1 }, // near-bottom-right
-            {  1,  1, -1, 1 }, // near-top-right
-            { -1,  1, -1, 1 }, // near-top-left
-            { -1, -1,  1, 1 }, // far-bottom-left
-            {  1, -1,  1, 1 }, // far-bottom-right
-            {  1,  1,  1, 1 }, // far-top-right
-            { -1,  1,  1, 1 }, // far-top-left
-        };
-
-        // Transformar las esquinas al espacio mundial usando la matriz de vista y proyección de la cámara
-        glm::mat4 inverseVP = glm::inverse(projection * view);
-        for (auto& corner : corners)
-        {
-            glm::vec4 worldPos = inverseVP * corner;
-            vertices.push_back(glm::vec3(worldPos) / worldPos.w);
-        }
-
-        // Crear la matriz de modelo usando la posición y la orientación de la cámara
-        glm::mat4 modelMatrix = glm::mat4(1.0f);
-        modelMatrix = glm::translate(modelMatrix, Position); // Aplicar la posición de la cámara
-        modelMatrix *= glm::toMat4(OrientationQuat); // Aplicar la rotación de la cámara usando el cuaternión
-
-        // Definir las líneas del frustum conectando las esquinas
-        renderFrustumLines(vertices, modelMatrix);
+        frustum.nearFace = { Position + zNear * Front, Front };
+        frustum.farFace = { Position + frontMultFar, -Front };
+        frustum.rightFace = { Position, glm::cross(Up, frontMultFar + Right * halfHSide) };
+        frustum.leftFace = { Position, glm::cross(frontMultFar - Right * halfHSide, Up) };
+        frustum.topFace = { Position, glm::cross(Right, frontMultFar - Up * halfVSide) };
+        frustum.bottomFace = { Position, glm::cross(frontMultFar + Up * halfVSide, Right) };
     }
 }
-

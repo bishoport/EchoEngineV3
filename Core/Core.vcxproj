@@ -20,10 +20,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\core\lights\SunLight.h" />
+    <ClInclude Include="src\core\model\Billboard.h" />
     <ClInclude Include="src\core\model\skeletal\animation.h" />
     <ClInclude Include="src\core\model\skeletal\animator.h" />
     <ClInclude Include="src\core\model\skeletal\AnimData.h" />
     <ClInclude Include="src\core\model\skeletal\bone.h" />
+    <ClInclude Include="src\core\renderer\Renderer.h" />
     <ClInclude Include="src\gui\Panels\DynamicSkyboxPanel.h" />
     <ClInclude Include="src\gui\Panels\GameViewportPanel.h" />
     <ClInclude Include="src\gui\Panels\MeshesPanel.h" />
@@ -43,7 +45,6 @@
     <ClInclude Include="src\core\renderer\FBO.hpp" />
     <ClInclude Include="src\core\renderer\GBO.hpp" />
     <ClInclude Include="src\core\renderer\IBL.h" />
-    <ClInclude Include="src\core\renderer\Renderer.hpp" />
     <ClInclude Include="src\core\renderer\DynamicSkybox.h" />
     <ClInclude Include="src\core\renderer\Viewport.h" />
     <ClInclude Include="src\core\shaders\Shader.h" />
@@ -117,6 +118,7 @@
     <ClCompile Include="src\core\lights\Light.cpp" />
     <ClCompile Include="src\core\model\Mesh.cpp" />
     <ClCompile Include="src\core\renderer\IBL.cpp" />
+    <ClCompile Include="src\core\renderer\Renderer.cpp" />
     <ClCompile Include="src\core\renderer\Viewport.cpp" />
     <ClCompile Include="src\core\textures\Material.cpp" />
     <ClCompile Include="src\core\textures\Texture.cpp" />

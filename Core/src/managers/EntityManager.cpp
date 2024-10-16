@@ -6,6 +6,7 @@
 #include <minwindef.h>
 #include <libloaderapi.h>
 #include "LuaManager.h"
+#include "ViewportManager.hpp"
 
 
 namespace libCore
@@ -59,6 +60,9 @@ namespace libCore
 
         return entity;
     }
+   
+
+
     entt::entity EntityManager::CreateGameObjectFromModel(Ref<Model> model, entt::entity parent)
     {
         // Crear una nueva entidad para el modelo
@@ -110,7 +114,8 @@ namespace libCore
     void EntityManager::CreateCamera()
     {
         entt::entity gameObject = CreateEmptyGameObject("MainCamera");
-        AddComponent<CameraComponent>(gameObject);
+        auto& cameraComponent = m_registry->emplace<CameraComponent>(gameObject);
+        cameraComponent.camera = ViewportManager::GetInstance().viewports[1]->camera;
     }
     void EntityManager::AddChild(entt::entity parent, entt::entity child)
     {
@@ -384,17 +389,6 @@ namespace libCore
     //--ACTUALIZADOR DE FUNCIONES UPDATES ANTES DEL RENDER DE LOS COMPONENTES
     void EntityManager::UpdateGameObjects(Timestep deltaTime)
     {
-        ////Destruccion real antes de actualizar
-        ////(Quizá mejor crear un componente temporal para esto)
-        //auto IDCompView = m_registry->view<IDComponent>();
-        //for (auto entity : IDCompView) {
-        //    auto& idComponent = GetComponent<IDComponent>(entity);
-
-        //    if (idComponent.markToDelete == true) {
-        //        EntityManager::GetInstance().DestroyEntityRecursively(entity);
-        //    }
-        //}
-
         // ACTUALIZACION DE LOS ANIMATION
         auto viewAnimation = m_registry->view<AnimationComponent>();
         for (auto entity : viewAnimation) {
@@ -409,32 +403,34 @@ namespace libCore
             UpdateScripts(deltaTime);
         }
 
-        //UPDATE ALL TRANSFORM CHILDREN
+        //--UPDATE ALL TRANSFORM CHILDREN
         auto rootView = m_registry->view<TransformComponent>(entt::exclude<ParentComponent>);
         for (auto entity : rootView) {
             UpdateAccumulatedTransforms(entity);
         }
 
 
-        // Actualizar las cámaras
-        //auto CameraCompView = m_registry->view<CameraComponent, TransformComponent>();
-        //
-        //for (auto entity : CameraCompView) {
-        //    auto& cameraComponent = GetComponent<CameraComponent>(entity);
-        //    auto& transformComponent = GetComponent<TransformComponent>(entity);
-        //
-        //    glm::vec3 forward = transformComponent.transform->rotation * glm::vec3(0.0f, 0.0f, -1.0f);
-        //    cameraComponent.view = glm::lookAt(transformComponent.transform->position, transformComponent.transform->position + forward, cameraComponent.Up);
-        //
-        //    if (cameraComponent.width > 0 && cameraComponent.height > 0) {
-        //        cameraComponent.projection = glm::perspective(glm::radians(cameraComponent.FOVdeg), (float)cameraComponent.width / (float)cameraComponent.height, cameraComponent.nearPlane, cameraComponent.farPlane);
-        //    }
-        //
-        //    cameraComponent.cameraMatrix = cameraComponent.projection * cameraComponent.view;
-        //}
+        //--Actualizar las cámaras
+        auto CameraCompView = m_registry->view<CameraComponent, TransformComponent>();
+
+        for (auto entity : CameraCompView)
+        {
+            auto& cameraComponent = GetComponent<CameraComponent>(entity);
+            auto& transformComponent = GetComponent<TransformComponent>(entity);
+
+            // Actualiza la posición de la cámara desde el TransformComponent
+            cameraComponent.camera->SetPosition(transformComponent.GetPosition());
+
+            // Actualiza la orientación de la cámara desde el TransformComponent (usando cuaterniones)
+            cameraComponent.camera->SetOrientationQuat(transformComponent.GetRotation());
+
+            // Actualiza la cámara
+            cameraComponent.camera->updateMatrix();  // Asegurarse de actualizar la matriz de la cámara
+        }
 
 
-        // Actualizar los AABB
+
+        //--Actualizar los AABB
         auto viewAABB = m_registry->view<TransformComponent, AABBComponent>();
         for (auto entity : viewAABB) {
             auto& transformComponent = viewAABB.get<TransformComponent>(entity);
@@ -443,15 +439,58 @@ namespace libCore
             glm::mat4 globalTransform = transformComponent.accumulatedTransform;
             aabbComponent.aabb->UpdateAABB(globalTransform);
         }
+
+
+        //CheckIfObjectIsInFrustrum();
     }
+
+    
     //------------------------------------------------------------------------------------
+    
 
     //--DRAW MESH Component (Son llamadas desde el Renderer cuando le toque)
-    void EntityManager::DrawGameObjects(const std::string& shader)
+    void EntityManager::DrawGameObjects(const std::string& shader, const int viewportNumber)
     {
         auto view = m_registry->view<TransformComponent, MeshComponent, MaterialComponent, AABBComponent>();
-        for (auto entity : view) {
-            DrawOneGameObject(entity, shader);
+        
+        for (auto entity : view) 
+        {
+            auto& aabb = view.get<AABBComponent>(entity).aabb;
+            auto& mesh = view.get<MeshComponent>(entity);
+            auto& transform = view.get<TransformComponent>(entity);
+
+            if (ViewportManager::GetInstance().viewports[viewportNumber]->camera->IsBoxInFrustum(transform.transform->getLocalModelMatrix(), aabb->minBounds, aabb->maxBounds))
+            {
+                mesh.renderable = true;
+                DrawOneGameObject(entity, shader);
+            }
+            else
+            {
+                mesh.renderable = false;
+            }
+
+            //--ESTE CODIGO ES PARA QUE EN EL VIEWPORT GAME SE VEA EL DEBUG DEL FRUSTRUM CULLING
+            //if (viewportNumber == 0)//EDITOR
+            //{
+            //    if (ViewportManager::GetInstance().viewports[0]->camera->IsBoxInFrustum(transform.transform->getLocalModelMatrix(), aabb->minBounds, aabb->maxBounds))
+            //    {
+            //        mesh.renderable = true;
+            //        DrawOneGameObject(entity, shader);
+            //    }
+            //    else
+            //    {
+            //        mesh.renderable = false;
+            //    }
+            //}
+            //else if (viewportNumber == 1) //GAME
+            //{
+            //    if (mesh.renderable == true)
+            //    {
+            //        DrawOneGameObject(entity, shader);
+            //    }
+            //}
+            //------------------------------------------------------------------------------------------------------------------------------------------------------------------
+            //------------------------------------------------------------------------------------------------------------------------------------------------------------------
         }
     }
     void EntityManager::DrawOneGameObject(entt::entity entity, const std::string& shader)
@@ -501,11 +540,13 @@ namespace libCore
         //DRAW INSTANCE
         if (!meshComponent.instanceMatrices.empty())
         {
-            meshComponent.mesh->DrawInstanced(static_cast<GLsizei>(meshComponent.instanceMatrices.size()), meshComponent.instanceMatrices);
-            //meshComponent.mesh->Draw();  //<-Dibujado sin Instancia (el modelo Original)
+            //meshComponent.mesh->DrawInstanced(static_cast<GLsizei>(meshComponent.instanceMatrices.size()), meshComponent.instanceMatrices);
+            meshComponent.mesh->Draw();  //<-Dibujado sin Instancia (el modelo Original)
         }
     }
     //------------------------------------------------------------------------------------
+
+    
 
     //--DRAW AABB Component (Son llamadas desde el Renderer cuando le toque)
     void EntityManager::DrawABBGameObjectMeshComponent(const std::string& shader)
@@ -589,6 +630,29 @@ namespace libCore
         unsigned char b = (id & 0xFF0000) >> 16;
 
         return glm::vec3(r / 255.0f, g / 255.0f, b / 255.0f);
+    }
+    void EntityManager::CheckIfObjectIsInFrustrum()
+    {
+        auto view = m_registry->view<TransformComponent, MeshComponent, MaterialComponent, AABBComponent>();
+        for (auto entity : view) {
+            auto& transform = view.get<TransformComponent>(entity);
+            auto& mesh = view.get<MeshComponent>(entity);
+            auto& material = view.get<MaterialComponent>(entity);
+            auto& aabb = view.get<AABBComponent>(entity).aabb;
+
+            if (CheckAABBInFrustum(aabb->minBounds, aabb->maxBounds))
+            {
+                mesh.renderable = true;
+            }
+            else
+            {
+                mesh.renderable = false;
+            }
+        }
+    }
+    bool EntityManager::CheckAABBInFrustum(const glm::vec3& min, const glm::vec3& max)
+    {
+        return true;// ViewportManager::GetInstance().viewports[0]->camera->IsBoxInFrustum(min, max);
     }
     uint32_t EntityManager::ColorToUUID(unsigned char r, unsigned char g, unsigned char b) {
         return r + (g << 8) + (b << 16);

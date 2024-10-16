@@ -113,19 +113,6 @@ namespace libCore
                 SceneManager::GetInstance().LoadScene(selectedScene);
                 //SceneManager::GetInstance().LoadSceneTask(selectedScene);
             }
-
-
-            // Botón para guardar la escena actual con icono Font Awesome de "Guardar"
-            if (ImGui::Button("ADD MAIN CAMERA")) 
-            {
-                Engine::GetInstance().AddMainCamera();
-            }
-            //if (ImGui::Button("READY"))
-            //{
-            //    ViewportManager::GetInstance().viewports[1]->isReady = true;
-            //}
-            
-
             ImGui::End();
         }
 

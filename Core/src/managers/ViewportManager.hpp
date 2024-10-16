@@ -5,7 +5,7 @@
 #include "../core/renderer/FBO.hpp"
 #include "../tools/cameras/EditorCamera.h"
 #include "../tools/cameras/GameCamera.h"
-#include "../core/renderer/Renderer.hpp"
+#include "../core/renderer/Renderer.h"
 
 namespace libCore
 {
@@ -32,12 +32,16 @@ namespace libCore
                 viewport->camera = CreateRef<libCore::EditorCamera>(viewport->viewportSize.x, viewport->viewportSize.y, cameraPosition);
                 viewport->camera->SetPosition(glm::vec3(-1.0f, 1.0f, 3.0f));
                 viewport->camera->LookAt(glm::vec3(0.0f, 0.0f, 0.0f));
+
+                viewport->viewportNumber = 0;
             }
             else if (controller == GAME)
             {
                 viewport->camera = CreateRef<libCore::GameCamera>();
                 viewport->camera->SetPosition(glm::vec3(-1.0f, 4.0f, 3.0f));
                 viewport->camera->LookAt(glm::vec3(0.0f, 0.0f, 0.0f));
+
+                viewport->viewportNumber = 1;
             }
 
             // G-Buffer

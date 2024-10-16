@@ -20,6 +20,8 @@ namespace libCore
 
         bool runScripting = false;
 
+        std::unordered_set<uint32_t> renderableObjects;
+
         Scope<entt::registry> m_registry;
 
         std::vector<entt::entity> entitiesInRay;
@@ -46,7 +48,7 @@ namespace libCore
         void InitScripts();
         void UpdateScripts(Timestep deltaTime);
         void UpdateGameObjects(Timestep deltaTime);
-        void DrawGameObjects(const std::string& shader);
+        void DrawGameObjects(const std::string& shader, const int viewportNumber);
         void DrawOneGameObject(entt::entity entity, const std::string& shader);
         void DrawABBGameObjectMeshComponent(const std::string& shader);
         void CheckRayModelIntersection(const glm::vec3& rayOrigin, const glm::vec3& rayDirection);
@@ -56,6 +58,8 @@ namespace libCore
         glm::vec3 UUIDToColor(const UUID& uuid);
         uint32_t ColorToUUID(unsigned char r, unsigned char g, unsigned char b);
 
+        void CheckIfObjectIsInFrustrum();
+        bool CheckAABBInFrustum(const glm::vec3& min, const glm::vec3& max);
 
         //--TEMPLATES
         template<typename T>
@@ -72,6 +76,8 @@ namespace libCore
 
         template<typename T>
         void RemoveComponent(entt::entity entity);
+
+        
 
     private:
         EntityManager();

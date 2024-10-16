@@ -1,6 +1,6 @@
 #include "PanelBase.h"
 #include "../../core/Engine.h"
-#include "../../core/renderer/Renderer.hpp"
+#include "../../core/renderer/Renderer.h"
 #include "../../managers/ViewportManager.hpp"
 #include "../../managers/EventManager.h"
 #include "../GuiLayer.h"

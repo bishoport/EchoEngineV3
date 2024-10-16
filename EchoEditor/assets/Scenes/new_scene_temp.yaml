@@ -1,8 +1,8 @@
 Scene: new_scene_temp
 Entities:
-  - Entity: 0
+  - Entity: 1048576
     IDComponent:
-      ID: 10416657
+      ID: 9274350
     TagComponent:
       Tag: new_GameObject
     TransformComponent:

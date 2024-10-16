@@ -1,6 +1,6 @@
 #include "PanelBase.h"
 #include "../../core/Engine.h"
-#include "../../core/renderer/Renderer.hpp"
+#include "../../core/renderer/Renderer.h"
 #include "../../managers/ViewportManager.hpp"
 #include "../../managers/EventManager.h"
 #include "../GuiLayer.h"
@@ -38,12 +38,14 @@ namespace libCore
                     ImVec2 panelSize = ImGui::GetContentRegionAvail();
                     ImVec2 panelPos = ImGui::GetWindowPos();
 
+                    // Checkbox para cambiar si el viewport es renderizable
+                    ImGui::Checkbox("Renderable", &viewport->isRenderable);
+
                     // Compara el tamaño y la posición del viewport con los del panel
                     if (panelSize.x != viewport->viewportSize.x || panelSize.y != viewport->viewportSize.y ||
                         panelPos.x != viewport->viewportPos.x || panelPos.y != viewport->viewportPos.y) {
 
-
-                        // Actualiza la posición y tamaño del Viewport
+                        // Actualiza la posición y tamaño del Viewport directamente sin evento, porque se enreda con el otro evento del panel 0
                         viewport->viewportSize = glm::vec2(panelSize.x, panelSize.y);
                         viewport->viewportPos = glm::vec2(panelPos.x, panelPos.y);  // Esta posición ahora será la posición global corregida desde el panel
 
@@ -52,38 +54,34 @@ namespace libCore
 
                         // Actualizar el tamaño de la cámara
                         viewport->UpdateCameraSizeView(static_cast<int>(panelSize.x), static_cast<int>(panelSize.y));
-
-                        //// Dispara el evento de cambio de tamaño y posición del panel
-                        //EventManager::OnPanelResizedEvent().trigger(m_title,
-                        //    glm::vec2(panelSize.x, panelSize.y),
-                        //    glm::vec2(panelPos.x, panelPos.y)); // Posición y tamaño globales corregidos
-
-                        // Actualiza las dimensiones del viewport
-                        //viewport->viewportSize = glm::vec2(panelSize.x, panelSize.y);
-                        //viewport->viewportPos = glm::vec2(panelPos.x, panelPos.y);
                     }
 
-                    // Detectar si el mouse ha entrado o salido del panel
-                    bool isMouseOver = ImGui::IsWindowHovered();
-                    if (isMouseOver != m_MouseOverPanel) {
-                        m_MouseOverPanel = isMouseOver;
-                        EventManager::OnPanelMouseEnterExitEvent().trigger(m_title, m_MouseOverPanel);
-                    }
+                    //// Detectar si el mouse ha entrado o salido del panel
+                    //bool isMouseOver = ImGui::IsWindowHovered();
+                    //if (isMouseOver != m_MouseOverPanel) {
+                    //    m_MouseOverPanel = isMouseOver;
+                    //    EventManager::OnPanelMouseEnterExitEvent().trigger(m_title, m_MouseOverPanel);
+                    //}
 
-                    // Detectar si el panel ha ganado o perdido el foco
-                    bool isFocused = ImGui::IsWindowFocused();
-                    if (isFocused != m_PanelFocused) {
-                        m_PanelFocused = isFocused;
-                        EventManager::OnPanelFocusEvent().trigger(m_title, m_PanelFocused);
-                    }
+                    //// Detectar si el panel ha ganado o perdido el foco
+                    //bool isFocused = ImGui::IsWindowFocused();
+                    //if (isFocused != m_PanelFocused) {
+                    //    m_PanelFocused = isFocused;
+                    //    EventManager::OnPanelFocusEvent().trigger(m_title, m_PanelFocused);
+                    //}
 
-                    // Dibuja el framebuffer en el panel de ImGui
-                    GLuint finalTexture = viewport->framebuffer_final->getTexture("color");
-                    if (finalTexture != 0) {
-                        ImGui::Image((void*)(intptr_t)finalTexture, panelSize, ImVec2(0, 1), ImVec2(1, 0));
+                    // Dibuja el framebuffer en el panel de ImGui si el viewport es renderizable
+                    if (viewport->isRenderable) {
+                        GLuint finalTexture = viewport->framebuffer_final->getTexture("color");
+                        if (finalTexture != 0) {
+                            ImGui::Image((void*)(intptr_t)finalTexture, panelSize, ImVec2(0, 1), ImVec2(1, 0));
+                        }
+                        else {
+                            ImGui::Text("No texture available for this framebuffer");
+                        }
                     }
                     else {
-                        ImGui::Text("No texture available for this framebuffer");
+                        ImGui::Text("Viewport is not renderable");
                     }
 
                     // Asegura la sincronización
@@ -97,6 +95,7 @@ namespace libCore
 
             ImGui::End();
         }
+
 
         void Shutdown() override {
             // Aquí puedes limpiar los recursos si es necesario

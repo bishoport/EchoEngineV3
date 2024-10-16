@@ -17,6 +17,7 @@ namespace libCore
 
         // Nombre del viewport
         std::string viewportName = "no_name_viewport";
+        int viewportNumber = 0;
 
         // Dimensiones del viewport
         glm::vec2 viewportSize = glm::vec2(800.0f, 600.0f);
@@ -25,6 +26,7 @@ namespace libCore
         glm::vec2 previousViewportPos = glm::vec2(0.0f, 0.0f);
 
         // Estado del viewport
+        bool isRenderable = true;
         bool isResizing = false;
         bool isMoving = false;
         bool mouseInviewport = false;

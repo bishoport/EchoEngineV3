@@ -53,6 +53,9 @@ namespace libCore
         aabb->CalculateAABB(vertices);
     }
 
+
+
+
     // Configuración del VBO para instancias (matrices de transformación de instancias)
     void Mesh::SetupInstanceVBO(const std::vector<glm::mat4>& instanceMatrices)
     {

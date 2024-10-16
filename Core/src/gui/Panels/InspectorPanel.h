@@ -125,23 +125,6 @@ namespace libCore
                             transform->SetEulerAngles(glm::radians(eulerAnglesDegrees)); // Convertir de nuevo a radianes para almacenar
                         }
 
-                        /*ImGui::Text("Rotation");
-                        ImGui::TextColored(ImVec4(1, 0, 0, 1), "X");
-                        ImGui::SameLine();
-                        if (ImGui::DragFloat("##RotX", &transform->eulerAngles.x, 0.1f, -360.0f, 360.0f, "X: %.2f")) {
-                            transform->updateRotationFromEulerAngles();
-                        }
-                        ImGui::TextColored(ImVec4(0, 1, 0, 1), "Y");
-                        ImGui::SameLine();
-                        if (ImGui::DragFloat("##RotY", &transform->eulerAngles.y, 0.1f, -360.0f, 360.0f, "Y: %.2f")) {
-                            transform->updateRotationFromEulerAngles();
-                        }
-                        ImGui::TextColored(ImVec4(0, 0, 1, 1), "Z");
-                        ImGui::SameLine();
-                        if (ImGui::DragFloat("##RotZ", &transform->eulerAngles.z, 0.1f, -360.0f, 360.0f, "Z: %.2f")) {
-                            transform->updateRotationFromEulerAngles();
-                        }*/
-
                         ImGui::Text("Scale");
                         ImGui::TextColored(ImVec4(1, 0, 0, 1), "X");
                         ImGui::SameLine();

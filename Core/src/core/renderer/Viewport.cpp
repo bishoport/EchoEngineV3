@@ -12,9 +12,6 @@ namespace libCore
         SetupEventSubscriptions();
     }
 
-
-
-
     // Función para centralizar la inicialización de buffers
     void Viewport::InitializeBuffers(int width, int height)
     {

@@ -13,4 +13,3 @@ namespace libCore
         void Inputs(libCore::Timestep deltaTime) override;
     };
 }
-

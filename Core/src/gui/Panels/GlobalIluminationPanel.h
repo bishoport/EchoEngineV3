@@ -1,6 +1,6 @@
 #pragma once
 #include "PanelBase.h"
-#include "../../core/renderer/Renderer.hpp"
+#include "../../core/renderer/Renderer.h"
 
 namespace libCore
 {

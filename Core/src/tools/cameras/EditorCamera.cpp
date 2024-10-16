@@ -10,39 +10,20 @@ namespace libCore
     {
     }
 
-    
     void EditorCamera::Inputs(libCore::Timestep deltaTime)
     {
         // Movimiento de la cámara
         float velocity = speed * deltaTime.GetMilliseconds();
 
-        // Calcular los ejes locales de la cámara
-        glm::vec3 forward = glm::normalize(Orientation);  // El eje forward es la orientación actual de la cámara
-        glm::vec3 right = glm::normalize(glm::cross(forward, Up));  // El eje right es perpendicular a forward y Up
-        glm::vec3 up = glm::normalize(glm::cross(right, forward));  // El eje Up local de la cámara
-
         // Control de rotación con el mouse
         if (InputManager::Instance().IsMouseButtonDown(GLFW_MOUSE_BUTTON_RIGHT))
         {
-            // Movimiento en la dirección de los ejes locales
-            if (InputManager::Instance().IsKeyPressed(GLFW_KEY_W))
-                Position += velocity * forward;   // Mover hacia adelante en el eje forward
-            if (InputManager::Instance().IsKeyPressed(GLFW_KEY_S))
-                Position -= velocity * forward;   // Mover hacia atrás en el eje forward
-            if (InputManager::Instance().IsKeyPressed(GLFW_KEY_A))
-                Position -= velocity * right;     // Mover hacia la izquierda en el eje right
-            if (InputManager::Instance().IsKeyPressed(GLFW_KEY_D))
-                Position += velocity * right;     // Mover hacia la derecha en el eje right
-            if (InputManager::Instance().IsKeyPressed(GLFW_KEY_R))
-                Position += velocity * up;        // Mover hacia arriba en el eje up
-            if (InputManager::Instance().IsKeyPressed(GLFW_KEY_F))
-                Position -= velocity * up;        // Mover hacia abajo en el eje up
-
-        
+            // Ocultar el cursor y deshabilitar el movimiento del mismo
             glfwSetInputMode(WindowManager::GetInstance().GetWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
             if (firstClick)
             {
+                // Establecer la posición del cursor en el centro del viewport la primera vez
                 glfwSetCursorPos(WindowManager::GetInstance().GetWindow(), (width / 2), (height / 2));
                 firstClick = false;
             }
@@ -50,6 +31,7 @@ namespace libCore
             double mouseX, mouseY;
             glfwGetCursorPos(WindowManager::GetInstance().GetWindow(), &mouseX, &mouseY);
 
+            // Calcular las variaciones en el eje X e Y del mouse
             float rotX = sensitivity * static_cast<float>(mouseY - (height / 2)) / height;
             float rotY = sensitivity * static_cast<float>(mouseX - (width / 2)) / width;
 
@@ -60,18 +42,38 @@ namespace libCore
             // Limitar el pitch para evitar que la cámara rote demasiado hacia arriba o abajo
             pitch = glm::clamp(pitch, -89.0f, 89.0f);
 
-            // Actualizar la orientación de la cámara
+            // Actualizar la orientación de la cámara y los vectores relacionados
             updateMatrix();
 
-            // Resetear la posición del cursor
+            // Resetear la posición del cursor al centro del viewport
             glfwSetCursorPos(WindowManager::GetInstance().GetWindow(), (width / 2), (height / 2));
         }
         else
         {
+            // Mostrar el cursor cuando no se esté presionando el botón derecho
             glfwSetInputMode(WindowManager::GetInstance().GetWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
             firstClick = true;
         }
+
+        // Movimiento de la cámara en la dirección de los ejes locales
+        if (InputManager::Instance().IsKeyPressed(GLFW_KEY_W))
+            Position += velocity * Front;   // Mover hacia adelante
+        if (InputManager::Instance().IsKeyPressed(GLFW_KEY_S))
+            Position -= velocity * Front;   // Mover hacia atrás
+        if (InputManager::Instance().IsKeyPressed(GLFW_KEY_A))
+            Position -= velocity * Right;   // Mover hacia la izquierda
+        if (InputManager::Instance().IsKeyPressed(GLFW_KEY_D))
+            Position += velocity * Right;   // Mover hacia la derecha
+        if (InputManager::Instance().IsKeyPressed(GLFW_KEY_R))
+            Position += velocity * Up;      // Mover hacia arriba
+        if (InputManager::Instance().IsKeyPressed(GLFW_KEY_F))
+            Position -= velocity * Up;      // Mover hacia abajo
+
+        // Actualizar la matriz de vista después de cualquier movimiento de posición
+        updateMatrix();
     }
+}
+
 
 
 
@@ -143,4 +145,4 @@ namespace libCore
     //    }
     //}
 
-}
+
