@@ -57,48 +57,44 @@ namespace libCore
     };
     struct TransformComponent {
         Ref<Transform> transform = CreateRef<Transform>();
-        glm::mat4 accumulatedTransform = glm::mat4(1.0f); // Transformación acumulada
 
-        // Función para obtener la transformación global del componente
-        glm::mat4 getGlobalTransform(entt::entity entity, entt::registry& registry) {
-            
-            if (transform->isTransformDirty()) {
-                transform->computeModelMatrix();
-            }
-
-            glm::mat4 globalTransform = transform->modelMatrix;
+        // Obtener la transformación acumulada (global) del componente
+        glm::mat4 GetGlobalTransform(entt::entity entity, entt::registry& registry) {
+            // Calcula la matriz global a partir de la acumulada del padre si existe
+            glm::mat4 parentGlobalMatrix = glm::mat4(1.0f);
             if (registry.has<ParentComponent>(entity)) {
                 entt::entity parentEntity = registry.get<ParentComponent>(entity).parent;
                 if (registry.valid(parentEntity)) {
-                    globalTransform = registry.get<TransformComponent>(parentEntity).getGlobalTransform(parentEntity, registry) * globalTransform;
+                    parentGlobalMatrix = registry.get<TransformComponent>(parentEntity).GetGlobalTransform(parentEntity, registry);
                 }
             }
-            accumulatedTransform = globalTransform;
-            return accumulatedTransform;
+            transform->ComputeGlobalModelMatrix(parentGlobalMatrix);
+            return transform->accumulatedMatrix;
         }
 
-        // Establece la transformación local del componente a partir de una matriz global
-        void setTransformFromGlobal(const glm::mat4& globalTransform, entt::entity entity, entt::registry& registry) {
+        // Establecer la transformación local del componente usando una matriz global
+        void SetTransformFromGlobal(const glm::mat4& globalTransform, entt::entity entity, entt::registry& registry) {
             glm::mat4 parentGlobalTransform = glm::mat4(1.0f);
             if (registry.has<ParentComponent>(entity)) {
                 entt::entity parentEntity = registry.get<ParentComponent>(entity).parent;
                 if (registry.valid(parentEntity)) {
-                    parentGlobalTransform = registry.get<TransformComponent>(parentEntity).getGlobalTransform(parentEntity, registry);
+                    parentGlobalTransform = registry.get<TransformComponent>(parentEntity).GetGlobalTransform(parentEntity, registry);
                 }
             }
             glm::mat4 newLocalTransform = glm::inverse(parentGlobalTransform) * globalTransform;
-            transform->setMatrix(newLocalTransform);
-            MarkDirty();
+            transform->SetPosition(glm::vec3(newLocalTransform[3]));
+            transform->SetRotation(glm::quat_cast(newLocalTransform));
+            transform->SetScale(glm::vec3(glm::length(glm::vec3(newLocalTransform[0]))));
         }
 
-        // Funciones adicionales para acceder y modificar la posición, rotación y escala desde Lua
+        // Funciones para acceder y modificar la posición, rotación y escala desde Lua o ImGui
         glm::vec3 GetPosition() const {
             return transform->GetPosition();
         }
 
         void SetPosition(const glm::vec3& position) {
             transform->SetPosition(position);
-            MarkDirty();
+            UpdateGlobalTransform();
         }
 
         glm::quat GetRotation() const {
@@ -107,12 +103,12 @@ namespace libCore
 
         void SetRotation(const glm::quat& rotation) {
             transform->SetRotation(rotation);
-            MarkDirty();
+            UpdateGlobalTransform();
         }
 
         void SetRotationEuler(const glm::vec3& eulerAngles) {
             transform->SetEulerAngles(eulerAngles);
-            MarkDirty();
+            UpdateGlobalTransform();
         }
 
         glm::vec3 GetEulerAngles() const {
@@ -125,29 +121,26 @@ namespace libCore
 
         void SetScale(const glm::vec3& scale) {
             transform->SetScale(scale);
-            MarkDirty();
+            UpdateGlobalTransform();
         }
 
-        // Función para obtener la matriz del modelo local
-        glm::mat4 GetLocalModelMatrix() const {
-            if (transform->isTransformDirty()) {
-                transform->computeModelMatrix();
-            }
-            return transform->getLocalModelMatrix();
+        // Obtener la matriz del modelo local
+        glm::mat4 GetLocalModelMatrix() {
+            return transform->GetLocalModelMatrix();
         }
 
-        // Marcar la transformación como sucia
-        void MarkDirty() {
-            transform->isDirty = true;
+        // Actualizar la matriz acumulada si es necesario
+        void UpdateIfNeeded(entt::entity entity, entt::registry& registry) {
+            GetGlobalTransform(entity, registry);
         }
 
-        // Función para recalcular la transformación si es necesario
-        void UpdateIfNeeded() {
-            if (transform->isTransformDirty()) {
-                transform->computeModelMatrix();
-            }
+        // Método para actualizar la matriz global
+        void UpdateGlobalTransform() {
+            transform->ComputeGlobalModelMatrix(glm::mat4(1.0f));
         }
     };
+
+
     struct CameraComponent
     {
         Ref<Camera> camera = nullptr;

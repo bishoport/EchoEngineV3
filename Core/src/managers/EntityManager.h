@@ -38,7 +38,7 @@ namespace libCore
         void DuplicateEntity();
         entt::entity DuplicateEntityRecursively(entt::entity entity, entt::entity parentEntity);
         bool IsTagUsed(const std::string& tag);
-        void UpdateAccumulatedTransforms(entt::entity entity, const glm::mat4& parentTransform = glm::mat4(1.0f));
+        void UpdateAccumulatedTransforms(entt::entity entity);
 
         void MarkToDeleteRecursively(entt::entity entity);
         void DestroyEntity(entt::entity entity);

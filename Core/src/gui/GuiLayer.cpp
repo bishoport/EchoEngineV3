@@ -172,7 +172,6 @@ namespace libCore
     }
     //-------------------------------------------------------------------------------
 
-
     //--LIFE CYCLE
     void GuiLayer::begin()
     {
@@ -317,7 +316,6 @@ namespace libCore
         {
             if (ImGui::Button(ICON_FA_STOP "")) {
                 Engine::GetInstance().SetEngineState(EditorStates::PREPARE_STOP);
-                //Engine::GetInstance().SetEngineState(EditorStates::STOP);
             }
             ImGui::SameLine();
             if (ImGui::Button(ICON_FA_PAUSE "")) {
@@ -326,23 +324,18 @@ namespace libCore
             ImGui::SameLine();
             if (ImGui::Button(ICON_FA_PLAY "")) {
                 Engine::GetInstance().SetEngineState(EditorStates::PREPARE_PLAY);
-                //Engine::GetInstance().SetEngineState(EditorStates::PLAY);
             }
 
             //-- ImGIZMO CONTROLS AREA
-            static bool useLocalTransform = true;
-            static bool snapEnabled = false;
-            static float snapValue[3] = { 1.0f, 1.0f, 1.0f };
-
             ImGui::SameLine();
-            if (ImGui::Button(useLocalTransform ? ICON_FA_ARROWS_ALT " Switch to Global" : ICON_FA_COMPRESS " Switch to Local"))
+            if (ImGui::Button(m_useLocalTransform ? ICON_FA_ARROWS_ALT " Switch to Global" : ICON_FA_COMPRESS " Switch to Local"))
             {
-                useLocalTransform = !useLocalTransform;
+                m_useLocalTransform = !m_useLocalTransform;
             }
             ImGui::SameLine();
-            if (ImGui::Button(snapEnabled ? ICON_FA_UNLINK " Disable Snap" : ICON_FA_LINK " Enable Snap"))
+            if (ImGui::Button(m_snapEnabled ? ICON_FA_UNLINK " Disable Snap" : ICON_FA_LINK " Enable Snap"))
             {
-                snapEnabled = !snapEnabled;
+                m_snapEnabled = !m_snapEnabled;
             }
         }
         ImGui::End();
@@ -356,7 +349,7 @@ namespace libCore
     }
     //-------------------------------------------------------------------------------
 
-    //--ImGIZMO
+    //--TRANSFORM GIZMO
     void GuiLayer::checkGizmo(Ref<Viewport> viewport)
     {
         ImGuizmo::SetDrawlist(ImGui::GetWindowDrawList());
@@ -388,23 +381,22 @@ namespace libCore
             ImGuizmo::SetRect(viewportPanelPos.x, viewportPanelPos.y, viewportPanelSize.x, viewportPanelSize.y);
 
             // Obtener las matrices de cámara (view) y proyección (projection)
-            glm::mat4 camera_view = viewport->camera->view;       // Utilizando la matriz `view` actualizada de la cámara
-            glm::mat4 camera_projection = viewport->camera->projection; // Utilizando la matriz de proyección actualizada de la cámara
+            glm::mat4 camera_view = viewport->camera->view;
+            glm::mat4 camera_projection = viewport->camera->projection;
 
             // Obtener la transformación global de la entidad seleccionada
             auto& transformComponent = EntityManager::GetInstance().GetComponent<TransformComponent>(EntityManager::GetInstance().currentSelectedEntityInScene);
-            glm::mat4 entity_transform = transformComponent.getGlobalTransform(EntityManager::GetInstance().currentSelectedEntityInScene, *EntityManager::GetInstance().m_registry);
+            glm::mat4 entity_transform = transformComponent.GetGlobalTransform(EntityManager::GetInstance().currentSelectedEntityInScene, *EntityManager::GetInstance().m_registry);
 
-            ImGuizmo::MODE transformMode = GuiLayer::GetInstance().m_useLocalTransform ? ImGuizmo::LOCAL : ImGuizmo::WORLD;
+            ImGuizmo::MODE transformMode = m_useLocalTransform ? ImGuizmo::LOCAL : ImGuizmo::WORLD;
 
             // Habilitar el snap si está activo
-            bool snap = GuiLayer::GetInstance().m_snapEnabled;
-            float* snapValues = snap ? GuiLayer::GetInstance().m_snapValue : nullptr;
+            float* snapValues = m_snapEnabled ? m_snapValue : nullptr;
 
             // Renderizar el gizmo
             ImGuizmo::Manipulate(glm::value_ptr(camera_view), glm::value_ptr(camera_projection),
-                GuiLayer::GetInstance().m_GizmoOperation == GizmoOperation::Translate ? ImGuizmo::TRANSLATE :
-                GuiLayer::GetInstance().m_GizmoOperation == GizmoOperation::Rotate3D ? ImGuizmo::ROTATE :
+                m_GizmoOperation == GizmoOperation::Translate ? ImGuizmo::TRANSLATE :
+                m_GizmoOperation == GizmoOperation::Rotate3D ? ImGuizmo::ROTATE :
                 ImGuizmo::SCALE,
                 transformMode, glm::value_ptr(entity_transform), nullptr, snapValues);
 
@@ -419,92 +411,22 @@ namespace libCore
 
             if (ImGuizmo::IsUsing())
             {
-                // Actualizar la transformación local basada en la transformación global manipulada
-                transformComponent.setTransformFromGlobal(entity_transform, EntityManager::GetInstance().currentSelectedEntityInScene, *EntityManager::GetInstance().m_registry);
+                // Descomponer la matriz transformada desde ImGuizmo
+                glm::vec3 position, scale, skew;
+                glm::quat rotation;
+                glm::vec4 perspective;
+
+                glm::decompose(entity_transform, scale, rotation, position, skew, perspective);
+
+                // Normalizar la rotación para evitar acumulación de errores
+                rotation = glm::normalize(rotation);
+
+                // Actualizar la transformación local con los valores descompuestos
+                transformComponent.SetPosition(position);
+                transformComponent.SetRotation(rotation);
+                transformComponent.SetScale(scale);
             }
         }
     }
-
-
-
-
-
-
-
-
-    //void GuiLayer::checkGizmo(Ref<Viewport> viewport)
-    //{
-    //    ImGuizmo::SetDrawlist(ImGui::GetWindowDrawList());
-
-    //    //--INPUTS TOOLS
-    //    if (InputManager::Instance().IsKeyJustPressed(GLFW_KEY_T))
-    //    {
-    //        GuiLayer::GetInstance().m_GizmoOperation = GizmoOperation::Translate;
-    //    }
-    //    else if (InputManager::Instance().IsKeyJustPressed(GLFW_KEY_Y))
-    //    {
-    //        GuiLayer::GetInstance().m_GizmoOperation = GizmoOperation::Rotate3D;
-    //    }
-    //    else if (InputManager::Instance().IsKeyJustPressed(GLFW_KEY_U))
-    //    {
-    //        GuiLayer::GetInstance().m_GizmoOperation = GizmoOperation::Scale;
-    //    }
-
-    //    //---------------------------ImGUIZMO------------------------------------------
-    //    if (EntityManager::GetInstance().currentSelectedEntityInScene != entt::null)
-    //    {
-    //        ImGuizmo::SetOrthographic(false);
-
-    //        // Obtener la posición y tamaño del viewport dentro de ImGui
-    //        ImVec2 viewportPanelPos = ImGui::GetWindowPos();
-    //        ImVec2 viewportPanelSize = ImGui::GetWindowSize();
-
-    //        // Establecer el área donde se renderizará el gizmo en el panel de viewport
-    //        ImGuizmo::SetRect(viewportPanelPos.x, viewportPanelPos.y, viewportPanelSize.x, viewportPanelSize.y);
-
-    //        // Obtener las matrices de cámara (view) y proyección (projection)
-    //        glm::mat4 camera_view = glm::lookAt(viewport->camera->Position, viewport->camera->Position + viewport->camera->Orientation, viewport->camera->Up);
-    //        glm::mat4 camera_projection = viewport->camera->projection;
-
-    //        // Obtener la transformación global de la entidad seleccionada
-    //        auto& transformComponent = EntityManager::GetInstance().GetComponent<TransformComponent>(EntityManager::GetInstance().currentSelectedEntityInScene);
-    //        glm::mat4 entity_transform = transformComponent.getGlobalTransform(EntityManager::GetInstance().currentSelectedEntityInScene, *EntityManager::GetInstance().m_registry);
-
-    //        ImGuizmo::MODE transformMode = GuiLayer::GetInstance().m_useLocalTransform ? ImGuizmo::LOCAL : ImGuizmo::WORLD;
-
-    //        // Habilitar el snap si está activo
-    //        bool snap = GuiLayer::GetInstance().m_snapEnabled;
-    //        float* snapValues = snap ? GuiLayer::GetInstance().m_snapValue : nullptr;
-
-    //        // Deshabilitar el Depth Test para evitar que se dibuje detrás de otros elementos
-    //        //glDisable(GL_DEPTH_TEST);
-
-    //        // Renderizar el gizmo
-    //        ImGuizmo::Manipulate(glm::value_ptr(camera_view), glm::value_ptr(camera_projection),
-    //            GuiLayer::GetInstance().m_GizmoOperation == GizmoOperation::Translate ? ImGuizmo::TRANSLATE :
-    //            GuiLayer::GetInstance().m_GizmoOperation == GizmoOperation::Rotate3D ? ImGuizmo::ROTATE :
-    //            ImGuizmo::SCALE,
-    //            transformMode, glm::value_ptr(entity_transform), nullptr, snapValues);
-
-    //        // Habilitar nuevamente el Depth Test
-    //        //glEnable(GL_DEPTH_TEST);
-
-
-    //        if (ImGuizmo::IsOver())
-    //        {
-    //            Engine::GetInstance().usingGizmo = true;
-    //        }
-    //        else
-    //        {
-    //            Engine::GetInstance().usingGizmo = false;
-    //        }
-
-    //        if (ImGuizmo::IsUsing())
-    //        {
-    //            // Actualizar la transformación local basada en la transformación global manipulada
-    //            transformComponent.setTransformFromGlobal(entity_transform, EntityManager::GetInstance().currentSelectedEntityInScene, *EntityManager::GetInstance().m_registry);
-    //        }
-    //    }
-    //}
     //-------------------------------------------------------------------------------
 }

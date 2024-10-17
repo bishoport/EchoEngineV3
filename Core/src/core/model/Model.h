@@ -69,7 +69,7 @@ namespace libCore
 			//Draw Meshes
 			for (unsigned int i = 0; i < meshes.size(); i++)
 			{
-				libCore::ShaderManager::Get(shader)->setMat4("model", transform->getMatrix());
+				libCore::ShaderManager::Get(shader)->setMat4("model", transform->GetLocalModelMatrix());
 				meshes[i]->Draw();
 				meshes[i]->DrawAABB();
 			}

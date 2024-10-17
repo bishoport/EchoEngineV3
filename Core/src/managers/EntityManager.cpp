@@ -124,7 +124,7 @@ namespace libCore
 
         // Obtener la transformación global actual del hijo
         auto& childTransformComponent = GetComponent<TransformComponent>(child);
-        glm::mat4 childGlobalTransform = childTransformComponent.getGlobalTransform(child, *m_registry);
+        glm::mat4 childGlobalTransform = childTransformComponent.GetGlobalTransform(child, *m_registry);
 
         // Eliminar el hijo de la lista de hijos del antiguo padre, si lo tiene
         if (HasComponent<ParentComponent>(child)) {
@@ -154,9 +154,10 @@ namespace libCore
             }
         }
 
-        // Actualizar la transformación local del hijo para mantener la transformación global
-        childTransformComponent.setTransformFromGlobal(childGlobalTransform, child, *m_registry);
+        // Actualizar la transformación local del hijo para mantener la transformación global constante
+        childTransformComponent.SetTransformFromGlobal(childGlobalTransform, child, *m_registry);
     }
+
     //------------------------------------------------------------------------------------
 
     //--DUPLICATE
@@ -217,7 +218,7 @@ namespace libCore
             dstTransform.transform->position =    srcTransform.transform->position;
             dstTransform.transform->scale =       srcTransform.transform->scale;
             dstTransform.transform->rotation =    srcTransform.transform->rotation;
-            dstTransform.transform->eulerAngles = srcTransform.transform->eulerAngles;
+            dstTransform.transform->SetEulerAngles(srcTransform.transform->GetEulerAngles());
         }
 
         if (HasComponent<MeshComponent>(entity)) {
@@ -366,7 +367,7 @@ namespace libCore
     //------------------------------------------------------------------------------------
 
 
-    //--ACTUALIZADOR DE FUNCIONES UPDATES ANTES DEL RENDER DE LOS COMPONENTES
+    // --ACTUALIZADOR DE FUNCIONES UPDATES ANTES DEL RENDER DE LOS COMPONENTES
     void EntityManager::UpdateGameObjects(Timestep deltaTime)
     {
         //--UPDATE ALL TRANSFORM CHILDREN-PARENT
@@ -375,6 +376,16 @@ namespace libCore
             UpdateAccumulatedTransforms(entity);
         }
 
+        //--UPDATE AABB (debe hacerse después de actualizar las transformaciones acumuladas)
+        auto viewAABB = m_registry->view<TransformComponent, AABBComponent>();
+        for (auto entity : viewAABB) {
+            auto& transformComponent = viewAABB.get<TransformComponent>(entity);
+            auto& aabbComponent = viewAABB.get<AABBComponent>(entity);
+
+            // Obtener la transformación global acumulada del componente
+            glm::mat4 globalTransform = transformComponent.GetGlobalTransform(entity, *m_registry);
+            aabbComponent.aabb->UpdateAABB(globalTransform);
+        }
 
         //--UPDATE SKELETON ANIMATION
         auto viewAnimation = m_registry->view<AnimationComponent>();
@@ -386,28 +397,25 @@ namespace libCore
         }
 
         //--UPDATE ON GAME PLAY
-        if (runScripting) 
+        if (runScripting)
         {
             UpdateScripts(deltaTime);
-            TweenManager::GetInstance().Update(deltaTime);//--Actualiza TweenManager
+            TweenManager::GetInstance().Update(deltaTime); //--Actualiza TweenManager
         }
 
-        //--UPDATE CAMERACOMPONENT
+        //--UPDATE CAMERACOMPONENT (debe hacerse después de que las transformaciones estén completamente actualizadas)
         auto CameraCompView = m_registry->view<CameraComponent, TransformComponent>();
         for (auto entity : CameraCompView)
         {
             auto& cameraComponent = GetComponent<CameraComponent>(entity);
             auto& transformComponent = GetComponent<TransformComponent>(entity);
 
-            // Actualiza la transformación acumulada de la entidad (esto asegura que tenemos la matriz actualizada)
-            transformComponent.UpdateIfNeeded(); // Asegúrate de que la transformación esté actualizada
+            // Obtener la transformación global acumulada del componente
+            glm::mat4 globalTransform = transformComponent.GetGlobalTransform(entity, *m_registry);
 
-            // Usar la transformación acumulada para obtener la posición y rotación globales
-            glm::mat4 accumulatedTransform = transformComponent.accumulatedTransform;
-
-            // Extraer la posición y orientación desde la matriz acumulada
-            glm::vec3 globalPosition = glm::vec3(accumulatedTransform[3]); // Extrae la posición desde la columna 3 de la matriz
-            glm::quat globalRotation = glm::quat_cast(accumulatedTransform); // Extrae la rotación desde la matriz acumulada
+            // Extraer la posición y orientación global desde la matriz acumulada
+            glm::vec3 globalPosition = glm::vec3(globalTransform[3]); // Extrae la posición desde la columna 3 de la matriz
+            glm::quat globalRotation = glm::quat_cast(globalTransform); // Extrae la rotación desde la matriz acumulada
 
             // Actualiza la posición y la orientación de la cámara
             cameraComponent.camera->SetPosition(globalPosition);
@@ -416,18 +424,8 @@ namespace libCore
             // Actualiza la cámara
             cameraComponent.camera->updateMatrix();  // Asegurarse de actualizar la matriz de la cámara
         }
-
-        //--UPDATE AABB
-        auto viewAABB = m_registry->view<TransformComponent, AABBComponent>();
-        for (auto entity : viewAABB) {
-            auto& transformComponent = viewAABB.get<TransformComponent>(entity);
-            auto& aabbComponent = viewAABB.get<AABBComponent>(entity);
-
-            glm::mat4 globalTransform = transformComponent.accumulatedTransform;
-            aabbComponent.aabb->UpdateAABB(globalTransform);
-        }
     }
-    void EntityManager::UpdateAccumulatedTransforms(entt::entity entity, const glm::mat4& parentTransform)
+    void EntityManager::UpdateAccumulatedTransforms(entt::entity entity)
     {
         if (!m_registry->valid(entity)) {
             return;
@@ -435,14 +433,21 @@ namespace libCore
 
         auto& transformComponent = GetComponent<TransformComponent>(entity);
 
-        // Actualizar la transformación acumulada de la entidad actual
-        transformComponent.accumulatedTransform = parentTransform * transformComponent.transform->getLocalModelMatrix();
+        // Obtener la transformación global acumulada del componente
+        glm::mat4 parentTransform = glm::mat4(1.0f);
+        if (HasComponent<ParentComponent>(entity)) {
+            auto& parentComponent = GetComponent<ParentComponent>(entity);
+            if (m_registry->valid(parentComponent.parent)) {
+                parentTransform = GetComponent<TransformComponent>(parentComponent.parent).GetGlobalTransform(parentComponent.parent, *m_registry);
+            }
+        }
+        transformComponent.transform->ComputeGlobalModelMatrix(parentTransform);
 
         // Recorrer recursivamente los hijos
         if (HasComponent<ChildComponent>(entity)) {
             auto& childComponent = GetComponent<ChildComponent>(entity);
             for (auto& child : childComponent.children) {
-                UpdateAccumulatedTransforms(child, transformComponent.accumulatedTransform);
+                UpdateAccumulatedTransforms(child);
             }
         }
     }
@@ -473,7 +478,7 @@ namespace libCore
             //--ESTE CODIGO ES PARA QUE EN EL VIEWPORT GAME SE VEA EL DEBUG DEL FRUSTRUM CULLING
             if (viewportNumber == 0)//EDITOR
             {
-                glm::mat4 globalTransform = transform.getGlobalTransform(entity, *m_registry);
+                glm::mat4 globalTransform = transform.GetGlobalTransform(entity, *m_registry);
 
                 if (ViewportManager::GetInstance().viewports[0]->camera->IsBoxInFrustum(globalTransform, aabb->minBounds, aabb->maxBounds))
                 {
@@ -515,13 +520,13 @@ namespace libCore
         materialComponent.material->metallicMap->Bind(shader);
         materialComponent.material->roughnessMap->Bind(shader);
 
-        UUID objectID = idComponent.ID; 
+        UUID objectID = idComponent.ID;
         glm::vec3 idColor = UUIDToColor(objectID);  // Convertir UUID a color
 
         libCore::ShaderManager::Get(shader)->setVec3("objectIDColor", idColor);
 
         // Usar la transformación acumulada
-        libCore::ShaderManager::Get(shader)->setMat4("model", transformComponent.accumulatedTransform);
+        libCore::ShaderManager::Get(shader)->setMat4("model", transformComponent.GetGlobalTransform(entity, *m_registry));
 
         //-SKELETAL
         bool useBones = false;
@@ -560,7 +565,7 @@ namespace libCore
 
             if (aabbComponent.aabb->showAABB) {
                 // Obtener la transformación global correcta
-                glm::mat4 globalTransform = transformComponent.getGlobalTransform(entity, *m_registry);
+                glm::mat4 globalTransform = transformComponent.GetGlobalTransform(entity, *m_registry);
 
                 libCore::ShaderManager::Get(shader)->setVec4("u_Color", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
                 libCore::ShaderManager::Get(shader)->setMat4("model", globalTransform);
@@ -574,20 +579,20 @@ namespace libCore
     //--AABB Component MOUSE CHECKER
     void EntityManager::CheckRayModelIntersection(const glm::vec3& rayOrigin, const glm::vec3& rayDirection)
     {
-        auto viewAABB = m_registry->view<TransformComponent, AABBComponent>();
-        for (auto entity : viewAABB) {
-            auto& transformComponent = viewAABB.get<TransformComponent>(entity);
-            auto& aabbComponent = viewAABB.get<AABBComponent>(entity);
-            // Obtener la transformación global correcta
-            glm::mat4 globalTransform = transformComponent.getGlobalTransform(entity, *m_registry);
-            // Transformar AABB
-            glm::vec3 transformedMin = glm::vec3(globalTransform * glm::vec4(aabbComponent.aabb->minBounds, 1.0));
-            glm::vec3 transformedMax = glm::vec3(globalTransform * glm::vec4(aabbComponent.aabb->maxBounds, 1.0));
-            // Verificar la intersección del rayo con la AABB transformada
-            if (rayIntersectsBoundingBox(rayOrigin, rayDirection, transformedMin, transformedMax)) {
-                entitiesInRay.push_back(entity);
-            }
-        }
+        //auto viewAABB = m_registry->view<TransformComponent, AABBComponent>();
+        //for (auto entity : viewAABB) {
+        //    auto& transformComponent = viewAABB.get<TransformComponent>(entity);
+        //    auto& aabbComponent = viewAABB.get<AABBComponent>(entity);
+        //    // Obtener la transformación global correcta
+        //    glm::mat4 globalTransform = transformComponent.getGlobalTransform(entity, *m_registry);
+        //    // Transformar AABB
+        //    glm::vec3 transformedMin = glm::vec3(globalTransform * glm::vec4(aabbComponent.aabb->minBounds, 1.0));
+        //    glm::vec3 transformedMax = glm::vec3(globalTransform * glm::vec4(aabbComponent.aabb->maxBounds, 1.0));
+        //    // Verificar la intersección del rayo con la AABB transformada
+        //    if (rayIntersectsBoundingBox(rayOrigin, rayDirection, transformedMin, transformedMax)) {
+        //        entitiesInRay.push_back(entity);
+        //    }
+        //}
     }
     bool EntityManager::rayIntersectsBoundingBox(const glm::vec3& rayOrigin, const glm::vec3& rayDirection, glm::vec3 boxMin, glm::vec3 boxMax)
     {

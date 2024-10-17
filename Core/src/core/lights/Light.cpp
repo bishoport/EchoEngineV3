@@ -50,7 +50,7 @@ namespace libCore
             libCore::ShaderManager::Get(shader)->setFloat("spotLights[" + std::to_string(id) + "].Quadratic", Quadratic);
             libCore::ShaderManager::Get(shader)->setFloat("spotLights[" + std::to_string(id) + "].Radius", Radius);
             libCore::ShaderManager::Get(shader)->setFloat("spotLights[" + std::to_string(id) + "].LightSmoothness", LightSmoothness);
-            libCore::ShaderManager::Get(shader)->setVec3("spotLights[" + std::to_string(id) + "].Direction", transform.getRotationMatrix() * glm::vec4(0, 0, -1, 0));
+            libCore::ShaderManager::Get(shader)->setVec3("spotLights[" + std::to_string(id) + "].Direction", transform.GetRotation() * glm::vec4(0, 0, -1, 0));
             libCore::ShaderManager::Get(shader)->setFloat("spotLights[" + std::to_string(id) + "].innerCutoff", innerCutoff);
             libCore::ShaderManager::Get(shader)->setFloat("spotLights[" + std::to_string(id) + "].outerCutoff", outerCutoff);
         }

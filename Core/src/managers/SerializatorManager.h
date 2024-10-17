@@ -45,9 +45,9 @@ namespace YAML
     struct convert<libCore::Transform> {
         static Node encode(const libCore::Transform& rhs) {
             Node node;
-            node["Position"] = rhs.position;
-            node["Rotation"] = rhs.eulerAngles;  // Se serializan los ángulos de Euler
-            node["Scale"] = rhs.scale;
+            node["Position"] = rhs.GetPosition();
+            node["Rotation"] = rhs.GetEulerAngles();  // Se serializan los ángulos de Euler
+            node["Scale"] = rhs.GetScale();
             return node;
         }
 
@@ -55,12 +55,9 @@ namespace YAML
             if (!node["Position"] || !node["Rotation"] || !node["Scale"]) {
                 return false;
             }
-            rhs.position = node["Position"].as<glm::vec3>();
-            rhs.eulerAngles = node["Rotation"].as<glm::vec3>();
-            rhs.scale = node["Scale"].as<glm::vec3>();
-
-            // Asegurarse de que la rotación en cuaternión se actualice correctamente
-            rhs.updateRotationFromEulerAngles();
+            rhs.SetPosition(node["Position"].as<glm::vec3>());
+            rhs.SetEulerAngles(node["Rotation"].as<glm::vec3>());
+            rhs.SetScale(node["Scale"].as<glm::vec3>());
 
             return true;
         }

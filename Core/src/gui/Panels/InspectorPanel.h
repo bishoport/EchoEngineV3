@@ -92,51 +92,68 @@ namespace libCore
                 if (EntityManager::GetInstance().HasComponent<TransformComponent>(selectedEntity)) {
                     auto& transformComponent = EntityManager::GetInstance().GetComponent<TransformComponent>(selectedEntity);
                     if (ImGui::CollapsingHeader(ICON_FA_ARROWS_ALT " Transform")) {
-                        auto& transform = transformComponent.transform;
-
+                        // Position
+                        glm::vec3 position = transformComponent.GetPosition();
                         ImGui::Text("Position");
                         ImGui::TextColored(ImVec4(1, 0, 0, 1), "X");
                         ImGui::SameLine();
-                        ImGui::DragFloat("##PosX", &transform->position.x, 0.1f, -FLT_MAX, FLT_MAX, "X: %.2f");
+                        if (ImGui::DragFloat("##PosX", &position.x, 0.1f, -FLT_MAX, FLT_MAX, "X: %.2f")) {
+                            transformComponent.SetPosition(position);
+                        }
                         ImGui::TextColored(ImVec4(0, 1, 0, 1), "Y");
                         ImGui::SameLine();
-                        ImGui::DragFloat("##PosY", &transform->position.y, 0.1f, -FLT_MAX, FLT_MAX, "Y: %.2f");
+                        if (ImGui::DragFloat("##PosY", &position.y, 0.1f, -FLT_MAX, FLT_MAX, "Y: %.2f")) {
+                            transformComponent.SetPosition(position);
+                        }
                         ImGui::TextColored(ImVec4(0, 0, 1, 1), "Z");
                         ImGui::SameLine();
-                        ImGui::DragFloat("##PosZ", &transform->position.z, 0.1f, -FLT_MAX, FLT_MAX, "Z: %.2f");
-
+                        if (ImGui::DragFloat("##PosZ", &position.z, 0.1f, -FLT_MAX, FLT_MAX, "Z: %.2f")) {
+                            transformComponent.SetPosition(position);
+                        }
 
                         // Rotation (Euler Angles in Degrees)
+                        glm::vec3 eulerAnglesDegrees = transformComponent.GetEulerAngles(); // Obtener los ángulos de Euler en grados
                         ImGui::Text("Rotation");
-                        glm::vec3 eulerAnglesDegrees = glm::degrees(transform->GetEulerAngles()); // Convertir a grados para mostrar en el inspector
+                        bool rotationChanged = false;
                         ImGui::TextColored(ImVec4(1, 0, 0, 1), "X");
                         ImGui::SameLine();
-                        if (ImGui::DragFloat("##RotX", &eulerAnglesDegrees.x, 0.1f, -360.0f, 360.0f, "X: %.2f")) {
-                            transform->SetEulerAngles(glm::radians(eulerAnglesDegrees)); // Convertir de nuevo a radianes para almacenar
-                        }
+                        rotationChanged |= ImGui::DragFloat("##RotX", &eulerAnglesDegrees.x, 0.1f, -360.0f, 360.0f, "X: %.2f");
                         ImGui::TextColored(ImVec4(0, 1, 0, 1), "Y");
                         ImGui::SameLine();
-                        if (ImGui::DragFloat("##RotY", &eulerAnglesDegrees.y, 0.1f, -360.0f, 360.0f, "Y: %.2f")) {
-                            transform->SetEulerAngles(glm::radians(eulerAnglesDegrees)); // Convertir de nuevo a radianes para almacenar
-                        }
+                        rotationChanged |= ImGui::DragFloat("##RotY", &eulerAnglesDegrees.y, 0.1f, -360.0f, 360.0f, "Y: %.2f");
                         ImGui::TextColored(ImVec4(0, 0, 1, 1), "Z");
                         ImGui::SameLine();
-                        if (ImGui::DragFloat("##RotZ", &eulerAnglesDegrees.z, 0.1f, -360.0f, 360.0f, "Z: %.2f")) {
-                            transform->SetEulerAngles(glm::radians(eulerAnglesDegrees)); // Convertir de nuevo a radianes para almacenar
+                        rotationChanged |= ImGui::DragFloat("##RotZ", &eulerAnglesDegrees.z, 0.1f, -360.0f, 360.0f, "Z: %.2f");
+
+                        if (rotationChanged) {
+                            transformComponent.SetRotationEuler(eulerAnglesDegrees);
                         }
 
+                        // Scale
+                        glm::vec3 scale = transformComponent.GetScale();
                         ImGui::Text("Scale");
                         ImGui::TextColored(ImVec4(1, 0, 0, 1), "X");
                         ImGui::SameLine();
-                        ImGui::DragFloat("##ScaleX", &transform->scale.x, 0.01f, 0.0f, FLT_MAX, "X: %.2f");
+                        if (ImGui::DragFloat("##ScaleX", &scale.x, 0.01f, 0.0f, FLT_MAX, "X: %.2f")) {
+                            transformComponent.SetScale(scale);
+                        }
                         ImGui::TextColored(ImVec4(0, 1, 0, 1), "Y");
                         ImGui::SameLine();
-                        ImGui::DragFloat("##ScaleY", &transform->scale.y, 0.01f, 0.0f, FLT_MAX, "Y: %.2f");
+                        if (ImGui::DragFloat("##ScaleY", &scale.y, 0.01f, 0.0f, FLT_MAX, "Y: %.2f")) {
+                            transformComponent.SetScale(scale);
+                        }
                         ImGui::TextColored(ImVec4(0, 0, 1, 1), "Z");
                         ImGui::SameLine();
-                        ImGui::DragFloat("##ScaleZ", &transform->scale.z, 0.01f, 0.0f, FLT_MAX, "Z: %.2f");
+                        if (ImGui::DragFloat("##ScaleZ", &scale.z, 0.01f, 0.0f, FLT_MAX, "Z: %.2f")) {
+                            transformComponent.SetScale(scale);
+                        }
                     }
                 }
+
+
+
+
+
                 //--MESH_COMPONENT
                 if (EntityManager::GetInstance().HasComponent<MeshComponent>(selectedEntity)) {
                     if (ImGui::CollapsingHeader(ICON_FA_CUBES " Mesh")) {
