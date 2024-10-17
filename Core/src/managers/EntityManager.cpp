@@ -1,12 +1,14 @@
 #include "EntityManager.h"
 
 #include "../core/Engine.h"
-
 #include "../core/model/Model.h"
+
 #include <minwindef.h>
 #include <libloaderapi.h>
+
 #include "LuaManager.h"
 #include "ViewportManager.hpp"
+#include "TweenManager.h"
 
 
 namespace libCore
@@ -60,9 +62,6 @@ namespace libCore
 
         return entity;
     }
-   
-
-
     entt::entity EntityManager::CreateGameObjectFromModel(Ref<Model> model, entt::entity parent)
     {
         // Crear una nueva entidad para el modelo
@@ -269,25 +268,6 @@ namespace libCore
         }
         return false;
     }
-    void EntityManager::UpdateAccumulatedTransforms(entt::entity entity, const glm::mat4& parentTransform)
-    {
-        if (!m_registry->valid(entity)) {
-            return;
-        }
-
-        auto& transformComponent = GetComponent<TransformComponent>(entity);
-
-        // Actualizar la transformación acumulada de la entidad actual
-        transformComponent.accumulatedTransform = parentTransform * transformComponent.transform->getLocalModelMatrix();
-
-        // Recorrer recursivamente los hijos
-        if (HasComponent<ChildComponent>(entity)) {
-            auto& childComponent = GetComponent<ChildComponent>(entity);
-            for (auto& child : childComponent.children) {
-                UpdateAccumulatedTransforms(child, transformComponent.accumulatedTransform);
-            }
-        }
-    }
     //------------------------------------------------------------------------------------
 
     //--DESTROY
@@ -389,7 +369,14 @@ namespace libCore
     //--ACTUALIZADOR DE FUNCIONES UPDATES ANTES DEL RENDER DE LOS COMPONENTES
     void EntityManager::UpdateGameObjects(Timestep deltaTime)
     {
-        // ACTUALIZACION DE LOS ANIMATION
+        //--UPDATE ALL TRANSFORM CHILDREN-PARENT
+        auto rootView = m_registry->view<TransformComponent>(entt::exclude<ParentComponent>);
+        for (auto entity : rootView) {
+            UpdateAccumulatedTransforms(entity);
+        }
+
+
+        //--UPDATE SKELETON ANIMATION
         auto viewAnimation = m_registry->view<AnimationComponent>();
         for (auto entity : viewAnimation) {
             auto& animationComponent = viewAnimation.get<AnimationComponent>(entity);
@@ -398,39 +385,39 @@ namespace libCore
             animationComponent.Update(deltaTime);
         }
 
-        // Actualizar scripts (si es necesario)
-        if (runScripting) {
+        //--UPDATE ON GAME PLAY
+        if (runScripting) 
+        {
             UpdateScripts(deltaTime);
+            TweenManager::GetInstance().Update(deltaTime);//--Actualiza TweenManager
         }
 
-        //--UPDATE ALL TRANSFORM CHILDREN
-        auto rootView = m_registry->view<TransformComponent>(entt::exclude<ParentComponent>);
-        for (auto entity : rootView) {
-            UpdateAccumulatedTransforms(entity);
-        }
-
-
-        //--Actualizar las cámaras
+        //--UPDATE CAMERACOMPONENT
         auto CameraCompView = m_registry->view<CameraComponent, TransformComponent>();
-
         for (auto entity : CameraCompView)
         {
             auto& cameraComponent = GetComponent<CameraComponent>(entity);
             auto& transformComponent = GetComponent<TransformComponent>(entity);
 
-            // Actualiza la posición de la cámara desde el TransformComponent
-            cameraComponent.camera->SetPosition(transformComponent.GetPosition());
+            // Actualiza la transformación acumulada de la entidad (esto asegura que tenemos la matriz actualizada)
+            transformComponent.UpdateIfNeeded(); // Asegúrate de que la transformación esté actualizada
 
-            // Actualiza la orientación de la cámara desde el TransformComponent (usando cuaterniones)
-            cameraComponent.camera->SetOrientationQuat(transformComponent.GetRotation());
+            // Usar la transformación acumulada para obtener la posición y rotación globales
+            glm::mat4 accumulatedTransform = transformComponent.accumulatedTransform;
+
+            // Extraer la posición y orientación desde la matriz acumulada
+            glm::vec3 globalPosition = glm::vec3(accumulatedTransform[3]); // Extrae la posición desde la columna 3 de la matriz
+            glm::quat globalRotation = glm::quat_cast(accumulatedTransform); // Extrae la rotación desde la matriz acumulada
+
+            // Actualiza la posición y la orientación de la cámara
+            cameraComponent.camera->SetPosition(globalPosition);
+            cameraComponent.camera->SetOrientationQuat(globalRotation);
 
             // Actualiza la cámara
             cameraComponent.camera->updateMatrix();  // Asegurarse de actualizar la matriz de la cámara
         }
 
-
-
-        //--Actualizar los AABB
+        //--UPDATE AABB
         auto viewAABB = m_registry->view<TransformComponent, AABBComponent>();
         for (auto entity : viewAABB) {
             auto& transformComponent = viewAABB.get<TransformComponent>(entity);
@@ -439,12 +426,26 @@ namespace libCore
             glm::mat4 globalTransform = transformComponent.accumulatedTransform;
             aabbComponent.aabb->UpdateAABB(globalTransform);
         }
-
-
-        //CheckIfObjectIsInFrustrum();
     }
+    void EntityManager::UpdateAccumulatedTransforms(entt::entity entity, const glm::mat4& parentTransform)
+    {
+        if (!m_registry->valid(entity)) {
+            return;
+        }
 
-    
+        auto& transformComponent = GetComponent<TransformComponent>(entity);
+
+        // Actualizar la transformación acumulada de la entidad actual
+        transformComponent.accumulatedTransform = parentTransform * transformComponent.transform->getLocalModelMatrix();
+
+        // Recorrer recursivamente los hijos
+        if (HasComponent<ChildComponent>(entity)) {
+            auto& childComponent = GetComponent<ChildComponent>(entity);
+            for (auto& child : childComponent.children) {
+                UpdateAccumulatedTransforms(child, transformComponent.accumulatedTransform);
+            }
+        }
+    }
     //------------------------------------------------------------------------------------
     
 
@@ -459,7 +460,7 @@ namespace libCore
             auto& mesh = view.get<MeshComponent>(entity);
             auto& transform = view.get<TransformComponent>(entity);
 
-            if (ViewportManager::GetInstance().viewports[viewportNumber]->camera->IsBoxInFrustum(transform.transform->getLocalModelMatrix(), aabb->minBounds, aabb->maxBounds))
+            /*if (ViewportManager::GetInstance().viewports[viewportNumber]->camera->IsBoxInFrustum(transform.accumulatedTransform, aabb->minBounds, aabb->maxBounds))
             {
                 mesh.renderable = true;
                 DrawOneGameObject(entity, shader);
@@ -467,28 +468,30 @@ namespace libCore
             else
             {
                 mesh.renderable = false;
-            }
+            }*/
 
             //--ESTE CODIGO ES PARA QUE EN EL VIEWPORT GAME SE VEA EL DEBUG DEL FRUSTRUM CULLING
-            //if (viewportNumber == 0)//EDITOR
-            //{
-            //    if (ViewportManager::GetInstance().viewports[0]->camera->IsBoxInFrustum(transform.transform->getLocalModelMatrix(), aabb->minBounds, aabb->maxBounds))
-            //    {
-            //        mesh.renderable = true;
-            //        DrawOneGameObject(entity, shader);
-            //    }
-            //    else
-            //    {
-            //        mesh.renderable = false;
-            //    }
-            //}
-            //else if (viewportNumber == 1) //GAME
-            //{
-            //    if (mesh.renderable == true)
-            //    {
-            //        DrawOneGameObject(entity, shader);
-            //    }
-            //}
+            if (viewportNumber == 0)//EDITOR
+            {
+                glm::mat4 globalTransform = transform.getGlobalTransform(entity, *m_registry);
+
+                if (ViewportManager::GetInstance().viewports[0]->camera->IsBoxInFrustum(globalTransform, aabb->minBounds, aabb->maxBounds))
+                {
+                    mesh.renderable = true;
+                    DrawOneGameObject(entity, shader);
+                }
+                else
+                {
+                    mesh.renderable = false;
+                }
+            }
+            else if (viewportNumber == 1) //GAME
+            {
+                if (mesh.renderable == true)
+                {
+                    DrawOneGameObject(entity, shader);
+                }
+            }
             //------------------------------------------------------------------------------------------------------------------------------------------------------------------
             //------------------------------------------------------------------------------------------------------------------------------------------------------------------
         }
@@ -540,13 +543,12 @@ namespace libCore
         //DRAW INSTANCE
         if (!meshComponent.instanceMatrices.empty())
         {
-            //meshComponent.mesh->DrawInstanced(static_cast<GLsizei>(meshComponent.instanceMatrices.size()), meshComponent.instanceMatrices);
-            meshComponent.mesh->Draw();  //<-Dibujado sin Instancia (el modelo Original)
+            meshComponent.mesh->DrawInstanced(static_cast<GLsizei>(meshComponent.instanceMatrices.size()), meshComponent.instanceMatrices);
+            //meshComponent.mesh->Draw();  //<-Dibujado sin Instancia (el modelo Original)
         }
     }
     //------------------------------------------------------------------------------------
 
-    
 
     //--DRAW AABB Component (Son llamadas desde el Renderer cuando le toque)
     void EntityManager::DrawABBGameObjectMeshComponent(const std::string& shader)
@@ -608,6 +610,29 @@ namespace libCore
     }
     //------------------------------------------------------------------------------------
 
+    void EntityManager::MoveEntityWithTween(entt::entity entity, glm::vec3 targetPosition, float duration)
+    {
+        // Obtener el transform del entity
+        auto& transformComponent = EntityManager::GetInstance().GetComponent<TransformComponent>(entity);
+        glm::vec3 startPosition = transformComponent.transform->GetPosition();
+
+        // Crear un tween
+        libCore::Tween tween(
+            startPosition,
+            targetPosition,
+            duration,
+            TweenType::EASE_IN_OUT,
+            [&transformComponent](const glm::vec3& newPosition) {
+                transformComponent.transform->SetPosition(newPosition);
+            },
+            [](const glm::vec3& finalPosition) {
+                // Aquí puedes poner lógica cuando termine la interpolación
+            }
+        );
+
+        // Agregar el tween al TweenSystem
+        TweenManager::GetInstance().AddTween(tween);
+    }
 
     //--ESPECIALES
     void EntityManager::CheckInstancesInRunTime()
@@ -630,29 +655,6 @@ namespace libCore
         unsigned char b = (id & 0xFF0000) >> 16;
 
         return glm::vec3(r / 255.0f, g / 255.0f, b / 255.0f);
-    }
-    void EntityManager::CheckIfObjectIsInFrustrum()
-    {
-        auto view = m_registry->view<TransformComponent, MeshComponent, MaterialComponent, AABBComponent>();
-        for (auto entity : view) {
-            auto& transform = view.get<TransformComponent>(entity);
-            auto& mesh = view.get<MeshComponent>(entity);
-            auto& material = view.get<MaterialComponent>(entity);
-            auto& aabb = view.get<AABBComponent>(entity).aabb;
-
-            if (CheckAABBInFrustum(aabb->minBounds, aabb->maxBounds))
-            {
-                mesh.renderable = true;
-            }
-            else
-            {
-                mesh.renderable = false;
-            }
-        }
-    }
-    bool EntityManager::CheckAABBInFrustum(const glm::vec3& min, const glm::vec3& max)
-    {
-        return true;// ViewportManager::GetInstance().viewports[0]->camera->IsBoxInFrustum(min, max);
     }
     uint32_t EntityManager::ColorToUUID(unsigned char r, unsigned char g, unsigned char b) {
         return r + (g << 8) + (b << 16);
@@ -746,7 +748,28 @@ namespace libCore
 
 
 
-
+//--ESTE CODIGO ES PARA QUE EN EL VIEWPORT GAME SE VEA EL DEBUG DEL FRUSTRUM CULLING
+//if (viewportNumber == 0)//EDITOR
+//{
+//    if (ViewportManager::GetInstance().viewports[0]->camera->IsBoxInFrustum(transform.transform->getLocalModelMatrix(), aabb->minBounds, aabb->maxBounds))
+//    {
+//        mesh.renderable = true;
+//        DrawOneGameObject(entity, shader);
+//    }
+//    else
+//    {
+//        mesh.renderable = false;
+//    }
+//}
+//else if (viewportNumber == 1) //GAME
+//{
+//    if (mesh.renderable == true)
+//    {
+//        DrawOneGameObject(entity, shader);
+//    }
+//}
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 //// Asignar los componentes de MaterialComponent si el modelo tiene materiales válidos

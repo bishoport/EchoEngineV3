@@ -58,8 +58,10 @@ namespace libCore
         glm::vec3 UUIDToColor(const UUID& uuid);
         uint32_t ColorToUUID(unsigned char r, unsigned char g, unsigned char b);
 
-        void CheckIfObjectIsInFrustrum();
-        bool CheckAABBInFrustum(const glm::vec3& min, const glm::vec3& max);
+
+        //--TWEEN SYSTEM
+        void MoveEntityWithTween(entt::entity entity, glm::vec3 targetPosition, float duration);
+
 
         //--TEMPLATES
         template<typename T>
@@ -76,7 +78,7 @@ namespace libCore
 
         template<typename T>
         void RemoveComponent(entt::entity entity);
-
+        //-------------------------------------------------------------------------------------
         
 
     private:

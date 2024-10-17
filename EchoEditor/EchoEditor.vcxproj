@@ -138,6 +138,7 @@
     <ClInclude Include="src\EchoEditor.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="assets\scripts\TweenTest.lua" />
     <None Include="assets\shaders\picking.frag" />
     <None Include="assets\shaders\picking.vert" />
   </ItemGroup>

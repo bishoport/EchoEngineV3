@@ -45,6 +45,7 @@ namespace libCore
 
 
     //--TRANSFORM COMPONENT
+    //-Position
     std::tuple<float, float, float> EntityManagerBridge::GetPosition(entt::entity entity) {
         if (EntityManager::GetInstance().HasComponent<TransformComponent>(entity)) {
             auto& transform = EntityManager::GetInstance().GetComponent<TransformComponent>(entity);
@@ -59,8 +60,7 @@ namespace libCore
         }
     }
     
-
-    // Conversiones en EntityManagerBridge
+    //-Rotation
     std::tuple<float, float, float> EntityManagerBridge::GetRotation(entt::entity entity) {
         if (EntityManager::GetInstance().HasComponent<TransformComponent>(entity)) {
             glm::vec3 eulerAngles = glm::degrees(EntityManager::GetInstance().GetComponent<TransformComponent>(entity).GetEulerAngles());
@@ -68,27 +68,13 @@ namespace libCore
         }
         return std::make_tuple(0.0f, 0.0f, 0.0f);
     }
-
     void EntityManagerBridge::SetRotation(entt::entity entity, float x, float y, float z) {
         if (EntityManager::GetInstance().HasComponent<TransformComponent>(entity)) {
             EntityManager::GetInstance().GetComponent<TransformComponent>(entity).SetRotationEuler(glm::vec3(glm::radians(x), glm::radians(y), glm::radians(z)));
         }
     }
 
-    /*std::tuple<float, float, float> EntityManagerBridge::GetRotation(entt::entity entity) {
-        if (EntityManager::GetInstance().HasComponent<TransformComponent>(entity)) {
-            glm::vec3 eulerAngles = EntityManager::GetInstance().GetComponent<TransformComponent>(entity).GetEulerAngles();
-            return std::make_tuple(eulerAngles.x, eulerAngles.y, eulerAngles.z);
-        }
-        return std::make_tuple(0.0f, 0.0f, 0.0f);
-    }
-    void EntityManagerBridge::SetRotation(entt::entity entity, float x, float y, float z) {
-        if (EntityManager::GetInstance().HasComponent<TransformComponent>(entity)) {
-            EntityManager::GetInstance().GetComponent<TransformComponent>(entity).SetRotationEuler(glm::vec3(x, y, z));
-        }
-    }*/
-
-
+    //-Scale
     std::tuple<float, float, float> EntityManagerBridge::GetScale(entt::entity entity) {
         if (EntityManager::GetInstance().HasComponent<TransformComponent>(entity)) {
             auto& transform = EntityManager::GetInstance().GetComponent<TransformComponent>(entity);
@@ -104,10 +90,20 @@ namespace libCore
     }
     //----------------------------------------------------------------------------------------------
 
-    //--
+
+    //--Entity Managment
     void libCore::EntityManagerBridge::AddChild(entt::entity parent, entt::entity child)
     {
         EntityManager::GetInstance().AddChild(parent, child);
+    }
+    //----------------------------------------------------------------------------------------------
+
+
+    //--TWEEN
+    void EntityManagerBridge::MoveEntityWithTween(entt::entity entity, float x, float y, float z, float duration)
+    {
+        glm::vec3 targetPosition(x, y, z);
+        EntityManager::GetInstance().MoveEntityWithTween(entity, targetPosition, duration);
     }
 
 }

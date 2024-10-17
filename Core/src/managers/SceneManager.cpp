@@ -22,6 +22,7 @@ namespace libCore
                 break;
             case PREPARE_STOP:
                 std::cout << "Editor state: PREPARE_STOP\n";
+                EntityManager::GetInstance().currentSelectedEntityInScene = entt::null;
                 EntityManager::GetInstance().runScripting = false;
                 EntityManager::GetInstance().CheckInstancesInRunTime();
                 DeserializeComponentsSceneTask();

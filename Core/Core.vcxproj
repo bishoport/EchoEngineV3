@@ -35,6 +35,7 @@
     <ClInclude Include="src\managers\MainThreadTaskManager.h" />
     <ClInclude Include="src\managers\SceneHistoryManager.h" />
     <ClInclude Include="src\managers\SkeletalModelLoader.h" />
+    <ClInclude Include="src\managers\TweenManager.h" />
     <ClInclude Include="src\tools\ConsoleLog.h" />
     <ClInclude Include="src\core\Core.h" />
     <ClInclude Include="src\core\geometry\AABB.h" />
@@ -128,6 +129,7 @@
     <ClCompile Include="src\managers\LuaManager.cpp" />
     <ClCompile Include="src\managers\SceneManager.cpp" />
     <ClCompile Include="src\managers\SkeletalModelLoader.cpp" />
+    <ClCompile Include="src\managers\TweenManager.cpp" />
     <ClCompile Include="src\scene\Scene.cpp" />
     <ClCompile Include="src\ecs\scripting\ScriptComponent.cpp" />
     <ClCompile Include="src\gui\GuiLayer.cpp" />

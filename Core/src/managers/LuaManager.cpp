@@ -1,5 +1,6 @@
 // LuaManager.cpp
 #include "LuaManager.h"
+#include "EntityManager.h"
 #include "../ecs/scripting/EntityManagerBridge.h"
 
 namespace libCore {
@@ -61,24 +62,27 @@ namespace libCore {
 
 
     void LuaManager::RegisterCommonFunctions(sol::state& luaState) {
+
         luaState.new_usertype<entt::entity>("entity");
 
         luaState.new_usertype<EntityManagerBridge>("EntityManagerBridge",
-            "CreateEntity", &EntityManagerBridge::CreateEntity,
+            "CreateEntity",          &EntityManagerBridge::CreateEntity,
             "CreateEntityFromModel", &EntityManagerBridge::CreateEntityFromModel,
-            "GetEntityName", &EntityManagerBridge::GetEntityName,
-            "DestroyEntity", &EntityManagerBridge::DestroyEntity,
-            "GetEntityByUUID", &EntityManagerBridge::GetEntityByUUID, // Exponer GetEntityByUUID
+            "GetEntityName",         &EntityManagerBridge::GetEntityName,
+            "DestroyEntity",         &EntityManagerBridge::DestroyEntity,
+            "GetEntityByUUID",       &EntityManagerBridge::GetEntityByUUID, // Exponer GetEntityByUUID
 
-            "GetPosition", &EntityManagerBridge::GetPosition,
-            "SetPosition", &EntityManagerBridge::SetPosition,
-            "GetRotation", &EntityManagerBridge::GetRotation,
-            "SetRotation", &EntityManagerBridge::SetRotation,
-            "GetScale", &EntityManagerBridge::GetScale,
-            "SetScale", &EntityManagerBridge::SetScale,
+            "GetPosition",   &EntityManagerBridge::GetPosition,
+            "SetPosition",   &EntityManagerBridge::SetPosition,
+            "GetRotation",   &EntityManagerBridge::GetRotation,
+            "SetRotation",   &EntityManagerBridge::SetRotation,
+            "GetScale",      &EntityManagerBridge::GetScale,
+            "SetScale",      &EntityManagerBridge::SetScale,
 
-            "AddChild", &EntityManagerBridge::AddChild
+            "AddChild", &EntityManagerBridge::AddChild,
+            "MoveEntityWithTween", & EntityManagerBridge::MoveEntityWithTween
         );
+
 
         static EntityManagerBridge entityManagerBridge;
         luaState["EntityManager"] = &entityManagerBridge;

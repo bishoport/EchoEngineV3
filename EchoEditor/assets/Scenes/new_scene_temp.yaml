@@ -2,18 +2,18 @@ Scene: new_scene_temp
 Entities:
   - Entity: 1048576
     IDComponent:
-      ID: 9274350
+      ID: 16774192
     TagComponent:
-      Tag: new_GameObject
+      Tag: Cone
     TransformComponent:
       Transform:
         Position:
           - 0
           - 0
-          - 0
+          - 3.47494483
         Rotation:
           - 0
-          - 0
+          - -0
           - 0
         Scale:
           - 1

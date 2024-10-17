@@ -163,3 +163,10 @@ struct ExposedVar {
 	std::variant<int, float, bool, std::string> value;
 };
 
+
+enum class TweenType {
+	LINEAR,
+	EASE_IN,
+	EASE_OUT,
+	EASE_IN_OUT
+};

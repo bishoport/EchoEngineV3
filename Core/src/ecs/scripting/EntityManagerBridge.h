@@ -31,6 +31,12 @@ namespace libCore {
         void SetScale(entt::entity entity, float x, float y, float z);
         //----------------------------------------------------------------------------------------
 
+        //--Entity Managment
         void AddChild(entt::entity parent, entt::entity child);
+        //----------------------------------------------------------------------------------------
+
+        //--TWEEN
+        void MoveEntityWithTween(entt::entity entity, float x, float y, float z, float duration);
+        //----------------------------------------------------------------------------------------
     };
 }

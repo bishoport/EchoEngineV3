@@ -30,5 +30,6 @@
   <ItemGroup>
     <None Include="assets\shaders\picking.vert" />
     <None Include="assets\shaders\picking.frag" />
+    <None Include="assets\scripts\TweenTest.lua" />
   </ItemGroup>
 </Project>
