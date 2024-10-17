@@ -37,6 +37,8 @@ namespace libCore {
 
         //--TWEEN
         void MoveEntityWithTween(entt::entity entity, float x, float y, float z, float duration);
+        void ScaleEntityWithTween(entt::entity entity, float x, float y, float z, float duration);
+        void RotateEntityWithTween(entt::entity entity, float x, float y, float z, float duration);
         //----------------------------------------------------------------------------------------
     };
 }

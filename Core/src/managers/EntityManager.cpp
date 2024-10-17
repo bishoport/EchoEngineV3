@@ -610,6 +610,8 @@ namespace libCore
     }
     //------------------------------------------------------------------------------------
 
+
+    //--TWEEN OPERATIONS
     void EntityManager::MoveEntityWithTween(entt::entity entity, glm::vec3 targetPosition, float duration)
     {
         // Obtener el transform del entity
@@ -622,6 +624,7 @@ namespace libCore
             targetPosition,
             duration,
             TweenType::EASE_IN_OUT,
+            TweenAction::MOVE, // Especificar la acción como MOVE
             [&transformComponent](const glm::vec3& newPosition) {
                 transformComponent.transform->SetPosition(newPosition);
             },
@@ -633,6 +636,50 @@ namespace libCore
         // Agregar el tween al TweenSystem
         TweenManager::GetInstance().AddTween(tween);
     }
+    void EntityManager::ScaleEntityWithTween(entt::entity entity, glm::vec3 targetScale, float duration)
+    {
+        auto& transformComponent = EntityManager::GetInstance().GetComponent<TransformComponent>(entity);
+        glm::vec3 startScale = transformComponent.transform->GetScale();
+
+        libCore::Tween tween(
+            startScale,
+            targetScale,
+            duration,
+            TweenType::EASE_IN_OUT,
+            TweenAction::SCALE, // Especificar la acción como SCALE
+            [&transformComponent](const glm::vec3& newScale) {
+                transformComponent.transform->SetScale(newScale);
+            },
+            [](const glm::vec3& finalScale) {
+                // Aquí puedes poner lógica cuando termine la interpolación
+            }
+        );
+
+        TweenManager::GetInstance().AddTween(tween);
+    }
+    void EntityManager::RotateEntityWithTween(entt::entity entity, glm::vec3 targetRotationEuler, float duration)
+    {
+        auto& transformComponent = EntityManager::GetInstance().GetComponent<TransformComponent>(entity);
+        glm::vec3 startRotation = transformComponent.transform->GetEulerAngles();
+
+        libCore::Tween tween(
+            startRotation,
+            targetRotationEuler,
+            duration,
+            TweenType::EASE_IN_OUT,
+            TweenAction::ROTATE, // Especificar la acción como ROTATE
+            [&transformComponent](const glm::vec3& newRotation) {
+                transformComponent.transform->SetEulerAngles(newRotation);
+            },
+            [](const glm::vec3& finalRotation) {
+                // Aquí puedes poner lógica cuando termine la interpolación
+            }
+        );
+
+        TweenManager::GetInstance().AddTween(tween);
+    }
+
+
 
     //--ESPECIALES
     void EntityManager::CheckInstancesInRunTime()

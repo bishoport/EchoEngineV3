@@ -105,5 +105,16 @@ namespace libCore
         glm::vec3 targetPosition(x, y, z);
         EntityManager::GetInstance().MoveEntityWithTween(entity, targetPosition, duration);
     }
+    void EntityManagerBridge::ScaleEntityWithTween(entt::entity entity, float x, float y, float z, float duration)
+    {
+        glm::vec3 targetScale(x, y, z);
+        EntityManager::GetInstance().ScaleEntityWithTween(entity, targetScale, duration);
+    }
+    void EntityManagerBridge::RotateEntityWithTween(entt::entity entity, float x, float y, float z, float duration)
+    {
+        glm::vec3 targetRotationEuler(x, y, z);
+        EntityManager::GetInstance().RotateEntityWithTween(entity, targetRotationEuler, duration);
+    }
+
 
 }

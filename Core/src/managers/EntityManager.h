@@ -61,6 +61,8 @@ namespace libCore
 
         //--TWEEN SYSTEM
         void MoveEntityWithTween(entt::entity entity, glm::vec3 targetPosition, float duration);
+        void ScaleEntityWithTween(entt::entity entity, glm::vec3 targetScale, float duration);
+        void RotateEntityWithTween(entt::entity entity, glm::vec3 targetRotationEuler, float duration);
 
 
         //--TEMPLATES

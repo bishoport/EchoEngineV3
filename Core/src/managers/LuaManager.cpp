@@ -79,8 +79,11 @@ namespace libCore {
             "GetScale",      &EntityManagerBridge::GetScale,
             "SetScale",      &EntityManagerBridge::SetScale,
 
-            "AddChild", &EntityManagerBridge::AddChild,
-            "MoveEntityWithTween", & EntityManagerBridge::MoveEntityWithTween
+            "AddChild",      &EntityManagerBridge::AddChild,
+
+            "MoveEntityWithTween", & EntityManagerBridge::MoveEntityWithTween,
+            "ScaleEntityWithTween", & EntityManagerBridge::ScaleEntityWithTween,
+            "RotateEntityWithTween", & EntityManagerBridge::RotateEntityWithTween
         );
 
 
