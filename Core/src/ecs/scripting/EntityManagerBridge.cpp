@@ -1,5 +1,6 @@
 #include "EntityManagerBridge.h"
 #include "../../managers/AssetsManager.h"
+#include "../../managers/GridsManager.h"
 #include "../Components.h"  // Para los componentes como TagComponent
 
 namespace libCore
@@ -70,7 +71,7 @@ namespace libCore
     }
     void EntityManagerBridge::SetRotation(entt::entity entity, float x, float y, float z) {
         if (EntityManager::GetInstance().HasComponent<TransformComponent>(entity)) {
-            EntityManager::GetInstance().GetComponent<TransformComponent>(entity).SetRotationEuler(glm::vec3(glm::radians(x), glm::radians(y), glm::radians(z)));
+            EntityManager::GetInstance().GetComponent<TransformComponent>(entity).SetRotationEuler(glm::vec3(x, y, z));
         }
     }
 
@@ -116,5 +117,16 @@ namespace libCore
         EntityManager::GetInstance().RotateEntityWithTween(entity, targetRotationEuler, duration);
     }
 
+    //--GRID MANAGER
+    std::vector<std::vector<int>> EntityManagerBridge::GetGridLayerAsMatrix(const std::string& gridName, const std::string& layerName)
+    {
+        auto matrixOpt = GridsManager::GetInstance().GetLayerDataAsLuaMatrix(gridName, layerName);
 
+        if (!matrixOpt.has_value()) {
+            std::cerr << "Error: No se pudo obtener la matriz para el grid '" << gridName << "' y la capa '" << layerName << "'." << std::endl;
+            return {}; // Devolver una matriz vacía si hubo un error
+        }
+
+        return matrixOpt.value(); // Devolver la matriz si se obtuvo con éxito
+    }
 }

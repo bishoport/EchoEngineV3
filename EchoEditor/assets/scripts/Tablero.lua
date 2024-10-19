@@ -1,6 +1,6 @@
 ﻿-- Tabla especial para las variables expuestas a ImGui
 exposedVars = {
-    int_width    = 27,   -- Ancho de la matriz del suelo
+    int_width    = 28,   -- Ancho de la matriz del suelo
     int_height   = 21,  -- Alto de la matriz del suelo
     model_Floor  = "", -- Modelo de losa      1
     model_Corner = "",  -- Modelo de  Esquina 2,3,4,5

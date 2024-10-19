@@ -138,9 +138,11 @@
     <ClInclude Include="src\EchoEditor.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="assets\Grids\HQ.grid" />
     <None Include="assets\scripts\cosa.lua" />
     <None Include="assets\scripts\HelloWorld.lua" />
     <None Include="assets\scripts\Tablero.lua" />
+    <None Include="assets\scripts\Tablero2.lua" />
     <None Include="assets\scripts\TransformTest.lua" />
     <None Include="assets\scripts\TweenTest.lua" />
     <None Include="assets\shaders\picking.frag" />

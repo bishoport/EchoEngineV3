@@ -30,6 +30,8 @@ namespace libCore {
             ConsoleLog::GetInstance().AddLog(LogLevel::L_ERROR, "Error loading Lua script:" + std::string(e.what()));
         }
     }
+
+
     void LuaManager::ReloadLuaFile(const std::string& scriptName)
     {
         reloading = true;
@@ -83,7 +85,9 @@ namespace libCore {
 
             "MoveEntityWithTween", & EntityManagerBridge::MoveEntityWithTween,
             "ScaleEntityWithTween", & EntityManagerBridge::ScaleEntityWithTween,
-            "RotateEntityWithTween", & EntityManagerBridge::RotateEntityWithTween
+            "RotateEntityWithTween", & EntityManagerBridge::RotateEntityWithTween,
+
+            "GetGridLayerAsMatrix", & EntityManagerBridge::GetGridLayerAsMatrix
         );
 
 

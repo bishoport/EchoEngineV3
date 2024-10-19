@@ -40,5 +40,12 @@ namespace libCore {
         void ScaleEntityWithTween(entt::entity entity, float x, float y, float z, float duration);
         void RotateEntityWithTween(entt::entity entity, float x, float y, float z, float duration);
         //----------------------------------------------------------------------------------------
+
+
+        //--GRID MANAGER
+        std::vector<std::vector<int>> GetGridLayerAsMatrix(const std::string& gridName, const std::string& layerName);
+        //----------------------------------------------------------------------------------------
+
+
     };
 }

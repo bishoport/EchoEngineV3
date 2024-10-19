@@ -6,24 +6,25 @@
 #include <optional>
 #include <fstream>
 #include <yaml-cpp/yaml.h>
+#include "../../managers/GridsManager.h"
+#include <array>
 
 namespace libCore
 {
     class MapEditorPanel : public PanelBase
     {
     public:
-        using CellData = std::variant<int, float, std::string, bool, uint32_t>;
 
         MapEditorPanel()
-            : PanelBase("Map Editor"), m_width(10), m_height(10), m_zoom(1.0f), m_currentLayer(0), m_scrollX(0.0f), m_scrollY(0.0f), m_filePath("map.grid")
+            : PanelBase("Map Editor"), m_width(10), m_height(10), m_zoom(1.0f), m_currentLayer(0), m_scrollX(0.0f), m_scrollY(0.0f), m_filePath("no_named_map")
         {
             AddLayer("Default Layer"); // Agregar una capa por defecto
             m_selectedCell = { 0, 0 }; // Seleccionar la primera celda al inicio
+
+            InitColorPalette();
         }
 
-        void Init() override
-        {
-        }
+        void Init() override{}
 
         void Draw() override
         {
@@ -53,20 +54,56 @@ namespace libCore
             ImGui::SliderInt(ICON_FA_ARROWS_ALT_V " Height", &m_height, 1, 100);
             UpdateMapSize(); // Actualizar tamaño después de modificar la altura
 
+            ImGui::Text(ICON_FA_ARROWS_ALT " Visualization:");
             ImGui::SliderFloat(ICON_FA_SEARCH_PLUS " Zoom", &m_zoom, 0.1f, 3.0f);
+            UpdateMapSize(); // Actualizar tamaño después de modificar la altura
 
             ImGui::NextColumn();
 
             // Columna derecha: controles de carga/guardado
             ImGui::SetColumnWidth(1, windowSize.x * 0.5f); // 50% de la columna derecha
-            ImGui::Text(ICON_FA_SAVE " File Controls:");
-            ImGui::InputText(ICON_FA_FILE " File Path", m_filePath.data(), m_filePath.size());
-            if (ImGui::Button(ICON_FA_SAVE " Save Map")) {
-                SaveMap(m_filePath);
+            ImGui::Text(ICON_FA_SAVE "File:");
+
+            // Copiar el valor actual a un buffer de 256 caracteres
+            char filePathBuffer[256];
+            strncpy(filePathBuffer, m_filePath.c_str(), sizeof(filePathBuffer));
+
+            // InputText con el nuevo buffer de 256 caracteres
+            if (ImGui::InputText(ICON_FA_FILE " File name", filePathBuffer, sizeof(filePathBuffer))) {
+                m_filePath = std::string(filePathBuffer); // Actualizar m_filePath después de la edición
             }
+
+            if (ImGui::Button(ICON_FA_SAVE " Save Grid")) {
+                SaveMap(m_filePath);
+                GridsManager::GetInstance().LoadGridFromYAML(defaultAssetsPathGrid + "/" + m_filePath + extensionGridFile, m_filePath);
+            }
+
+            // COMBO
+            std::vector<std::string> gridNames = GridsManager::GetInstance().GetGridNames();
+            static int selectedGridIndex = -1;
+
+            ImGui::Text("Loaded Grids:");
+
+            // ComboBox para seleccionar un grid
+            if (ImGui::BeginCombo("##GridCombo", selectedGridIndex >= 0 ? gridNames[selectedGridIndex].c_str() : "Select a Grid")) {
+                for (int i = 0; i < gridNames.size(); ++i) {
+                    bool isSelected = (selectedGridIndex == i);
+                    if (ImGui::Selectable(gridNames[i].c_str(), isSelected)) {
+                        selectedGridIndex = i;
+                    }
+                    if (isSelected) {
+                        ImGui::SetItemDefaultFocus();
+                    }
+                }
+                ImGui::EndCombo();
+            }
+
+            // Colocar el botón en la misma línea
             ImGui::SameLine();
-            if (ImGui::Button(ICON_FA_FOLDER_OPEN " Load Map")) {
-                LoadMap(m_filePath);
+
+            // Botón para cargar el grid seleccionado
+            if (ImGui::Button(ICON_FA_FOLDER_OPEN " Load Grid") && selectedGridIndex >= 0) {
+                LoadGridToGUI(gridNames[selectedGridIndex]);
             }
 
             ImGui::Columns(1); // Finalizar columnas
@@ -86,11 +123,11 @@ namespace libCore
             ImGui::Text(ICON_FA_LAYER_GROUP " Layer Controls:");
 
             // Botones para agregar y eliminar capas
-            if (ImGui::Button(ICON_FA_PLUS " Add Layer")) {
+            if (ImGui::Button(ICON_FA_PLUS " Add")) {
                 AddLayer("New Layer " + std::to_string(m_mapLayers.size() + 1));
             }
             ImGui::SameLine();
-            if (ImGui::Button(ICON_FA_MINUS " Remove Layer") && m_mapLayers.size() > 1) {
+            if (ImGui::Button(ICON_FA_MINUS " Remove") && m_mapLayers.size() > 1) {
                 ImGui::OpenPopup("Confirm Delete Layer");
             }
 
@@ -109,7 +146,9 @@ namespace libCore
                 ImGui::EndPopup();
             }
 
+            ImGui::Spacing();
             ImGui::Separator();
+            ImGui::Spacing();
 
             // Selección de capa
             ImGui::Text(ICON_FA_LAYER_GROUP " Current Layer:");
@@ -126,6 +165,8 @@ namespace libCore
                 ImGui::EndCombo();
             }
 
+            ImGui::Spacing();
+
             // Selección del tipo de dato de las celdas
             ImGui::Text(ICON_FA_COGS " Layer Properties:");
             char buffer[256];
@@ -139,7 +180,7 @@ namespace libCore
                 for (int n = 0; n < IM_ARRAYSIZE(dataTypes); n++) {
                     bool isSelected = (static_cast<int>(m_mapLayers[m_currentLayer].dataType) == n);
                     if (ImGui::Selectable(dataTypes[n], isSelected)) {
-                        m_mapLayers[m_currentLayer].dataType = static_cast<MapLayer::DataType>(n);
+                        m_mapLayers[m_currentLayer].dataType = static_cast<LayerGridData::DataType>(n);
                         ResetLayerData(m_mapLayers[m_currentLayer]); // Resetear los datos de la capa al cambiar el tipo
                     }
                     if (isSelected) {
@@ -151,7 +192,9 @@ namespace libCore
 
             // Mostrar las propiedades de la celda seleccionada
             if (m_selectedCell.has_value()) {
+                ImGui::Spacing();
                 ImGui::Separator();
+                ImGui::Spacing();
                 ImGui::Text(ICON_FA_CUBE " Selected Cell Properties:");
                 ImGui::Text("Cell (%d, %d):", m_selectedCell->first, m_selectedCell->second);
                 auto& cell = m_mapLayers[m_currentLayer].mapData[m_selectedCell->second][m_selectedCell->first];
@@ -175,7 +218,7 @@ namespace libCore
                 {
                     ImGui::PushID(y * m_width + x); // Asegurarse de que cada celda tenga un ID único
 
-                    // Mostramos cada celda como un botón con el valor actual de la capa seleccionada
+                    // Obtener la celda actual
                     auto& cell = m_mapLayers[m_currentLayer].mapData[y][x];
                     std::string cellText = GetCellText(cell);
 
@@ -184,34 +227,58 @@ namespace libCore
                         cellText = cellText.substr(0, 4) + "...";
                     }
 
-                    ImVec4 buttonColor = (m_selectedCell && m_selectedCell->first == x && m_selectedCell->second == y) ? ImVec4(0.3f, 0.7f, 0.3f, 1.0f) : ImGui::GetStyle().Colors[ImGuiCol_Button];
+                    // Color por defecto del botón
+                    ImVec4 buttonColor = ImGui::GetStyle().Colors[ImGuiCol_Button];
+
+                    // Asignar color si es un valor int, uint32 o bool
+                    if (m_mapLayers[m_currentLayer].dataType == LayerGridData::DataType::INT ||
+                        m_mapLayers[m_currentLayer].dataType == LayerGridData::DataType::UINT32 ||
+                        m_mapLayers[m_currentLayer].dataType == LayerGridData::DataType::BOOL) {
+
+                        int value = std::visit([](auto&& arg) -> int {
+                            using T = std::decay_t<decltype(arg)>;
+                            if constexpr (std::is_same_v<T, int> || std::is_same_v<T, uint32_t> || std::is_same_v<T, bool>)
+                                return static_cast<int>(arg);
+                            return -1; // Valor por defecto si no es de tipo esperado
+                            }, cell);
+
+                        // Verificar si el valor está entre 0 y 19 para asignar un color
+                        if (value >= 0 && value < 20) {
+                            buttonColor = m_colorPalette[value]; // Usar la paleta de colores
+                        }
+                    }
+
+                    // Aplicar el color al botón
                     ImGui::PushStyleColor(ImGuiCol_Button, buttonColor);
 
+                    // Mostrar el botón de la celda
                     if (ImGui::Button(cellText.c_str(), ImVec2(30 * m_zoom, 30 * m_zoom)))
                     {
-                        // Al hacer clic, mostramos las propiedades de la celda
+                        // Al hacer clic, seleccionar la celda
                         m_selectedCell = { x, y };
                     }
 
                     // Mostrar menú emergente para copiar/pegar
                     if (ImGui::BeginPopupContextItem()) {
                         if (ImGui::MenuItem("Copy")) {
-                            m_clipboardCell = cell;
+                            m_clipboardCell = cell; // Copiar el valor de la celda seleccionada
                         }
                         if (ImGui::MenuItem("Paste", nullptr, false, m_clipboardCell.has_value())) {
-                            cell = m_clipboardCell.value();
+                            cell = m_clipboardCell.value(); // Pegar el valor almacenado en el portapapeles
                         }
                         ImGui::EndPopup();
                     }
 
-                    ImGui::PopStyleColor();
-                    ImGui::PopID();
+                    ImGui::PopStyleColor(); // Restablecer el color por defecto
+                    ImGui::PopID(); // Finalizar el ID de la celda
 
                     // Espaciado entre botones
                     if (x < m_width - 1)
                         ImGui::SameLine();
                 }
             }
+
+
 
             m_scrollX = ImGui::GetScrollX();
             m_scrollY = ImGui::GetScrollY();
@@ -230,33 +297,30 @@ namespace libCore
             // Liberación de recursos si es necesario
         }
 
+
+
+
+
     private:
-
-        struct MapLayer
-        {
-            enum class DataType { INT, FLOAT, STRING, BOOL, UINT32 };
-            std::string name;
-            DataType dataType = DataType::INT;
-            CellData defaultValue = 0;
-            std::vector<std::vector<CellData>> mapData;
-        };
-
+        std::string defaultAssetsPathGrid = "assets/Grids";
+        std::string extensionGridFile = ".grid";
         int m_width;
         int m_height;
         float m_zoom;
         int m_currentLayer;
         float m_scrollX;
         float m_scrollY;
-        std::vector<MapLayer> m_mapLayers;
+        std::vector<LayerGridData> m_mapLayers;
         std::optional<std::pair<int, int>> m_selectedCell;
         std::optional<CellData> m_clipboardCell;
         std::string m_filePath;
+        std::array<ImVec4, 20> m_colorPalette; // Paleta de colores
 
 
         //--LAYERS MANAGMENT
         void AddLayer(const std::string& name)
         {
-            MapLayer newLayer;
+            LayerGridData newLayer;
             newLayer.name = name;
             SetDefaultValueForLayer(newLayer);
             newLayer.mapData.resize(m_height, std::vector<CellData>(m_width, newLayer.defaultValue));
@@ -272,12 +336,12 @@ namespace libCore
         }
 
         //--CELL DATA MANAGMENT
-        bool EditCellValue(CellData& cell, MapLayer::DataType dataType)
+        bool EditCellValue(CellData& cell, LayerGridData::DataType dataType)
         {
             bool valueChanged = false;
             switch (dataType)
             {
-            case MapLayer::DataType::INT: {
+            case LayerGridData::DataType::INT: {
                 int value = std::get<int>(cell);
                 if (ImGui::InputInt("Value", &value)) {
                     cell = value;
@@ -285,7 +349,7 @@ namespace libCore
                 }
                 break;
             }
-            case MapLayer::DataType::FLOAT: {
+            case LayerGridData::DataType::FLOAT: {
                 float value = std::get<float>(cell);
                 if (ImGui::InputFloat("Value", &value)) {
                     cell = value;
@@ -293,7 +357,7 @@ namespace libCore
                 }
                 break;
             }
-            case MapLayer::DataType::STRING: {
+            case LayerGridData::DataType::STRING: {
                 std::string value = std::get<std::string>(cell);
                 char buffer[256];
                 strncpy(buffer, value.c_str(), sizeof(buffer));
@@ -303,7 +367,7 @@ namespace libCore
                 }
                 break;
             }
-            case MapLayer::DataType::BOOL: {
+            case LayerGridData::DataType::BOOL: {
                 bool value = std::get<bool>(cell);
                 if (ImGui::Checkbox("Value", &value)) {
                     cell = value;
@@ -311,7 +375,7 @@ namespace libCore
                 }
                 break;
             }
-            case MapLayer::DataType::UINT32: {
+            case LayerGridData::DataType::UINT32: {
                 uint32_t value = std::get<uint32_t>(cell);
                 int temp = static_cast<int>(value);
                 if (ImGui::InputInt("Value", &temp)) {
@@ -323,28 +387,28 @@ namespace libCore
             }
             return valueChanged;
         }
-        void SetDefaultValueForLayer(MapLayer& layer)
+        void SetDefaultValueForLayer(LayerGridData& layer)
         {
             switch (layer.dataType)
             {
-            case MapLayer::DataType::INT:
+            case LayerGridData::DataType::INT:
                 layer.defaultValue = 0;
                 break;
-            case MapLayer::DataType::FLOAT:
+            case LayerGridData::DataType::FLOAT:
                 layer.defaultValue = 0.0f;
                 break;
-            case MapLayer::DataType::STRING:
+            case LayerGridData::DataType::STRING:
                 layer.defaultValue = std::string("");
                 break;
-            case MapLayer::DataType::BOOL:
+            case LayerGridData::DataType::BOOL:
                 layer.defaultValue = false;
                 break;
-            case MapLayer::DataType::UINT32:
+            case LayerGridData::DataType::UINT32:
                 layer.defaultValue = static_cast<uint32_t>(0);
                 break;
             }
         }
-        void ResetLayerData(MapLayer& layer)
+        void ResetLayerData(LayerGridData& layer)
         {
             SetDefaultValueForLayer(layer);
             for (auto& row : layer.mapData)
@@ -375,6 +439,61 @@ namespace libCore
             }
         }
 
+        //--COLOR PALETTE
+        void InitColorPalette()
+        {
+            m_colorPalette = {
+                ImVec4(0.1f, 0.1f, 0.9f, 1.0f), // Color for 0
+                ImVec4(0.2f, 0.2f, 0.8f, 1.0f), // Color for 1
+                ImVec4(0.3f, 0.3f, 0.7f, 1.0f), // Color for 2
+                ImVec4(0.4f, 0.4f, 0.6f, 1.0f), // Color for 3
+                ImVec4(0.5f, 0.5f, 0.5f, 1.0f), // Color for 4
+                ImVec4(0.6f, 0.6f, 0.4f, 1.0f), // Color for 5
+                ImVec4(0.7f, 0.7f, 0.3f, 1.0f), // Color for 6
+                ImVec4(0.8f, 0.8f, 0.2f, 1.0f), // Color for 7
+                ImVec4(0.9f, 0.9f, 0.1f, 1.0f), // Color for 8
+                ImVec4(1.0f, 0.1f, 0.1f, 1.0f), // Color for 9
+                ImVec4(1.0f, 0.2f, 0.2f, 1.0f), // Color for 10
+                ImVec4(1.0f, 0.3f, 0.3f, 1.0f), // Color for 11
+                ImVec4(1.0f, 0.4f, 0.4f, 1.0f), // Color for 12
+                ImVec4(1.0f, 0.5f, 0.5f, 1.0f), // Color for 13
+                ImVec4(1.0f, 0.6f, 0.6f, 1.0f), // Color for 14
+                ImVec4(1.0f, 0.7f, 0.7f, 1.0f), // Color for 15
+                ImVec4(1.0f, 0.8f, 0.8f, 1.0f), // Color for 16
+                ImVec4(1.0f, 0.9f, 0.9f, 1.0f), // Color for 17
+                ImVec4(0.9f, 0.9f, 1.0f, 1.0f), // Color for 18
+                ImVec4(0.8f, 0.8f, 1.0f, 1.0f)  // Color for 19
+            };
+        }
+
+        //LOADER FROM GRIDSMANAGER
+        void LoadGridToGUI(const std::string& gridName)
+        {
+            auto& gridsManager = GridsManager::GetInstance();
+            auto grid = gridsManager.GetGrid(gridName);
+            if (!grid) {
+                std::cerr << "Error: Grid not found." << std::endl;
+                return;
+            }
+
+            // Actualizar las dimensiones del mapa
+            m_width = grid->layers.begin()->second.mapData[0].size();
+            m_height = grid->layers.begin()->second.mapData.size();
+
+            m_filePath = grid->name;
+
+            // Limpiar capas actuales y reemplazar con las del grid cargado
+            m_mapLayers.clear();
+            for (const auto& [layerName, layer] : grid->layers) {
+                LayerGridData newLayer;
+                newLayer.name = layer.name;
+                newLayer.dataType = layer.dataType;
+                newLayer.mapData = layer.mapData;
+                m_mapLayers.push_back(newLayer);
+            }
+
+            std::cout << "Grid '" << gridName << "' loaded into the editor." << std::endl;
+        }
 
         //--SAVE GRID
         void SaveMap(const std::string& filePath)
@@ -402,68 +521,73 @@ namespace libCore
             out << YAML::EndSeq;
             out << YAML::EndMap;
 
-            std::ofstream fout(filePath);
+            std::ofstream fout(defaultAssetsPathGrid + "/" + filePath + extensionGridFile);
             fout << out.c_str();
         }
-        //--------------------------------------------------------------------------------------------------------
-
-
-
-        //--LOAD GRID
-        void LoadMap(const std::string& filePath)
-        {
-            YAML::Node data = YAML::LoadFile(filePath);
-            if (!data) return;
-
-            m_width = data["width"].as<int>();
-            m_height = data["height"].as<int>();
-            m_mapLayers.clear();
-
-            for (const auto& layerNode : data["layers"]) {
-                MapLayer layer;
-                layer.name = layerNode["name"].as<std::string>();
-                layer.dataType = static_cast<MapLayer::DataType>(layerNode["dataType"].as<int>());
-                SetDefaultValueForLayer(layer); // Aquí establecemos el valor predeterminado
-                layer.mapData.resize(m_height, std::vector<CellData>(m_width, layer.defaultValue));
-
-                int y = 0;
-                for (const auto& rowNode : layerNode["mapData"]) {
-                    int x = 0;
-                    for (const auto& cellNode : rowNode) {
-                        SetCellValue(layer.mapData[y][x], cellNode.as<std::string>(), layer.dataType);
-                        ++x;
-                    }
-                    ++y;
-                }
-                m_mapLayers.push_back(layer);
-            }
-        }
-        void SetCellValue(CellData& cell, const std::string& valueStr, MapLayer::DataType dataType)
-        {
-            try {
-                switch (dataType)
-                {
-                case MapLayer::DataType::INT:
-                    cell = std::stoi(valueStr);
-                    break;
-                case MapLayer::DataType::FLOAT:
-                    cell = std::stof(valueStr);
-                    break;
-                case MapLayer::DataType::STRING:
-                    cell = valueStr;
-                    break;
-                case MapLayer::DataType::BOOL:
-                    cell = (valueStr == "true");
-                    break;
-                case MapLayer::DataType::UINT32:
-                    cell = static_cast<uint32_t>(std::stoul(valueStr));
-                    break;
-                }
-            }
-            catch (...) {
-                // Handle invalid conversions gracefully
-            }
-        }
-        //--------------------------------------------------------------------------------------------------------
+        //---------------------------------------------------------------------------------------
     };
 }
+
+
+
+//ImGui::SameLine();
+        //if (ImGui::Button(ICON_FA_FOLDER_OPEN " Load Map")) {
+        //    LoadMap(m_filePath);
+        //}
+
+        ////--LOAD GRID
+        //void LoadMap(const std::string& filePath)
+        //{
+        //    YAML::Node data = YAML::LoadFile(filePath);
+        //    if (!data) return;
+
+        //    m_width = data["width"].as<int>();
+        //    m_height = data["height"].as<int>();
+        //    m_mapLayers.clear();
+
+        //    for (const auto& layerNode : data["layers"]) {
+        //        LayerGridData layer;
+        //        layer.name = layerNode["name"].as<std::string>();
+        //        layer.dataType = static_cast<LayerGridData::DataType>(layerNode["dataType"].as<int>());
+        //        SetDefaultValueForLayer(layer); // Aquí establecemos el valor predeterminado
+        //        layer.mapData.resize(m_height, std::vector<CellData>(m_width, layer.defaultValue));
+
+        //        int y = 0;
+        //        for (const auto& rowNode : layerNode["mapData"]) {
+        //            int x = 0;
+        //            for (const auto& cellNode : rowNode) {
+        //                SetCellValue(layer.mapData[y][x], cellNode.as<std::string>(), layer.dataType);
+        //                ++x;
+        //            }
+        //            ++y;
+        //        }
+        //        m_mapLayers.push_back(layer);
+        //    }
+        //}
+        //void SetCellValue(CellData& cell, const std::string& valueStr, LayerGridData::DataType dataType)
+        //{
+        //    try {
+        //        switch (dataType)
+        //        {
+        //        case LayerGridData::DataType::INT:
+        //            cell = std::stoi(valueStr);
+        //            break;
+        //        case LayerGridData::DataType::FLOAT:
+        //            cell = std::stof(valueStr);
+        //            break;
+        //        case LayerGridData::DataType::STRING:
+        //            cell = valueStr;
+        //            break;
+        //        case LayerGridData::DataType::BOOL:
+        //            cell = (valueStr == "true");
+        //            break;
+        //        case LayerGridData::DataType::UINT32:
+        //            cell = static_cast<uint32_t>(std::stoul(valueStr));
+        //            break;
+        //        }
+        //    }
+        //    catch (...) {
+        //        // Handle invalid conversions gracefully
+        //    }
+        //}
+        //--------------------------------------------------------------------------------------------------------

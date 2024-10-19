@@ -21,7 +21,7 @@ namespace libCore
 		}
 
 		//--TEXTURES
-		std::string defaultAssetsPathTexture = "C:/Users/bisho/OneDrive/Escritorio/EchoEngine_2024/EchoEngine/EchoEditor/assets/textures";
+		std::string defaultAssetsPathTexture = "assets/textures";
 		void UnloadTexture(const std::string& name);
 		void LoadDefaultAssets();
 		Ref<Texture> LoadTextureAsset(const std::string& key, const char* directoryPath, const char* fileName, TEXTURE_TYPES type);
