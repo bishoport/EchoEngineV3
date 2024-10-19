@@ -66,15 +66,16 @@ namespace libCore
                     std::cout << "Cargando nuevo grid: " << fileName << std::endl;
                 }
 
-                // Actualizar o cargar el grid
-                grid->layers.clear();  // Limpiar las capas anteriores (si existen)
+                // Limpiar capas anteriores (si existen)
+                grid->layers.clear();
 
+                // Iterar sobre las capas en el YAML
                 for (const auto& layerNode : data["layers"]) {
                     LayerGridData layer;
                     layer.name = layerNode["name"].as<std::string>();
                     layer.dataType = static_cast<LayerGridData::DataType>(layerNode["dataType"].as<int>());
 
-                    SetDefaultValueForLayer(layer); // Aquí establecemos el valor predeterminado
+                    SetDefaultValueForLayer(layer); // Establecer el valor predeterminado
                     layer.mapData.resize(height, std::vector<CellData>(width, layer.defaultValue));
 
                     int y = 0;
@@ -94,7 +95,8 @@ namespace libCore
                 // Guardar o actualizar el grid en el mapa
                 m_grids[fileName] = grid;
 
-                GridsManager::GetInstance().PrintGrid(fileName); // Para depuración, opcional
+                // Depuración opcional: imprime el grid cargado
+                GridsManager::GetInstance().PrintGrid(fileName);
                 return true;
             }
             catch (const YAML::Exception& e)
@@ -104,6 +106,7 @@ namespace libCore
                 return false;
             }
         }
+
 
 
 

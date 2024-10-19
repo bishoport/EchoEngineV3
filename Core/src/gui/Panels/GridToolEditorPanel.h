@@ -508,22 +508,27 @@ namespace libCore
                 out << YAML::Key << "name" << YAML::Value << layer.name;
                 out << YAML::Key << "dataType" << YAML::Value << static_cast<int>(layer.dataType);
                 out << YAML::Key << "mapData" << YAML::BeginSeq;
+
                 for (const auto& row : layer.mapData) {
+                    // Almacenar cada fila como una lista horizontal
+                    out << YAML::Flow;  // Usamos formato "flow" para poner la fila en una sola línea
                     out << YAML::BeginSeq;
                     for (const auto& cell : row) {
                         out << GetCellText(cell);
                     }
                     out << YAML::EndSeq;
                 }
-                out << YAML::EndSeq;
-                out << YAML::EndMap;
+
+                out << YAML::EndSeq; // Termina mapData
+                out << YAML::EndMap; // Termina layer
             }
-            out << YAML::EndSeq;
+            out << YAML::EndSeq; // Termina layers
             out << YAML::EndMap;
 
             std::ofstream fout(defaultAssetsPathGrid + "/" + filePath + extensionGridFile);
             fout << out.c_str();
         }
+
         //---------------------------------------------------------------------------------------
     };
 }
