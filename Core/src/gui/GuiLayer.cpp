@@ -24,6 +24,7 @@
 #include "Panels/MeshesPanel.h"
 #include "Panels/ScenePanel.h"
 #include "Panels/GameViewportPanel.h"
+#include "Panels/GridToolEditorPanel.h"
 
 
 namespace libCore
@@ -71,6 +72,7 @@ namespace libCore
         auto dynamicSkyboxPanel            = CreateRef<DynamicSkyboxPanel>();
         auto meshesPanel                   = CreateRef<MeshesPanel>();
         auto scenePanel                    = CreateRef<ScenePanel>();
+        auto mapEditorPanel                = CreateRef<MapEditorPanel>();
 
        
         AddPanel(inspectorPanel);
@@ -87,6 +89,7 @@ namespace libCore
         AddPanel(globalIluminationPanel);
         AddPanel(frameBuffersPreviewPanel);
         AddPanel(dynamicSkyboxPanel);
+        AddPanel(mapEditorPanel);
         
         
 

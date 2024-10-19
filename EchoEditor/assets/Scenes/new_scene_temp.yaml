@@ -2,14 +2,14 @@ Scene: new_scene_temp
 Entities:
   - Entity: 0
     IDComponent:
-      ID: 4768132
+      ID: 10905349
     TagComponent:
       Tag: Cube
     TransformComponent:
       Transform:
         Position:
           - 0
-          - 1.49011612e-08
+          - 0
           - 2
         Rotation:
           - 0

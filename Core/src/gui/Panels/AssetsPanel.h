@@ -2,6 +2,7 @@
 #include "PanelBase.h"
 #include "../../managers/AssetsManager.h"
 #include "../../managers/SceneManager.h"
+#include "../../managers/GridsManager.h"
 
 namespace libCore
 {
@@ -151,6 +152,12 @@ namespace libCore
                         // Aquí llamas a la función para deserializar la escena
                         std::string sceneName = path.stem().string(); // Obtén el nombre del archivo sin extensión
                         SceneManager::GetInstance().GetCurrentScene()->DeserializeScene(sceneName);
+                    }
+                    else if (path.extension() == ".grid")
+                    {
+                        // Aquí llamas a la función para deserializar la escena
+                        std::string gridName = path.stem().string(); // Obtén el nombre del archivo sin extensión
+                        GridsManager::GetInstance().LoadGridFromYAML(path.string(),gridName);
                     }
                 }
 

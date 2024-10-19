@@ -28,10 +28,12 @@
     <ClInclude Include="src\core\renderer\Renderer.h" />
     <ClInclude Include="src\gui\Panels\DynamicSkyboxPanel.h" />
     <ClInclude Include="src\gui\Panels\GameViewportPanel.h" />
+    <ClInclude Include="src\gui\Panels\GridToolEditorPanel.h" />
     <ClInclude Include="src\gui\Panels\MeshesPanel.h" />
     <ClInclude Include="src\gui\Panels\ScenePanel.h" />
     <ClInclude Include="src\gui\PopupManager.h" />
     <ClInclude Include="src\managers\BackgroundTaskManager.h" />
+    <ClInclude Include="src\managers\GridsManager.h" />
     <ClInclude Include="src\managers\MainThreadTaskManager.h" />
     <ClInclude Include="src\managers\SceneHistoryManager.h" />
     <ClInclude Include="src\managers\SkeletalModelLoader.h" />

@@ -42,6 +42,8 @@ namespace libCore
                 viewport->camera->LookAt(glm::vec3(0.0f, 0.0f, 0.0f));
 
                 viewport->viewportNumber = 1;
+
+                viewport->isRenderable = false;
             }
 
             // G-Buffer

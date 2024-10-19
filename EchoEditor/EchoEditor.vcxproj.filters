@@ -31,5 +31,9 @@
     <None Include="assets\shaders\picking.vert" />
     <None Include="assets\shaders\picking.frag" />
     <None Include="assets\scripts\TweenTest.lua" />
+    <None Include="assets\scripts\TransformTest.lua" />
+    <None Include="assets\scripts\cosa.lua" />
+    <None Include="assets\scripts\HelloWorld.lua" />
+    <None Include="assets\scripts\Tablero.lua" />
   </ItemGroup>
 </Project>
