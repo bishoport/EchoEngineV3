@@ -12,6 +12,12 @@ namespace libCore
 
     void EditorCamera::Inputs(libCore::Timestep deltaTime)
     {
+
+        if (InputManager::Instance().IsKeyPressed(GLFW_KEY_LEFT_CONTROL) || InputManager::Instance().IsKeyPressed(GLFW_KEY_RIGHT_CONTROL))
+        {
+            return;
+        }
+
         // Movimiento de la cámara
         float velocity = speed * deltaTime.GetMilliseconds();
 
