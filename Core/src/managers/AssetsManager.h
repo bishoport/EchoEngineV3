@@ -22,7 +22,7 @@ namespace libCore
 
 		//--TEXTURES
 
-		std::string defaultAssetsPathTexture = "C:/Users/bisho/OneDrive/Escritorio/OPENGL_GAME/OpenGL_ShooterV2/Core/assets/textures/";
+		std::string defaultAssetsPathTexture = "C:/PRODUCTION/EchoEngineV3/Core/assets/textures/";
 		void UnloadTexture(const std::string& name);
 		void LoadDefaultAssets();
 		Ref<Texture> LoadTextureAsset(const std::string& key, const char* directoryPath, const char* fileName, TEXTURE_TYPES type);
